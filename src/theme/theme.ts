@@ -23,3 +23,42 @@ export const theme = {
     },
   };
   export type AppTheme = typeof theme;
+
+  export const lightTheme = {
+    colors: {
+      background: "#FFFFFF",
+      foreground: "#1A1A1A",
+  
+      card: "#FFFFFF",
+      cardForeground: "#1A1A1A",
+  
+      primary: "#030213",
+      primaryForeground: "#FFFFFF",
+  
+      secondary: "#F1F1F4",
+      secondaryForeground: "#030213",
+  
+      muted: "#ECECF0",
+      mutedForeground: "#717182",
+  
+      border: "rgba(0,0,0,0.1)",
+  
+      inputBackground: "#F3F3F5",
+  
+      accent: "#E9EBEF",
+      accentForeground: "#030213",
+    },
+  
+    radius: {
+      sm: 6,
+      md: 8,
+      lg: 10,
+    },
+  
+    spacing: {
+      xs: 8,
+      sm: 12,
+      md: 16,
+      lg: 24,
+    }
+  };
