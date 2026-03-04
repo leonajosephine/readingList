@@ -13,25 +13,21 @@ export function StatCard({ label, value }: { label: string; value: string }) {
 const Box = styled.View`
   flex: 1;
   background: ${({ theme }) => theme.colors.card};
-  border-radius: ${({ theme }) => theme.radius.md}px;
-  padding: 16px;
+  border-radius: ${({ theme }) => theme.radius.lg}px;
+  padding: ${({ theme }) => theme.space.md}px;
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
-  shadow-color: #000;
-  shadow-opacity: 0.06;
-  shadow-radius: 10px;
-  shadow-offset: 0px 6px;
 `;
 
 const Label = styled.Text`
-  color: ${({ theme }) => theme.colors.muted};
+  color: ${({ theme }) => theme.colors.mutedForeground};
   font-size: 13px;
-  font-weight: 700;
+  font-weight: ${({ theme }) => theme.font.weight.bold};
 `;
 
 const Value = styled.Text`
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.foreground};
   font-size: 34px;
-  font-weight: 900;
+  font-weight: ${({ theme }) => theme.font.weight.black};
   margin-top: 6px;
 `;

@@ -3,72 +3,34 @@ import { Alert, ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 
-type Friend = {
-  id: string;
-  name: string;
-  avatarUrl: string;
-  status?: "pending_in" | "pending_out" | "friend";
-};
+type Friend = { id: string; name: string; avatarUrl: string; status?: "pending_in" | "pending_out" | "friend" };
 
 export default function FriendsScreen() {
   const friends = useMemo<Friend[]>(
     () => [
-      {
-        id: "1",
-        name: "Anna",
-        avatarUrl: "https://i.pravatar.cc/200?img=32",
-        status: "friend",
-      },
-      {
-        id: "2",
-        name: "Mia",
-        avatarUrl: "https://i.pravatar.cc/200?img=12",
-        status: "friend",
-      },
-      {
-        id: "3",
-        name: "Noah",
-        avatarUrl: "https://i.pravatar.cc/200?img=24",
-        status: "pending_in",
-      },
-      {
-        id: "4",
-        name: "Luca",
-        avatarUrl: "https://i.pravatar.cc/200?img=8",
-        status: "friend",
-      },
-      {
-        id: "5",
-        name: "Sophie",
-        avatarUrl: "https://i.pravatar.cc/200?img=47",
-        status: "pending_out",
-      },
-      {
-        id: "6",
-        name: "Ben",
-        avatarUrl: "https://i.pravatar.cc/200?img=60",
-        status: "friend",
-      },
+      { id: "1", name: "Anna", avatarUrl: "https://i.pravatar.cc/200?img=32", status: "friend" },
+      { id: "2", name: "Mia", avatarUrl: "https://i.pravatar.cc/200?img=12", status: "friend" },
+      { id: "3", name: "Noah", avatarUrl: "https://i.pravatar.cc/200?img=24", status: "pending_in" },
+      { id: "4", name: "Luca", avatarUrl: "https://i.pravatar.cc/200?img=8", status: "friend" },
+      { id: "5", name: "Sophie", avatarUrl: "https://i.pravatar.cc/200?img=47", status: "pending_out" },
+      { id: "6", name: "Ben", avatarUrl: "https://i.pravatar.cc/200?img=60", status: "friend" },
     ],
     []
   );
 
   const pendingInCount = friends.filter((f) => f.status === "pending_in").length;
 
-  const onAddFriend = () => {
-    Alert.alert("Add Friend", "Coming soon: search by username/email");
-  };
+  const onAddFriend = () => Alert.alert("Add Friend", "Coming soon");
 
   const onFriendPress = (f: Friend) => {
     if (f.status === "pending_in") {
       Alert.alert(f.name, "Friend request", [
-        { text: "Accept", onPress: () => Alert.alert("Accepted", `${f.name} is now your friend`) },
+        { text: "Accept", onPress: () => Alert.alert("Accepted") },
         { text: "Decline", style: "destructive", onPress: () => Alert.alert("Declined") },
         { text: "Cancel", style: "cancel" },
       ]);
       return;
     }
-
     if (f.status === "pending_out") {
       Alert.alert(f.name, "Request pending", [
         { text: "Cancel request", style: "destructive", onPress: () => Alert.alert("Canceled") },
@@ -76,7 +38,6 @@ export default function FriendsScreen() {
       ]);
       return;
     }
-
     Alert.alert(f.name, "Friend profile (coming soon)");
   };
 
@@ -95,9 +56,7 @@ export default function FriendsScreen() {
           </RightControls>
         </TopRow>
 
-        <Hint>
-          Add friends to share books and lists. Pending requests show a small badge.
-        </Hint>
+        <Hint>Add friends to share books and lists.</Hint>
 
         <Grid>
           {friends.map((f) => (
@@ -109,11 +68,7 @@ export default function FriendsScreen() {
               </AvatarWrap>
               <Name numberOfLines={1}>{f.name}</Name>
               <Meta>
-                {f.status === "pending_in"
-                  ? "Requested you"
-                  : f.status === "pending_out"
-                  ? "Pending"
-                  : "Friend"}
+                {f.status === "pending_in" ? "Requested you" : f.status === "pending_out" ? "Pending" : "Friend"}
               </Meta>
             </AvatarTile>
           ))}
@@ -125,7 +80,7 @@ export default function FriendsScreen() {
 
 const Screen = styled.View`
   flex: 1;
-  background: ${({ theme }) => theme.colors.bg};
+  background: ${({ theme }) => theme.colors.background};
 `;
 
 const TopRow = styled.View`
@@ -138,8 +93,8 @@ const TopRow = styled.View`
 
 const Title = styled.Text`
   font-size: 32px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const RightControls = styled.View`
@@ -150,8 +105,8 @@ const RightControls = styled.View`
 
 const Badge = styled.Text`
   background: ${({ theme }) => theme.colors.primary};
-  color: white;
-  font-weight: 900;
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-weight: ${({ theme }) => theme.font.weight.black};
   padding: 6px 10px;
   border-radius: 999px;
   overflow: hidden;
@@ -164,14 +119,14 @@ const AddButton = styled.Pressable`
 `;
 
 const AddText = styled.Text`
-  color: white;
-  font-weight: 900;
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-weight: ${({ theme }) => theme.font.weight.black};
 `;
 
 const Hint = styled.Text`
   padding: 0 18px 14px 18px;
-  color: ${({ theme }) => theme.colors.muted};
-  font-weight: 600;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.weight.medium};
   line-height: 20px;
 `;
 
@@ -198,7 +153,7 @@ const AvatarWrap = styled.View`
   border-radius: 32px;
   overflow: hidden;
   border-width: 2px;
-  border-color: rgba(29, 27, 22, 0.12);
+  border-color: ${({ theme }) => theme.colors.border};
   position: relative;
 `;
 
@@ -221,13 +176,13 @@ const Dot = styled.View<{ color: string }>`
 
 const Name = styled.Text`
   margin-top: 10px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const Meta = styled.Text`
   margin-top: 2px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.muted};
+  font-weight: ${({ theme }) => theme.font.weight.bold};
+  color: ${({ theme }) => theme.colors.mutedForeground};
   font-size: 12px;
 `;

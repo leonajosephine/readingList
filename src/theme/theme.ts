@@ -1,64 +1,54 @@
-export const theme = {
-    colors: {
-      bg: "#FFFFFF",        // warm off-white FAF7F2
-      card: "#FFFFFF",
-      text: "#1D1B16",
-      muted: "#7C756C",
-      border: "rgba(29,27,22,0.10)",
-      shadow: "rgba(29,27,22,0.12)",
-      primary: "#0B0B16",   // dunkler Button (Create List, Add Friend)
-      chipBg: "#EEE7DC",
-      chipActiveBg: "#FFFFFF",
-    },
-    radius: {
-      lg: 22,
-      md: 16,
-      sm: 12,
-    },
-    space: {
-      xs: 6,
-      sm: 10,
-      md: 16,
-      lg: 24,
-    },
-  };
-  export type AppTheme = typeof theme;
+import type { Tokens } from "./tokens";
 
-  export const lightTheme = {
-    colors: {
-      background: "#FFFFFF",
-      foreground: "#1A1A1A",
-  
-      card: "#FFFFFF",
-      cardForeground: "#1A1A1A",
-  
-      primary: "#030213",
-      primaryForeground: "#FFFFFF",
-  
-      secondary: "#F1F1F4",
-      secondaryForeground: "#030213",
-  
-      muted: "#ECECF0",
-      mutedForeground: "#717182",
-  
-      border: "rgba(0,0,0,0.1)",
-  
-      inputBackground: "#F3F3F5",
-  
-      accent: "#E9EBEF",
-      accentForeground: "#030213",
+export const makeTheme = (t: Tokens) => ({
+  colors: {
+    background: t.background,
+    foreground: t.foreground,
+
+    card: t.card,
+    cardForeground: t.cardForeground,
+
+    primary: t.primary,
+    primaryForeground: t.primaryForeground,
+
+    secondary: t.secondary,
+    secondaryForeground: t.secondaryForeground,
+
+    muted: t.muted,
+    mutedForeground: t.mutedForeground,
+
+    accent: t.accent,
+    accentForeground: t.accentForeground,
+
+    border: t.border,
+
+    inputBackground: t.inputBackground,
+
+    destructive: t.destructive,
+    destructiveForeground: t.destructiveForeground,
+  },
+  radius: {
+    sm: Math.max(4, t.radius - 4),
+    md: Math.max(6, t.radius - 2),
+    lg: t.radius,
+    xl: t.radius + 6,
+  },
+  space: {
+    xs: 8,
+    sm: 12,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  font: {
+    base: 16,
+    weight: {
+      normal: "400" as const,
+      medium: "500" as const,
+      bold: "700" as const,
+      black: "900" as const,
     },
-  
-    radius: {
-      sm: 6,
-      md: 8,
-      lg: 10,
-    },
-  
-    spacing: {
-      xs: 8,
-      sm: 12,
-      md: 16,
-      lg: 24,
-    }
-  };
+  },
+});
+
+export type AppTheme = ReturnType<typeof makeTheme>;

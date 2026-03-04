@@ -11,7 +11,7 @@ export function AppHeader() {
     <Wrap>
       <Left>
         <Mark>
-          <Ionicons name="book-outline" size={18} color="#1D1B16" />
+          <Ionicons name="book-outline" size={18} color="#000" />
         </Mark>
         <Brand>ReadList</Brand>
       </Left>
@@ -20,7 +20,7 @@ export function AppHeader() {
         <AvatarWrap>
           <Avatar
             source={{
-              uri: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200",
+              uri: "https://i.pravatar.cc/200?img=32",
             }}
           />
           <Gear>
@@ -48,7 +48,7 @@ const Left = styled.View`
 const Mark = styled.View`
   width: 34px;
   height: 34px;
-  border-radius: 17px;
+  border-radius: ${({ theme }) => theme.radius.md}px;
   background: ${({ theme }) => theme.colors.card};
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
@@ -58,8 +58,8 @@ const Mark = styled.View`
 
 const Brand = styled.Text`
   font-size: 22px;
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const AvatarWrap = styled.View`
@@ -68,7 +68,7 @@ const AvatarWrap = styled.View`
   border-radius: 22px;
   overflow: hidden;
   border-width: 2px;
-  border-color: rgba(29, 27, 22, 0.12);
+  border-color: ${({ theme }) => theme.colors.border};
 `;
 
 const Avatar = styled.Image`
@@ -87,5 +87,5 @@ const Gear = styled.View`
   align-items: center;
   justify-content: center;
   border-width: 2px;
-  border-color: ${({ theme }) => theme.colors.bg};
+  border-color: ${({ theme }) => theme.colors.background};
 `;

@@ -1,209 +1,264 @@
 import React, { useMemo, useState } from "react";
-import { ScrollView } from "react-native";
+import { Image } from "react-native";
 import styled from "styled-components/native";
 import { useRouter } from "expo-router";
 
-type Mode = "light" | "dark";
-type ThemeKey = "minimal" | "instagram" | "mystery" | "scifi";
+import { useAppTheme } from "../src/theme/ThemeContext";
+import type { ThemeKey } from "../src/theme/tokens";
+
+import { Screen, Page } from "../src/ui/Screen";
+import { Card, CardBody } from "../src/ui/Card";
+import { H1, H2, P, Small } from "../src/ui/Text";
+import { Button, ButtonText } from "../src/ui/Button";
+import { Input } from "../src/ui/Input";
 
 type ThemeOption = {
   key: ThemeKey;
-  title: string;
-  subtitle: string;
+  name: string;
+  description: string;
+  // kleine Preview-Farbfläche (ähnlich wie die div preview box in deinem Web)
+  previewBg: string;
+  previewBorder: string;
 };
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("light");
-  const [theme, setTheme] = useState<ThemeKey>("minimal");
+  const { themeKey, setThemeKey } = useAppTheme();
 
-  const themes = useMemo<ThemeOption[]>(
+  // Dummy user (später aus Store)
+  const [name, setName] = useState("Leona");
+  const [email, setEmail] = useState("leona@example.com");
+  const [bio, setBio] = useState("Building a reading app ✨");
+
+  const themeOptions = useMemo<ThemeOption[]>(
     () => [
-      { key: "minimal", title: "Minimal", subtitle: "Clean + soft" },
-      { key: "instagram", title: "Instagram Moments", subtitle: "Warm & bold" },
-      { key: "mystery", title: "Mystery", subtitle: "Moody & dark" },
-      { key: "scifi", title: "Sci-Fi", subtitle: "Techy neon" },
+      { key: "light", name: "Light Mode", description: "Clean and bright", previewBg: "#ffffff", previewBorder: "rgba(0,0,0,0.12)" },
+      { key: "dark", name: "Dark Mode", description: "Easy on the eyes", previewBg: "#0f0f10", previewBorder: "rgba(255,255,255,0.16)" },
+      { key: "fantasy", name: "Fantasy", description: "Magical adventures", previewBg: "#faf8f5", previewBorder: "rgba(107,68,35,0.22)" },
+      { key: "romance", name: "Romance", description: "Love stories", previewBg: "#fff5f8", previewBorder: "rgba(217,70,166,0.22)" },
+      { key: "mystery", name: "Mystery", description: "Dark and thrilling", previewBg: "#0f0f1e", previewBorder: "rgba(124,58,237,0.35)" },
+      { key: "scifi", name: "Sci-Fi", description: "Future worlds", previewBg: "#0a0e1a", previewBorder: "rgba(6,182,212,0.35)" },
     ],
     []
   );
 
   return (
     <Screen>
-      <TopBar>
-        <Back onPress={() => router.back()}>
-          <BackText>‹ Back</BackText>
-        </Back>
+      <Page>
+        {/* Header */}
+        <HeaderRow>
+          <BackPress onPress={() => router.back()}>
+            <BackText>‹ Back</BackText>
+          </BackPress>
+          <HeaderCenter />
+        </HeaderRow>
 
-        <TopTitle>Settings</TopTitle>
+        <HeaderBlock>
+          <H1>Settings</H1>
+          <P>Customize your reading experience</P>
+        </HeaderBlock>
 
-        <Spacer />
-      </TopBar>
+        {/* Profile */}
+        <Card style={{ marginTop: 14 }}>
+          <CardBody>
+            <H2>Profile</H2>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <Section>
-          <SectionTitle>Profile Settings</SectionTitle>
-          <Card>
-            <Row>
-              <RowTitle>Name</RowTitle>
-              <RowValue>Leona</RowValue>
-            </Row>
-            <Divider />
-            <Row>
-              <RowTitle>Language</RowTitle>
-              <RowValue>English</RowValue>
-            </Row>
-          </Card>
-        </Section>
+            <ProfileRow>
+              <AvatarWrap>
+                <Avatar
+                  source={{
+                    uri: "https://i.pravatar.cc/300?img=32",
+                  }}
+                />
+                <MiniIconButton onPress={() => {}}>
+                  <MiniIconText>🎨</MiniIconText>
+                </MiniIconButton>
+              </AvatarWrap>
 
-        <Section>
-          <SectionTitle>Create Appearance</SectionTitle>
+              <FormCol>
+                <Field>
+                  <Label>Name</Label>
+                  <Input value={name} onChangeText={setName} placeholder="Your name" />
+                </Field>
 
-          <ModeRow>
-            <ModeCard active={mode === "light"} onPress={() => setMode("light")}>
-              <ModeTitle active={mode === "light"}>Light Mode</ModeTitle>
-              <ModeSub>Bright + clean</ModeSub>
-            </ModeCard>
+                <Field>
+                  <Label>Email</Label>
+                  <Input
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="you@email.com"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </Field>
 
-            <ModeCard active={mode === "dark"} onPress={() => setMode("dark")}>
-              <ModeTitle active={mode === "dark"}>Dark Mode</ModeTitle>
-              <ModeSub>Low light</ModeSub>
-            </ModeCard>
-          </ModeRow>
+                <Field>
+                  <Label>Bio</Label>
+                  <BioInput
+                    value={bio}
+                    onChangeText={setBio}
+                    placeholder="Tell us about your reading taste..."
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </Field>
+              </FormCol>
+            </ProfileRow>
 
-          <Grid>
-            {themes.map((t) => {
-              const active = t.key === theme;
-              return (
-                <ThemeTile
-                  key={t.key}
-                  active={active}
-                  onPress={() => setTheme(t.key)}
-                >
-                  <TileTop>
-                    <TileTitle active={active}>{t.title}</TileTitle>
-                    {active && <ActivePill>Active</ActivePill>}
-                  </TileTop>
-                  <TileSub>{t.subtitle}</TileSub>
-                </ThemeTile>
-              );
-            })}
-          </Grid>
+            <RightRow>
+              <Button onPress={() => {}}>
+                <ButtonText>Save Changes</ButtonText>
+              </Button>
+            </RightRow>
+          </CardBody>
+        </Card>
 
-          <Hint>
-            Later we’ll wire this to the global ThemeStore so the whole app updates instantly.
-          </Hint>
-        </Section>
-      </ScrollView>
+        {/* Appearance */}
+        <Card style={{ marginTop: 16 }}>
+          <CardBody>
+            <H2>Appearance</H2>
+            <Small style={{ marginTop: 6 }}>
+              Choose a theme that matches your reading mood
+            </Small>
+
+            <ThemeGrid>
+              {themeOptions.map((opt) => {
+                const active = opt.key === themeKey;
+
+                return (
+                  <ThemeTile
+                    key={opt.key}
+                    active={active}
+                    onPress={() => setThemeKey(opt.key)}
+                  >
+                    {active && <CheckPill>✓</CheckPill>}
+
+                    <PreviewBox
+                      style={{
+                        backgroundColor: opt.previewBg,
+                        borderColor: opt.previewBorder,
+                      }}
+                    />
+
+                    <TileTitleRow>
+                      <TileTitle numberOfLines={1}>{opt.name}</TileTitle>
+                    </TileTitleRow>
+
+                    <TileDesc numberOfLines={2}>{opt.description}</TileDesc>
+                  </ThemeTile>
+                );
+              })}
+            </ThemeGrid>
+          </CardBody>
+        </Card>
+
+        <FooterSpace />
+      </Page>
     </Screen>
   );
 }
 
-const Screen = styled.View`
-  flex: 1;
-  background: ${({ theme }) => theme.colors.bg};
-`;
+/* ------- styles ------- */
 
-const TopBar = styled.View`
-  padding: 18px 18px 8px 18px;
+const HeaderRow = styled.View`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 `;
 
-const Back = styled.Pressable`
-  padding: 8px 10px;
-  border-radius: 999px;
+const BackPress = styled.Pressable`
+  padding: 10px 12px;
+  border-radius: ${({ theme }) => theme.radius.md}px;
   background: ${({ theme }) => theme.colors.card};
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
 `;
 
 const BackText = styled.Text`
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
-const TopTitle = styled.Text`
-  font-size: 18px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+const HeaderCenter = styled.View`
+  width: 60px;
 `;
 
-const Spacer = styled.View`
-  width: 64px;
+const HeaderBlock = styled.View`
+  margin-top: 12px;
+  gap: 6px;
 `;
 
-const Section = styled.View`
-  padding: 14px 18px 0 18px;
+const ProfileRow = styled.View`
+  margin-top: 14px;
+  gap: 16px;
 `;
 
-const SectionTitle = styled.Text`
-  font-size: 22px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: 10px;
+const AvatarWrap = styled.View`
+  align-self: flex-start;
+  width: 96px;
+  height: 96px;
+  border-radius: 48px;
+  overflow: hidden;
+  border-width: 3px;
+  border-color: ${({ theme }) => theme.colors.border};
 `;
 
-const Card = styled.View`
-  background: ${({ theme }) => theme.colors.card};
-  border-radius: ${({ theme }) => theme.radius.lg}px;
+const Avatar = styled(Image)`
+  width: 96px;
+  height: 96px;
+`;
+
+const MiniIconButton = styled.Pressable`
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  background: ${({ theme }) => theme.colors.primary};
+  align-items: center;
+  justify-content: center;
+  border-width: 3px;
+  border-color: ${({ theme }) => theme.colors.card};
+`;
+
+const MiniIconText = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-size: 14px;
+`;
+
+const FormCol = styled.View`
+  gap: 12px;
+`;
+
+const Field = styled.View`
+  gap: 6px;
+`;
+
+const Label = styled.Text`
+  font-weight: ${({ theme }) => theme.font.weight.bold};
+  color: ${({ theme }) => theme.colors.foreground};
+`;
+
+const BioInput = styled.TextInput`
+  min-height: 90px;
+  padding: 12px 14px;
+  border-radius: ${({ theme }) => theme.radius.md}px;
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
-  overflow: hidden;
+  background: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
 `;
 
-const Row = styled.View`
-  padding: 14px 16px;
+const RightRow = styled.View`
+  margin-top: 14px;
   flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 `;
 
-const RowTitle = styled.Text`
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const RowValue = styled.Text`
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.muted};
-`;
-
-const Divider = styled.View`
-  height: 1px;
-  background: ${({ theme }) => theme.colors.border};
-`;
-
-/* Mode switch cards */
-const ModeRow = styled.View`
-  flex-direction: row;
-  gap: 12px;
-  margin-bottom: 12px;
-`;
-
-const ModeCard = styled.Pressable<{ active: boolean }>`
-  flex: 1;
-  padding: 14px;
-  border-radius: ${({ theme }) => theme.radius.lg}px;
-  background: ${({ theme }) => theme.colors.card};
-  border-width: 2px;
-  border-color: ${({ active, theme }) =>
-    active ? theme.colors.primary : theme.colors.border};
-`;
-
-const ModeTitle = styled.Text<{ active: boolean }>`
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const ModeSub = styled.Text`
-  margin-top: 6px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.muted};
-`;
-
-/* Themes grid */
-const Grid = styled.View`
+const ThemeGrid = styled.View`
+  margin-top: 14px;
   flex-direction: row;
   flex-wrap: wrap;
   gap: 12px;
@@ -211,46 +266,55 @@ const Grid = styled.View`
 
 const ThemeTile = styled.Pressable<{ active: boolean }>`
   width: 48%;
-  padding: 14px;
+  padding: 12px;
   border-radius: ${({ theme }) => theme.radius.lg}px;
-  background: ${({ theme }) => theme.colors.card};
   border-width: 2px;
-  border-color: ${({ active, theme }) =>
+  border-color: ${({ theme, active }) =>
     active ? theme.colors.primary : theme.colors.border};
+  background: ${({ theme }) => theme.colors.card};
+  position: relative;
 `;
 
-const TileTop = styled.View`
+const CheckPill = styled.Text`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+`;
+
+const PreviewBox = styled.View`
+  width: 100%;
+  height: 64px;
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  border-width: 2px;
+  margin-bottom: 10px;
+`;
+
+const TileTitleRow = styled.View`
   flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: 8px;
 `;
 
-const TileTitle = styled.Text<{ active: boolean }>`
+const TileTitle = styled.Text`
   flex: 1;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.cardForeground};
 `;
 
-const TileSub = styled.Text`
-  margin-top: 8px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.muted};
+const TileDesc = styled.Text`
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-size: 13px;
+  line-height: 18px;
 `;
 
-const ActivePill = styled.Text`
-  background: ${({ theme }) => theme.colors.primary};
-  color: white;
-  font-weight: 900;
-  font-size: 11px;
-  padding: 6px 8px;
-  border-radius: 999px;
-  overflow: hidden;
-`;
-
-const Hint = styled.Text`
-  margin-top: 10px;
-  color: ${({ theme }) => theme.colors.muted};
-  font-weight: 600;
-  line-height: 20px;
+const FooterSpace = styled.View`
+  height: 30px;
 `;

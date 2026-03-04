@@ -1,16 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Platform, ScrollView } from "react-native";
+import { Alert, ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
 
 type ViewMode = "grid" | "list";
-
-type ReadingList = {
-  id: string;
-  title: string;
-  subtitle?: string; // z.B. "12 books"
-};
+type ReadingList = { id: string; title: string; subtitle?: string };
 
 export default function ListsScreen() {
   const [mode, setMode] = useState<ViewMode>("grid");
@@ -26,14 +21,9 @@ export default function ListsScreen() {
   );
 
   const onMenu = (list: ReadingList) => {
-    // Später machen wir ein echtes Menü/BottomSheet.
     Alert.alert(list.title, "What do you want to do?", [
       { text: "Share", onPress: () => Alert.alert("Share", "Coming soon") },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => Alert.alert("Delete", "Coming soon"),
-      },
+      { text: "Delete", style: "destructive", onPress: () => Alert.alert("Delete", "Coming soon") },
       { text: "Cancel", style: "cancel" },
     ]);
   };
@@ -41,7 +31,6 @@ export default function ListsScreen() {
   return (
     <Screen>
       <AppHeader />
-
       <ScrollView contentContainerStyle={{ paddingBottom: 70 }}>
         <TopRow>
           <Title>My Reading Lists</Title>
@@ -71,10 +60,7 @@ export default function ListsScreen() {
                     <DotsText>⋯</DotsText>
                   </DotsPress>
                 </CardTop>
-
-                <CardBottom>
-                  <CardMeta>{l.subtitle ?? ""}</CardMeta>
-                </CardBottom>
+                <CardMeta>{l.subtitle ?? ""}</CardMeta>
               </GridCard>
             ))}
           </Grid>
@@ -86,7 +72,6 @@ export default function ListsScreen() {
                   <RowTitle numberOfLines={1}>{l.title}</RowTitle>
                   {!!l.subtitle && <RowMeta>{l.subtitle}</RowMeta>}
                 </RowText>
-
                 <DotsPress onPress={() => onMenu(l)}>
                   <DotsText>⋯</DotsText>
                 </DotsPress>
@@ -101,7 +86,7 @@ export default function ListsScreen() {
 
 const Screen = styled.View`
   flex: 1;
-  background: ${({ theme }) => theme.colors.bg};
+  background: ${({ theme }) => theme.colors.background};
 `;
 
 const TopRow = styled.View`
@@ -115,8 +100,8 @@ const TopRow = styled.View`
 const Title = styled.Text`
   flex: 1;
   font-size: 32px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const CreateButton = styled.Pressable`
@@ -126,15 +111,14 @@ const CreateButton = styled.Pressable`
 `;
 
 const CreateText = styled.Text`
-  color: white;
-  font-weight: 900;
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-weight: ${({ theme }) => theme.font.weight.black};
 `;
 
 const SegmentWrap = styled.View`
   padding: 0 18px 14px 18px;
 `;
 
-/* GRID */
 const Grid = styled.View`
   padding: 0 18px;
   flex-direction: row;
@@ -163,20 +147,16 @@ const CardTop = styled.View`
 const CardTitle = styled.Text`
   flex: 1;
   font-size: 16px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const CardBottom = styled.View`
-  margin-top: 10px;
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const CardMeta = styled.Text`
-  color: ${({ theme }) => theme.colors.muted};
-  font-weight: 700;
+  margin-top: 10px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.weight.bold};
 `;
 
-/* LIST */
 const List = styled.View`
   padding: 0 18px;
   gap: 12px;
@@ -200,16 +180,15 @@ const RowText = styled.View`
 
 const RowTitle = styled.Text`
   font-size: 16px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const RowMeta = styled.Text`
-  color: ${({ theme }) => theme.colors.muted};
-  font-weight: 700;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.weight.bold};
 `;
 
-/* MENU */
 const DotsPress = styled.Pressable`
   width: 34px;
   height: 34px;
@@ -221,5 +200,5 @@ const DotsPress = styled.Pressable`
 const DotsText = styled.Text`
   font-size: 22px;
   line-height: 22px;
-  color: ${({ theme }) => theme.colors.muted};
+  color: ${({ theme }) => theme.colors.mutedForeground};
 `;

@@ -44,20 +44,20 @@ const Cover = styled.Image`
 `;
 
 const Body = styled.View`
-  padding: 14px;
+  padding: ${({ theme }) => theme.space.md}px;
 `;
 
 const Title = styled.Text`
   font-size: 16px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const Author = styled.Text`
   font-size: 14px;
   margin-top: 4px;
-  color: ${({ theme }) => theme.colors.muted};
-  font-weight: 700;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.weight.bold};
 `;
 
 const RatingRow = styled.View`
@@ -73,6 +73,6 @@ const Star = styled.Text`
 `;
 
 const Rating = styled.Text`
-  color: ${({ theme }) => theme.colors.text};
-  font-weight: 900;
+  color: ${({ theme }) => theme.colors.foreground};
+  font-weight: ${({ theme }) => theme.font.weight.black};
 `;

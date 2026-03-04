@@ -3,14 +3,7 @@ import { ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 
-type Book = {
-  id: string;
-  title: string;
-  author: string;
-  rating?: string;
-  coverUrl: string;
-  genre: string;
-};
+type Book = { id: string; title: string; author: string; rating?: string; coverUrl: string; genre: string };
 
 const GENRES = ["All", "Fantasy", "Mystery", "Romance", "Sci-Fi", "Classics", "Non-Fiction"];
 
@@ -20,54 +13,12 @@ export default function SearchScreen() {
 
   const books = useMemo<Book[]>(
     () => [
-      {
-        id: "1",
-        title: "The Midnight Library",
-        author: "Matt Haig",
-        rating: "4.5",
-        coverUrl: "https://picsum.photos/400/601",
-        genre: "Fantasy",
-      },
-      {
-        id: "2",
-        title: "The Name of the Wind",
-        author: "Patrick Rothfuss",
-        rating: "4.6",
-        coverUrl: "https://picsum.photos/401/601",
-        genre: "Fantasy",
-      },
-      {
-        id: "3",
-        title: "Gone Girl",
-        author: "Gillian Flynn",
-        rating: "4.1",
-        coverUrl: "https://picsum.photos/402/601",
-        genre: "Mystery",
-      },
-      {
-        id: "4",
-        title: "Pride and Prejudice",
-        author: "Jane Austen",
-        rating: "4.4",
-        coverUrl: "https://picsum.photos/403/601",
-        genre: "Classics",
-      },
-      {
-        id: "5",
-        title: "Dune",
-        author: "Frank Herbert",
-        rating: "4.3",
-        coverUrl: "https://picsum.photos/404/601",
-        genre: "Sci-Fi",
-      },
-      {
-        id: "6",
-        title: "It Ends With Us",
-        author: "Colleen Hoover",
-        rating: "4.2",
-        coverUrl: "https://picsum.photos/405/601",
-        genre: "Romance",
-      },
+      { id: "1", title: "The Midnight Library", author: "Matt Haig", rating: "4.5", coverUrl: "https://picsum.photos/400/601", genre: "Fantasy" },
+      { id: "2", title: "The Name of the Wind", author: "Patrick Rothfuss", rating: "4.6", coverUrl: "https://picsum.photos/401/601", genre: "Fantasy" },
+      { id: "3", title: "Gone Girl", author: "Gillian Flynn", rating: "4.1", coverUrl: "https://picsum.photos/402/601", genre: "Mystery" },
+      { id: "4", title: "Pride and Prejudice", author: "Jane Austen", rating: "4.4", coverUrl: "https://picsum.photos/403/601", genre: "Classics" },
+      { id: "5", title: "Dune", author: "Frank Herbert", rating: "4.3", coverUrl: "https://picsum.photos/404/601", genre: "Sci-Fi" },
+      { id: "6", title: "It Ends With Us", author: "Colleen Hoover", rating: "4.2", coverUrl: "https://picsum.photos/405/601", genre: "Romance" },
     ],
     []
   );
@@ -76,10 +27,7 @@ export default function SearchScreen() {
     const q = query.trim().toLowerCase();
     return books.filter((b) => {
       const matchGenre = genre === "All" ? true : b.genre === genre;
-      const matchQuery =
-        q.length === 0
-          ? true
-          : b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
+      const matchQuery = q.length === 0 ? true : b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
       return matchGenre && matchQuery;
     });
   }, [books, genre, query]);
@@ -96,7 +44,7 @@ export default function SearchScreen() {
             value={query}
             onChangeText={setQuery}
             placeholder="Search by title, author…"
-            placeholderTextColor="rgba(29,27,22,0.45)"
+            placeholderTextColor="rgba(120,120,130,0.9)"
             autoCorrect={false}
             autoCapitalize="none"
           />
@@ -139,13 +87,13 @@ export default function SearchScreen() {
 
 const Screen = styled.View`
   flex: 1;
-  background: ${({ theme }) => theme.colors.bg};
+  background: ${({ theme }) => theme.colors.background};
 `;
 
 const Title = styled.Text`
   font-size: 32px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
   padding: 8px 18px 12px 18px;
 `;
 
@@ -154,13 +102,13 @@ const SearchWrap = styled.View`
 `;
 
 const SearchInput = styled.TextInput`
-  background: ${({ theme }) => theme.colors.card};
+  background: ${({ theme }) => theme.colors.inputBackground};
   border-radius: ${({ theme }) => theme.radius.lg}px;
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
   padding: 14px 14px;
   font-size: 16px;
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const ChipsScroll = styled.ScrollView`
@@ -177,12 +125,14 @@ const ChipsRow = styled.View`
 const Chip = styled.Pressable<{ active: boolean }>`
   padding: 10px 14px;
   border-radius: 999px;
-  background: ${({ active, theme }) => (active ? theme.colors.primary : theme.colors.chipBg)};
+  background: ${({ active, theme }) => (active ? theme.colors.primary : theme.colors.muted)};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
 `;
 
 const ChipText = styled.Text<{ active: boolean }>`
-  font-weight: 900;
-  color: ${({ active }) => (active ? "white" : "#1D1B16")};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ active, theme }) => (active ? theme.colors.primaryForeground : theme.colors.foreground)};
 `;
 
 const Grid = styled.View`
@@ -212,14 +162,14 @@ const TileBody = styled.View`
 
 const TileTitle = styled.Text`
   font-size: 15px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const TileAuthor = styled.Text`
   margin-top: 4px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.muted};
+  font-weight: ${({ theme }) => theme.font.weight.bold};
+  color: ${({ theme }) => theme.colors.mutedForeground};
 `;
 
 const RatingRow = styled.View`
@@ -235,6 +185,6 @@ const Star = styled.Text`
 `;
 
 const RatingText = styled.Text`
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
 `;

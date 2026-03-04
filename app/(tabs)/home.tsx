@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { ScrollView } from "react-native";
 import styled from "styled-components/native";
-
 import { AppHeader } from "../../src/components/AppHeader";
 import { StatCard } from "../../src/components/StatCard";
 import { BookCard } from "../../src/components/BookCard";
@@ -15,21 +14,16 @@ export default function HomeScreen() {
       <AppHeader />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
-        <Title>Hi Leona</Title>
-        <Subtitle>
-          Track, organize, and discover your next favorite book
-        </Subtitle>
+        <H1>Hi Leona</H1>
+        <Sub>Track, organize, and discover your next favorite book</Sub>
 
-        {/* Stats */}
         <StatsRow>
           <StatCard label="Reading" value="2" />
           <StatCard label="To Read" value="3" />
           <StatCard label="Done" value="3" />
         </StatsRow>
 
-        {/* Currently Reading */}
         <SectionTitle>Currently Reading</SectionTitle>
-
         <CardsRow>
           <BookCard
             title="The Midnight Library"
@@ -37,7 +31,6 @@ export default function HomeScreen() {
             rating="4.5"
             coverUrl="https://picsum.photos/400/600"
           />
-
           <BookCard
             title="The Name of the Wind"
             author="Patrick Rothfuss"
@@ -46,20 +39,19 @@ export default function HomeScreen() {
           />
         </CardsRow>
 
-        {/* Library */}
         <SectionTitle>Your Library</SectionTitle>
+        <SegmentWrap>
+          <SegmentedControl
+            value={filter}
+            onChange={(k) => setFilter(k as any)}
+            options={[
+              { key: "all", label: "All" },
+              { key: "toRead", label: "To Read" },
+              { key: "done", label: "Done" },
+            ]}
+          />
+        </SegmentWrap>
 
-        <SegmentedControl
-          value={filter}
-          onChange={(key) => setFilter(key as any)}
-          options={[
-            { key: "all", label: "All" },
-            { key: "toRead", label: "To Read" },
-            { key: "done", label: "Done" },
-          ]}
-        />
-
-        {/* Placeholder Grid */}
         <LibraryGrid>
           <Tile />
           <Tile />
@@ -73,22 +65,23 @@ export default function HomeScreen() {
 
 const Screen = styled.View`
   flex: 1;
-  background: ${({ theme }) => theme.colors.bg};
+  background: ${({ theme }) => theme.colors.background};
 `;
 
-const Title = styled.Text`
+const H1 = styled.Text`
   font-size: 42px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
   padding: 0 18px;
   margin-top: 10px;
 `;
 
-const Subtitle = styled.Text`
+const Sub = styled.Text`
   font-size: 18px;
-  color: ${({ theme }) => theme.colors.muted};
+  color: ${({ theme }) => theme.colors.mutedForeground};
   padding: 6px 18px 0 18px;
   line-height: 24px;
+  font-weight: ${({ theme }) => theme.font.weight.medium};
 `;
 
 const StatsRow = styled.View`
@@ -99,8 +92,8 @@ const StatsRow = styled.View`
 
 const SectionTitle = styled.Text`
   font-size: 28px;
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: ${({ theme }) => theme.font.weight.black};
+  color: ${({ theme }) => theme.colors.foreground};
   padding: 10px 18px 14px 18px;
 `;
 
@@ -109,6 +102,10 @@ const CardsRow = styled.View`
   gap: 14px;
   padding: 0 18px 18px 18px;
   align-items: stretch;
+`;
+
+const SegmentWrap = styled.View`
+  padding: 0 18px;
 `;
 
 const LibraryGrid = styled.View`
