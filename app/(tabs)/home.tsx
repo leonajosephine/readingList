@@ -1,69 +1,71 @@
-import React from "react";
-import { ScrollView, View } from "react-native";
+import React, { useState } from "react";
+import { ScrollView } from "react-native";
 import styled from "styled-components/native";
+
 import { AppHeader } from "../../src/components/AppHeader";
+import { StatCard } from "../../src/components/StatCard";
+import { BookCard } from "../../src/components/BookCard";
+import { SegmentedControl } from "../../src/components/SegmentedControl";
 
 export default function HomeScreen() {
+  const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
+
   return (
     <Screen>
       <AppHeader />
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <H1>Hi Leona</H1>
-        <Sub>Track, organize, and discover your next favorite book</Sub>
 
-        <Row>
-          <StatBox>
-            <StatLabel>Reading</StatLabel>
-            <StatValue>2</StatValue>
-          </StatBox>
-          <StatBox>
-            <StatLabel>To Read</StatLabel>
-            <StatValue>3</StatValue>
-          </StatBox>
-          <StatBox>
-            <StatLabel>Done</StatLabel>
-            <StatValue>3</StatValue>
-          </StatBox>
-        </Row>
+      <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+        <Title>Hi Leona</Title>
+        <Subtitle>
+          Track, organize, and discover your next favorite book
+        </Subtitle>
 
+        {/* Stats */}
+        <StatsRow>
+          <StatCard label="Reading" value="2" />
+          <StatCard label="To Read" value="3" />
+          <StatCard label="Done" value="3" />
+        </StatsRow>
+
+        {/* Currently Reading */}
         <SectionTitle>Currently Reading</SectionTitle>
 
         <CardsRow>
-          <BookCard>
-            <Cover source={{ uri: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=900" }} />
-            <CardBody>
-              <CardTitle>The Midnight Library</CardTitle>
-              <CardAuthor>Matt Haig</CardAuthor>
-              <RatingRow>
-                <Star>★</Star>
-                <RatingText>4.5</RatingText>
-              </RatingRow>
-            </CardBody>
-          </BookCard>
+          <BookCard
+            title="The Midnight Library"
+            author="Matt Haig"
+            rating="4.5"
+            coverUrl="https://picsum.photos/400/600"
+          />
 
-          <BookCard>
-            <Cover source={{ uri: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=900" }} />
-            <CardBody>
-              <CardTitle>The Name of the Wind</CardTitle>
-              <CardAuthor>Patrick Rothfuss</CardAuthor>
-              <RatingRow>
-                <Star>★</Star>
-                <RatingText>4.6</RatingText>
-              </RatingRow>
-            </CardBody>
-          </BookCard>
+          <BookCard
+            title="The Name of the Wind"
+            author="Patrick Rothfuss"
+            rating="4.6"
+            coverUrl="https://picsum.photos/401/600"
+          />
         </CardsRow>
 
+        {/* Library */}
         <SectionTitle>Your Library</SectionTitle>
 
-        <Pill>
-          <PillItem active><PillText active>All</PillText></PillItem>
-          <PillItem><PillText>To Read</PillText></PillItem>
-          <PillItem><PillText>Done</PillText></PillItem>
-        </Pill>
+        <SegmentedControl
+          value={filter}
+          onChange={(key) => setFilter(key as any)}
+          options={[
+            { key: "all", label: "All" },
+            { key: "toRead", label: "To Read" },
+            { key: "done", label: "Done" },
+          ]}
+        />
 
-        {/* hier später Grid der Library */}
-        <Spacer />
+        {/* Placeholder Grid */}
+        <LibraryGrid>
+          <Tile />
+          <Tile />
+          <Tile />
+          <Tile />
+        </LibraryGrid>
       </ScrollView>
     </Screen>
   );
@@ -74,139 +76,53 @@ const Screen = styled.View`
   background: ${({ theme }) => theme.colors.bg};
 `;
 
-const H1 = styled.Text`
+const Title = styled.Text`
   font-size: 42px;
-  font-weight: 800;
+  font-weight: 900;
   color: ${({ theme }) => theme.colors.text};
   padding: 0 18px;
-  margin-top: 8px;
+  margin-top: 10px;
 `;
 
-const Sub = styled.Text`
+const Subtitle = styled.Text`
   font-size: 18px;
   color: ${({ theme }) => theme.colors.muted};
   padding: 6px 18px 0 18px;
   line-height: 24px;
 `;
 
-const Row = styled.View`
+const StatsRow = styled.View`
   flex-direction: row;
   gap: 14px;
   padding: 18px;
-`;
-
-const StatBox = styled.View`
-  flex: 1;
-  background: ${({ theme }) => theme.colors.card};
-  border-radius: ${({ theme }) => theme.radius.md}px;
-  padding: 16px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-  shadow-color: #000;
-  shadow-opacity: 0.06;
-  shadow-radius: 10px;
-  shadow-offset: 0px 6px;
-`;
-
-const StatLabel = styled.Text`
-  color: ${({ theme }) => theme.colors.muted};
-  font-size: 14px;
-  font-weight: 600;
-`;
-
-const StatValue = styled.Text`
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 34px;
-  font-weight: 800;
-  margin-top: 6px;
 `;
 
 const SectionTitle = styled.Text`
   font-size: 28px;
   font-weight: 800;
   color: ${({ theme }) => theme.colors.text};
-  padding: 8px 18px 12px 18px;
+  padding: 10px 18px 14px 18px;
 `;
 
 const CardsRow = styled.View`
   flex-direction: row;
   gap: 14px;
   padding: 0 18px 18px 18px;
+  align-items: stretch;
 `;
 
-const BookCard = styled.View`
-  flex: 1;
-  background: ${({ theme }) => theme.colors.card};
+const LibraryGrid = styled.View`
+  padding: 16px 18px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+`;
+
+const Tile = styled.View`
+  width: 48%;
+  height: 180px;
   border-radius: ${({ theme }) => theme.radius.lg}px;
-  overflow: hidden;
+  background: ${({ theme }) => theme.colors.card};
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
-  shadow-color: #000;
-  shadow-opacity: 0.08;
-  shadow-radius: 12px;
-  shadow-offset: 0px 8px;
-`;
-
-const Cover = styled.Image`
-  width: 100%;
-  height: 200px;
-`;
-
-const CardBody = styled.View`
-  padding: 14px;
-`;
-
-const CardTitle = styled.Text`
-  font-size: 16px;
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const CardAuthor = styled.Text`
-  font-size: 14px;
-  margin-top: 4px;
-  color: ${({ theme }) => theme.colors.muted};
-`;
-
-const RatingRow = styled.View`
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-`;
-
-const Star = styled.Text`
-  color: #f4b400;
-  font-size: 16px;
-`;
-
-const RatingText = styled.Text`
-  color: ${({ theme }) => theme.colors.text};
-  font-weight: 700;
-`;
-
-const Pill = styled.View`
-  margin: 0 18px;
-  background: ${({ theme }) => theme.colors.chipBg};
-  border-radius: 999px;
-  padding: 6px;
-  flex-direction: row;
-  gap: 6px;
-`;
-
-const PillItem = styled.Pressable<{ active?: boolean }>`
-  flex: 1;
-  padding: 10px 12px;
-  border-radius: 999px;
-  background: ${({ active, theme }) => (active ? theme.colors.chipActiveBg : "transparent")};
-`;
-
-const PillText = styled.Text<{ active?: boolean }>`
-  text-align: center;
-  font-weight: 700;
-  color: ${({ active, theme }) => (active ? theme.colors.text : theme.colors.muted)};
-`;
-
-const Spacer = styled.View`
-  height: 24px;
 `;

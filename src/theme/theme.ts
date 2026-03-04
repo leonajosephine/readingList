@@ -1,6 +1,6 @@
 export const theme = {
     colors: {
-      bg: "#FAF7F2",        // warm off-white
+      bg: "#FFFFFF",        // warm off-white FAF7F2
       card: "#FFFFFF",
       text: "#1D1B16",
       muted: "#7C756C",

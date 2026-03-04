@@ -1,10 +1,8 @@
 import React from "react";
-import { Pressable, View } from "react-native";
 import styled from "styled-components/native";
+import { Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-
-
 
 export function AppHeader() {
   const router = useRouter();
@@ -12,30 +10,30 @@ export function AppHeader() {
   return (
     <Wrap>
       <Left>
-        <Ionicons name="book-outline" size={22} color="#1D1B16" />
+        <Mark>
+          <Ionicons name="book-outline" size={18} color="#1D1B16" />
+        </Mark>
         <Brand>ReadList</Brand>
       </Left>
 
-      <Right>
-        <Pressable onPress={() => router.push("/settings")}>
-          <AvatarRing>
-            <Avatar
-              source={{
-                uri: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200",
-              }}
-            />
-          </AvatarRing>
+      <Pressable onPress={() => router.push("/settings")}>
+        <AvatarWrap>
+          <Avatar
+            source={{
+              uri: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200",
+            }}
+          />
           <Gear>
-            <Ionicons name="settings-outline" size={14} color="white" />
+            <Ionicons name="settings-outline" size={14} color="#fff" />
           </Gear>
-        </Pressable>
-      </Right>
+        </AvatarWrap>
+      </Pressable>
     </Wrap>
   );
 }
 
 const Wrap = styled.View`
-  padding: 18px 18px 10px 18px;
+  padding: 18px 18px 8px 18px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
@@ -47,17 +45,24 @@ const Left = styled.View`
   gap: 10px;
 `;
 
+const Mark = styled.View`
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  align-items: center;
+  justify-content: center;
+`;
+
 const Brand = styled.Text`
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   color: ${({ theme }) => theme.colors.text};
 `;
 
-const Right = styled.View`
-  position: relative;
-`;
-
-const AvatarRing = styled.View`
+const AvatarWrap = styled.View`
   width: 44px;
   height: 44px;
   border-radius: 22px;
@@ -73,12 +78,14 @@ const Avatar = styled.Image`
 
 const Gear = styled.View`
   position: absolute;
-  right: -4px;
-  bottom: -4px;
+  right: -5px;
+  bottom: -5px;
   width: 22px;
   height: 22px;
   border-radius: 11px;
   background: ${({ theme }) => theme.colors.primary};
   align-items: center;
   justify-content: center;
+  border-width: 2px;
+  border-color: ${({ theme }) => theme.colors.bg};
 `;
