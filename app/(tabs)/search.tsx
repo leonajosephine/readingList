@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
+import { softShadow } from "../../src/ui/shadows";
 
 type Book = { id: string; title: string; author: string; rating?: string; coverUrl: string; genre: string };
 
@@ -65,7 +66,7 @@ export default function SearchScreen() {
 
         <Grid>
           {filtered.map((b) => (
-            <BookTile key={b.id}>
+            <BookTile key={b.id} style={softShadow}>
               <TileCover source={{ uri: b.coverUrl }} resizeMode="cover" />
               <TileBody>
                 <TileTitle numberOfLines={2}>{b.title}</TileTitle>

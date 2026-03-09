@@ -11,6 +11,7 @@ import { Card, CardBody } from "../src/ui/Card";
 import { H1, H2, P, Small } from "../src/ui/Text";
 import { Button, ButtonText } from "../src/ui/Button";
 import { Input } from "../src/ui/Input";
+import { softShadow } from "../src/ui/shadows";
 
 type ThemeOption = {
   key: ThemeKey;
@@ -59,7 +60,7 @@ export default function SettingsScreen() {
         </HeaderBlock>
 
         {/* Profile */}
-        <Card style={{ marginTop: 14 }}>
+        <Card style={[{ marginTop: 14 }, softShadow]}>
           <CardBody>
             <H2>Profile</H2>
 
@@ -114,7 +115,7 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Appearance */}
-        <Card style={{ marginTop: 16 }}>
+        <Card style={[{ marginTop: 16 }, softShadow]}>
           <CardBody>
             <H2>Appearance</H2>
             <Small style={{ marginTop: 6 }}>

@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Alert, ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
+import { softShadow } from "../../src/ui/shadows";
 
 type Friend = { id: string; name: string; avatarUrl: string; status?: "pending_in" | "pending_out" | "friend" };
 
@@ -60,7 +61,7 @@ export default function FriendsScreen() {
 
         <Grid>
           {friends.map((f) => (
-            <AvatarTile key={f.id} onPress={() => onFriendPress(f)}>
+            <AvatarTile key={f.id} style={softShadow} onPress={() => onFriendPress(f)}>
               <AvatarWrap>
                 <Avatar source={{ uri: f.avatarUrl }} />
                 {f.status === "pending_in" && <Dot color="#0B0B16" />}

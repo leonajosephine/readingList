@@ -26,17 +26,25 @@ export default function HomeScreen() {
         <SectionTitle>Currently Reading</SectionTitle>
         <CardsRow>
           <BookCard
-            title="The Midnight Library"
-            author="Matt Haig"
-            rating="4.5"
-            coverUrl="https://picsum.photos/400/600"
-          />
-          <BookCard
-            title="The Name of the Wind"
-            author="Patrick Rothfuss"
-            rating="4.6"
-            coverUrl="https://picsum.photos/401/600"
-          />
+            book={{
+                id: "1",
+                title: "The Midnight Library",
+                author: "Matt Haig",
+                rating: "4.5",
+                coverUrl: "https://picsum.photos/400/600",
+                status: "reading",
+            }}
+            />
+          <BookCard 
+            book={{
+                id: "2",
+                title: "Dune",
+                author: "Frank Herbert",
+                rating: "4.3",
+                coverUrl: "https://picsum.photos/402/600",
+                status: "reading",
+             }}
+            />
         </CardsRow>
 
         <SectionTitle>Your Library</SectionTitle>

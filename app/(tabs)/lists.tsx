@@ -3,6 +3,7 @@ import { Alert, ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
+import { softShadow } from "../../src/ui/shadows";
 
 type ViewMode = "grid" | "list";
 type ReadingList = { id: string; title: string; subtitle?: string };
@@ -53,7 +54,7 @@ export default function ListsScreen() {
         {mode === "grid" ? (
           <Grid>
             {lists.map((l) => (
-              <GridCard key={l.id}>
+              <GridCard key={l.id} style={softShadow}>
                 <CardTop>
                   <CardTitle numberOfLines={2}>{l.title}</CardTitle>
                   <DotsPress onPress={() => onMenu(l)}>
@@ -67,7 +68,7 @@ export default function ListsScreen() {
         ) : (
           <List>
             {lists.map((l) => (
-              <Row key={l.id}>
+              <Row key={l.id} style={softShadow}>
                 <RowText>
                   <RowTitle numberOfLines={1}>{l.title}</RowTitle>
                   {!!l.subtitle && <RowMeta>{l.subtitle}</RowMeta>}
