@@ -171,14 +171,14 @@ const TitleBlock = styled.View`
 
 const Title = styled.Text`
   font-size: 32px;
-  font-family: ${({ theme }) => theme.font.family.bold};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
   letter-spacing: -0.4px;
 `;
 
 const Subtitle = styled.Text`
   font-size: 16px;
-  font-family: ${({ theme }) => theme.font.family.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
   color: ${({ theme }) => theme.colors.mutedForeground};
 `;
 
@@ -222,7 +222,7 @@ const CreateButton = styled.Pressable`
 
 const CreateButtonText = styled.Text`
   color: ${({ theme }) => theme.colors.primaryForeground};
-  font-family: ${({ theme }) => theme.font.family.semibold};
+  font-weight: ${({ theme }) => theme.font.family.semibold};
   font-size: 15px;
 `;
 
@@ -258,7 +258,7 @@ const ListTextWrap = styled.View`
 
 const ListTitle = styled.Text`
   font-size: 20px;
-  font-family: ${({ theme }) => theme.font.family.semibold};
+  font-weight: ${({ theme }) => theme.font.family.semibold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
@@ -266,7 +266,7 @@ const ListMeta = styled.Text`
   margin-top: 6px;
   font-size: 14px;
   color: ${({ theme }) => theme.colors.mutedForeground};
-  font-family: ${({ theme }) => theme.font.family.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const MenuButton = styled.Pressable`
@@ -322,7 +322,7 @@ const GridTop = styled.View`
 const GridTitle = styled.Text`
   flex: 1;
   font-size: 16px;
-  font-family: ${({ theme }) => theme.font.family.semibold};
+  font-weight: ${({ theme }) => theme.font.family.semibold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
@@ -330,7 +330,7 @@ const GridMeta = styled.Text`
   margin-top: 8px;
   font-size: 14px;
   color: ${({ theme }) => theme.colors.mutedForeground};
-  font-family: ${({ theme }) => theme.font.family.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const GridPreview = styled.View`
