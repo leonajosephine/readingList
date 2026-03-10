@@ -58,7 +58,7 @@ const Mark = styled.View`
 
 const Brand = styled.Text`
   font-size: 20px;
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
   letter-spacing: -0.2px;
 `;

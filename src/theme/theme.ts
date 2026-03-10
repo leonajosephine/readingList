@@ -41,13 +41,18 @@ export const makeTheme = (t: Tokens) => ({
     xl: 32,
   },
   font: {
+    family: {
+      regular: "Inter_400Regular",
+      medium: "Inter_500Medium",
+      semibold: "Inter_600SemiBold",
+      bold: "Inter_700Bold",
+    },
     base: 16,
     weight: {
-      normal: "400" as const,
-      medium: "500" as const,
-      semibold: "600" as const,
-      bold: "700" as const,
-      black: "800" as const,
+      normal: "400",
+      medium: "500",
+      semibold: "600",
+      bold: "700",
     },
   },
 });

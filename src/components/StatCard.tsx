@@ -23,12 +23,12 @@ const Box = styled.View`
 const Label = styled.Text`
   color: ${({ theme }) => theme.colors.mutedForeground};
   font-size: 12px;
-  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const Value = styled.Text`
   color: ${({ theme }) => theme.colors.foreground};
   font-size: 28px;
-  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
   margin-top: 8px;
 `;

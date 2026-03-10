@@ -24,23 +24,23 @@ export function SegmentedControl(props: {
 
 const Wrap = styled.View`
   background: ${({ theme }) => theme.colors.muted};
-  border-radius: 999px;
-  padding: 6px;
+  border-radius: 20px;
+  padding: 2px 6px;
   flex-direction: row;
   gap: 6px;
-  border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
 `;
 
 const Item = styled.Pressable<{ active: boolean }>`
   flex: 1;
-  padding: 10px 12px;
-  border-radius: 999px;
+  padding: 6px 12px;
+  margin: 3px 0px;
+  border-radius: 18px;
   background: ${({ active, theme }) => (active ? theme.colors.card : "transparent")};
 `;
 
 const Text = styled.Text<{ active: boolean }>`
   text-align: center;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ active, theme }) => (active ? theme.colors.foreground : theme.colors.mutedForeground)};
 `;

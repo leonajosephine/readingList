@@ -99,7 +99,7 @@ const Screen = styled.View`
 
 const Title = styled.Text`
   font-size: 32px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
   padding: 8px 18px 12px 18px;
 `;
@@ -138,7 +138,7 @@ const Chip = styled.Pressable<{ active: boolean }>`
 `;
 
 const ChipText = styled.Text<{ active: boolean }>`
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ active, theme }) => (active ? theme.colors.primaryForeground : theme.colors.foreground)};
 `;
 

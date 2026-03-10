@@ -94,7 +94,7 @@ const TopRow = styled.View`
 
 const Title = styled.Text`
   font-size: 32px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
@@ -107,7 +107,7 @@ const RightControls = styled.View`
 const Badge = styled.Text`
   background: ${({ theme }) => theme.colors.primary};
   color: ${({ theme }) => theme.colors.primaryForeground};
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   padding: 6px 10px;
   border-radius: 999px;
   overflow: hidden;
@@ -121,13 +121,13 @@ const AddButton = styled.Pressable`
 
 const AddText = styled.Text`
   color: ${({ theme }) => theme.colors.primaryForeground};
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
 const Hint = styled.Text`
   padding: 0 18px 14px 18px;
   color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
   line-height: 20px;
 `;
 
@@ -177,13 +177,13 @@ const Dot = styled.View<{ color: string }>`
 
 const Name = styled.Text`
   margin-top: 10px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const Meta = styled.Text`
   margin-top: 2px;
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.mutedForeground};
   font-size: 12px;
 `;

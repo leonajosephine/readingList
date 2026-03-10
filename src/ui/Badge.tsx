@@ -9,6 +9,6 @@ export const Badge = styled.Pressable<{ active?: boolean }>`
 `;
 
 export const BadgeText = styled.Text<{ active?: boolean }>`
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme, active }) => (active ? theme.colors.primaryForeground : theme.colors.foreground)};
 `;

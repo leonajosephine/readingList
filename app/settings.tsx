@@ -176,7 +176,7 @@ const BackPress = styled.Pressable`
 `;
 
 const BackText = styled.Text`
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
@@ -237,7 +237,7 @@ const Field = styled.View`
 `;
 
 const Label = styled.Text`
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
@@ -285,7 +285,7 @@ const CheckPill = styled.Text`
   overflow: hidden;
   background: ${({ theme }) => theme.colors.primary};
   color: ${({ theme }) => theme.colors.primaryForeground};
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
 const PreviewBox = styled.View`
@@ -304,14 +304,14 @@ const TileTitleRow = styled.View`
 
 const TileTitle = styled.Text`
   flex: 1;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.cardForeground};
 `;
 
 const TileDesc = styled.Text`
   margin-top: 4px;
   color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
   font-size: 13px;
   line-height: 18px;
 `;

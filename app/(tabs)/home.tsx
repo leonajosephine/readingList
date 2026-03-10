@@ -86,8 +86,8 @@ const Screen = styled.View`
 `;
 
 const H1 = styled.Text`
-  font-size: 38px;
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-size: 32px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
   padding: 0 18px;
   margin-top: 10px;
@@ -99,7 +99,7 @@ const Sub = styled.Text`
   color: ${({ theme }) => theme.colors.mutedForeground};
   padding: 8px 18px 0 18px;
   line-height: 24px;
-  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-weight: ${({ theme }) => theme.font.family.medium};
   max-width: 340px;
 `;
 
@@ -111,7 +111,7 @@ const StatsRow = styled.View`
 
 const SectionTitle = styled.Text`
   font-size: 24px;
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
   padding: 14px 18px 14px 18px;
   letter-spacing: -0.3px;

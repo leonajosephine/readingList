@@ -101,7 +101,7 @@ const TopRow = styled.View`
 const Title = styled.Text`
   flex: 1;
   font-size: 32px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
@@ -113,7 +113,7 @@ const CreateButton = styled.Pressable`
 
 const CreateText = styled.Text`
   color: ${({ theme }) => theme.colors.primaryForeground};
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
 const SegmentWrap = styled.View`
@@ -148,14 +148,14 @@ const CardTop = styled.View`
 const CardTitle = styled.Text`
   flex: 1;
   font-size: 16px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const CardMeta = styled.Text`
   margin-top: 10px;
   color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
 const List = styled.View`
@@ -181,13 +181,13 @@ const RowText = styled.View`
 
 const RowTitle = styled.Text`
   font-size: 16px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
 `;
 
 const RowMeta = styled.Text`
   color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
 const DotsPress = styled.Pressable`

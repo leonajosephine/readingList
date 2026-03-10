@@ -21,7 +21,7 @@ export const Button = styled.Pressable<{ variant?: "primary" | "outline" | "seco
 `;
 
 export const ButtonText = styled.Text<{ variant?: "primary" | "outline" | "secondary" | "destructive" }>`
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme, variant }) => {
     if (variant === "secondary") return theme.colors.secondaryForeground;
     if (variant === "destructive") return theme.colors.destructiveForeground;
