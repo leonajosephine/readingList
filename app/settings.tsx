@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Image } from "react-native";
+import { Image, ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { useRouter } from "expo-router";
 
@@ -45,6 +45,7 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
       <Page>
         {/* Header */}
         <HeaderRow>
@@ -155,6 +156,7 @@ export default function SettingsScreen() {
 
         <FooterSpace />
       </Page>
+      </ScrollView>
     </Screen>
   );
 }
