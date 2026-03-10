@@ -105,7 +105,7 @@ const Sub = styled.Text`
 
 const StatsRow = styled.View`
   flex-direction: row;
-  gap: 14px;
+  gap: 11px;
   padding: 18px;
 `;
 

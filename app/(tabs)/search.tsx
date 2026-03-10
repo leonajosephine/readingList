@@ -3,6 +3,7 @@ import { ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { BookCard } from "../../src/components/BookCard";
+import { Ionicons } from "@expo/vector-icons";
 
 type Book = { id: string; title: string; author: string; rating?: string; coverUrl: string; genre: string };
 
@@ -51,11 +52,31 @@ export default function SearchScreen() {
           <SearchInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search by title, author…"
+            placeholder="Find your next great read"
             placeholderTextColor="rgba(120,120,130,0.9)"
             autoCorrect={false}
             autoCapitalize="none"
           />
+        </SearchWrap>
+        <SearchWrap>
+            <SearchBox>
+                <SearchIconWrap>
+                <Ionicons
+                    name="search-outline"
+                    size={20}
+                    color="rgba(113, 113, 130, 0.9)"
+                />
+                </SearchIconWrap>
+
+                <SearchInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search by title, author..."
+                placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                autoCorrect={false}
+                autoCapitalize="none"
+                />
+            </SearchBox>
         </SearchWrap>
 
         <ChipsScroll horizontal showsHorizontalScrollIndicator={false}>
@@ -70,6 +91,8 @@ export default function SearchScreen() {
             })}
           </ChipsRow>
         </ChipsScroll>
+
+        <ResultsText>{filtered.length} books found</ResultsText>
 
         <Grid>
             {filtered.map((b) => (
@@ -105,22 +128,37 @@ const Title = styled.Text`
 `;
 
 const SearchWrap = styled.View`
-  padding: 0 18px 12px 18px;
+  padding: 0 18px 14px 18px;
 `;
 
-const SearchInput = styled.TextInput`
-  background: ${({ theme }) => theme.colors.inputBackground};
+const SearchBox = styled.View`
+  height: 48px;
+  background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.lg}px;
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
-  padding: 14px 14px;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 14px;
+`;
+
+const SearchIconWrap = styled.View`
+  margin-right: 10px;
+  align-items: center;
+  justify-content: center;
+`;
+
+const SearchInput = styled.TextInput`
+  flex: 1;
+  height: 100%;
   font-size: 16px;
   color: ${({ theme }) => theme.colors.foreground};
+  font-family: ${({ theme }) => theme.font.family.medium};
 `;
 
 const ChipsScroll = styled.ScrollView`
   padding-left: 18px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 `;
 
 const ChipsRow = styled.View`
@@ -130,16 +168,22 @@ const ChipsRow = styled.View`
 `;
 
 const Chip = styled.Pressable<{ active: boolean }>`
-  padding: 10px 14px;
-  border-radius: 999px;
+  padding: 8px 14px;
+  border-radius: 20px;
   background: ${({ active, theme }) => (active ? theme.colors.primary : theme.colors.muted)};
-  border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
 `;
 
 const ChipText = styled.Text<{ active: boolean }>`
   font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ active, theme }) => (active ? theme.colors.primaryForeground : theme.colors.foreground)};
+`;
+
+const ResultsText = styled.Text`
+  padding: 2px 18px 14px 18px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  font-family: ${({ theme }) => theme.font.family.medium};
 `;
 
 const Grid = styled.View`
