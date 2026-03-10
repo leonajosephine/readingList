@@ -158,7 +158,7 @@ const SearchInput = styled.TextInput`
 
 const ChipsScroll = styled.ScrollView`
   padding-left: 18px;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
 `;
 
 const ChipsRow = styled.View`
