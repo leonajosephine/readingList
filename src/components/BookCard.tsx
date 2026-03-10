@@ -126,15 +126,16 @@ const Body = styled.View`
 `;
 
 const Title = styled.Text`
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.weight.semibold};
   color: ${({ theme }) => theme.colors.cardForeground};
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 20px;
 `;
 
 const Author = styled.Text`
   margin-top: 4px;
   color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-weight: ${({ theme }) => theme.font.weight.normal};
   font-size: 13px;
 `;
 
@@ -159,19 +160,20 @@ const Star = styled.Text`
 
 const RatingText = styled.Text`
   color: ${({ theme }) => theme.colors.cardForeground};
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-weight: ${({ theme }) => theme.font.weight.medium};
+  font-size: 13px;
 `;
 
 const StatusBadge = styled.View`
   padding: 6px 10px;
   border-radius: 999px;
-  border-width: 1px;
+  
   border-color: ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.secondary};
 `;
 
 const StatusText = styled.Text`
-  font-size: 12px;
-  font-weight: ${({ theme }) => theme.font.weight.bold};
+  font-size: 11px;
+  font-weight: ${({ theme }) => theme.font.weight.medium};
   color: ${({ theme }) => theme.colors.secondaryForeground};
 `;

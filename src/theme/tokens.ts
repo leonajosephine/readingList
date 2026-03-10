@@ -32,8 +32,7 @@ export type Tokens = {
 export const TOKENS: Record<ThemeKey, Tokens> = {
   light: {
     background: "#ffffff",
-    foreground: "#1a1a1a",
-
+    foreground: "#1a1a1a", //#171717" #222129"
     card: "#ffffff",
     cardForeground: "#1a1a1a",
 

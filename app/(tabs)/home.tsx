@@ -86,19 +86,21 @@ const Screen = styled.View`
 `;
 
 const H1 = styled.Text`
-  font-size: 42px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-size: 38px;
+  font-weight: ${({ theme }) => theme.font.weight.bold};
   color: ${({ theme }) => theme.colors.foreground};
   padding: 0 18px;
   margin-top: 10px;
+  letter-spacing: -0.5px;
 `;
 
 const Sub = styled.Text`
-  font-size: 18px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.mutedForeground};
-  padding: 6px 18px 0 18px;
+  padding: 8px 18px 0 18px;
   line-height: 24px;
   font-weight: ${({ theme }) => theme.font.weight.medium};
+  max-width: 340px;
 `;
 
 const StatsRow = styled.View`
@@ -108,10 +110,11 @@ const StatsRow = styled.View`
 `;
 
 const SectionTitle = styled.Text`
-  font-size: 28px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-size: 24px;
+  font-weight: ${({ theme }) => theme.font.weight.bold};
   color: ${({ theme }) => theme.colors.foreground};
-  padding: 10px 18px 14px 18px;
+  padding: 14px 18px 14px 18px;
+  letter-spacing: -0.3px;
 `;
 
 const CardsRow = styled.View`

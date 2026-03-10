@@ -57,9 +57,10 @@ const Mark = styled.View`
 `;
 
 const Brand = styled.Text`
-  font-size: 22px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
+  font-size: 20px;
+  font-weight: ${({ theme }) => theme.font.weight.bold};
   color: ${({ theme }) => theme.colors.foreground};
+  letter-spacing: -0.2px;
 `;
 
 const AvatarWrap = styled.View`
