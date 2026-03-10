@@ -104,7 +104,7 @@ const Card = styled.View`
 
   shadow-color: #000;
   shadow-opacity: 0.08;
-  shadow-radius: 14px;
+  shadow-radius: 8px;
   shadow-offset: 0px 6px;
   elevation: 4;
 `;

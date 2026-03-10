@@ -1,9 +1,10 @@
 import React from "react";
 import styled from "styled-components/native";
+import { softShadow } from "../ui/shadows"; 
 
 export function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <Box>
+    <Box style={softShadow}>
       <Label>{label}</Label>
       <Value>{value}</Value>
     </Box>
