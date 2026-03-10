@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
-import { softShadow } from "../../src/ui/shadows";
+import { BookCard } from "../../src/components/BookCard";
 
 type Book = { id: string; title: string; author: string; rating?: string; coverUrl: string; genre: string };
 
@@ -32,6 +32,13 @@ export default function SearchScreen() {
       return matchGenre && matchQuery;
     });
   }, [books, genre, query]);
+
+  const { width } = useWindowDimensions();
+
+    const horizontalPadding = 18 * 2;
+    const gap = 12;
+    const availableWidth = width - horizontalPadding - gap;
+    const cardWidth = Math.min(availableWidth / 2, 256);
 
   return (
     <Screen>
@@ -65,22 +72,21 @@ export default function SearchScreen() {
         </ChipsScroll>
 
         <Grid>
-          {filtered.map((b) => (
-            <BookTile key={b.id} style={softShadow}>
-              <TileCover source={{ uri: b.coverUrl }} resizeMode="cover" />
-              <TileBody>
-                <TileTitle numberOfLines={2}>{b.title}</TileTitle>
-                <TileAuthor numberOfLines={1}>{b.author}</TileAuthor>
-                {!!b.rating && (
-                  <RatingRow>
-                    <Star>★</Star>
-                    <RatingText>{b.rating}</RatingText>
-                  </RatingRow>
-                )}
-              </TileBody>
-            </BookTile>
-          ))}
-        </Grid>
+            {filtered.map((b) => (
+                <BookCard
+                key={b.id}
+                style={{ width: cardWidth }}
+                book={{
+                    id: b.id,
+                    title: b.title,
+                    author: b.author,
+                    rating: b.rating ?? "0.0",
+                    coverUrl: b.coverUrl,
+                    status: "to-read",
+                }}
+                />
+            ))}
+            </Grid>
       </ScrollView>
     </Screen>
   );
@@ -141,51 +147,4 @@ const Grid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
   gap: 12px;
-`;
-
-const BookTile = styled.Pressable`
-  width: 48%;
-  background: ${({ theme }) => theme.colors.card};
-  border-radius: ${({ theme }) => theme.radius.lg}px;
-  overflow: hidden;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-`;
-
-const TileCover = styled.Image`
-  width: 100%;
-  height: 190px;
-`;
-
-const TileBody = styled.View`
-  padding: 12px;
-`;
-
-const TileTitle = styled.Text`
-  font-size: 15px;
-  font-weight: ${({ theme }) => theme.font.weight.black};
-  color: ${({ theme }) => theme.colors.foreground};
-`;
-
-const TileAuthor = styled.Text`
-  margin-top: 4px;
-  font-weight: ${({ theme }) => theme.font.weight.bold};
-  color: ${({ theme }) => theme.colors.mutedForeground};
-`;
-
-const RatingRow = styled.View`
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-`;
-
-const Star = styled.Text`
-  color: #f4b400;
-  font-size: 16px;
-`;
-
-const RatingText = styled.Text`
-  font-weight: ${({ theme }) => theme.font.weight.black};
-  color: ${({ theme }) => theme.colors.foreground};
 `;

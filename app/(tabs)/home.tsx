@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { StatCard } from "../../src/components/StatCard";
@@ -8,6 +8,13 @@ import { SegmentedControl } from "../../src/components/SegmentedControl";
 
 export default function HomeScreen() {
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
+
+  const { width } = useWindowDimensions();
+
+    const horizontalPadding = 18 * 2;
+    const gap = 14;
+    const availableWidth = width - horizontalPadding - gap;
+    const cardWidth = Math.min(availableWidth / 2, 256);
 
   return (
     <Screen>
@@ -26,6 +33,7 @@ export default function HomeScreen() {
         <SectionTitle>Currently Reading</SectionTitle>
         <CardsRow>
           <BookCard
+            style={{ width: cardWidth }}
             book={{
                 id: "1",
                 title: "The Midnight Library",
@@ -36,6 +44,7 @@ export default function HomeScreen() {
             }}
             />
           <BookCard 
+            style={{ width: cardWidth }}
             book={{
                 id: "2",
                 title: "Dune",
@@ -109,7 +118,7 @@ const CardsRow = styled.View`
   flex-direction: row;
   gap: 14px;
   padding: 0 18px 18px 18px;
-  align-items: stretch;
+  justify-content: flex-start;
 `;
 
 const SegmentWrap = styled.View`

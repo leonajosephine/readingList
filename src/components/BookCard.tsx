@@ -37,23 +37,12 @@ export function BookCard({
     return map[status];
   }, [status]);
 
-  const statusVariant = useMemo(() => {
-    // Angelehnt an deine Tailwind Farben (blue/green/gray) – aber passend zu unseren Tokens.
-    // Wir mappen es auf "secondary" look + leichte Abwandlung.
-    const map: Record<BookStatus, "info" | "success" | "neutral"> = {
-      "to-read": "info",
-      reading: "success",
-      completed: "neutral",
-    };
-    return map[status];
-  }, [status]);
-
   const pressIn = () => {
     Animated.spring(scale, {
-      toValue: 1.03,
+      toValue: 1.02,
       useNativeDriver: true,
       speed: 30,
-      bounciness: 6,
+      bounciness: 4,
     }).start();
   };
 
@@ -62,53 +51,64 @@ export function BookCard({
       toValue: 1,
       useNativeDriver: true,
       speed: 30,
-      bounciness: 6,
+      bounciness: 4,
     }).start();
   };
 
   return (
-    <Pressable onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} style={{ flex: 1 }}>
-      <Card style={style}>
-        <CoverWrap>
-          <AnimatedCover
-            style={{ transform: [{ scale }] }}
-            source={{ uri: book.coverUrl }}
-            resizeMode="cover"
-          />
-        </CoverWrap>
+    <CardWrap style={style}>
+      <Pressable onPress={onPress} onPressIn={pressIn} onPressOut={pressOut}>
+        <Card>
+          <CoverWrap>
+            <AnimatedCover
+              style={{ transform: [{ scale }] }}
+              source={{ uri: book.coverUrl }}
+              resizeMode="cover"
+            />
+          </CoverWrap>
 
-        <Body>
-          <Title numberOfLines={1}>{book.title}</Title>
-          <Author numberOfLines={1}>{book.author}</Author>
+          <Body>
+            <Title numberOfLines={1}>{book.title}</Title>
+            <Author numberOfLines={1}>{book.author}</Author>
 
-          <MetaRow>
-            <StarRow>
-              <Star>★</Star>
-              <RatingText>{book.rating}</RatingText>
-            </StarRow>
+            <MetaRow>
+              <StarRow>
+                <Star>★</Star>
+                <RatingText>{book.rating}</RatingText>
+              </StarRow>
 
-            {showStatus ? (
-              <StatusBadge variant={statusVariant}>
-                <StatusText>{statusLabel}</StatusText>
-              </StatusBadge>
-            ) : null}
-          </MetaRow>
-        </Body>
-      </Card>
-    </Pressable>
+              {showStatus ? (
+                <StatusBadge>
+                  <StatusText>{statusLabel}</StatusText>
+                </StatusBadge>
+              ) : null}
+            </MetaRow>
+          </Body>
+        </Card>
+      </Pressable>
+    </CardWrap>
   );
 }
 
-/** Card container like: rounded-lg bg-card border border-border */
+const CardWrap = styled.View`
+  width: 100%;
+  max-width: 256px;
+`;
+
 const Card = styled.View`
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.lg}px;
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
   overflow: hidden;
+
+  shadow-color: #000;
+  shadow-opacity: 0.08;
+  shadow-radius: 14px;
+  shadow-offset: 0px 6px;
+  elevation: 4;
 `;
 
-/** aspect-[2/3] */
 const CoverWrap = styled.View`
   width: 100%;
   aspect-ratio: 2 / 3;
@@ -162,19 +162,12 @@ const RatingText = styled.Text`
   font-weight: ${({ theme }) => theme.font.weight.bold};
 `;
 
-/** Badge: variant="secondary" + status tint */
-const StatusBadge = styled.View<{ variant: "info" | "success" | "neutral" }>`
+const StatusBadge = styled.View`
   padding: 6px 10px;
   border-radius: 999px;
   border-width: 1px;
-
-  background: ${({ theme, variant }) => {
-    if (variant === "info") return theme.colors.secondary;
-    if (variant === "success") return theme.colors.secondary;
-    return theme.colors.muted;
-  }};
-
   border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.secondary};
 `;
 
 const StatusText = styled.Text`
