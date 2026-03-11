@@ -45,123 +45,137 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-      <Page>
-        {/* Header */}
-        <HeaderRow>
-          <BackPress onPress={() => router.back()}>
-            <BackText>‹ Back</BackText>
-          </BackPress>
-          <HeaderCenter />
-        </HeaderRow>
-
-        <HeaderBlock>
-          <H1>Settings</H1>
-          <P>Customize your reading experience</P>
-        </HeaderBlock>
-
-        {/* Profile */}
-        <Card style={[{ marginTop: 14 }, softShadow]}>
-          <CardBody>
-            <H2>Profile</H2>
-
-            <ProfileRow>
-              <AvatarWrap>
-                <Avatar
-                  source={{
-                    uri: "https://i.pravatar.cc/300?img=32",
-                  }}
-                />
-                <MiniIconButton onPress={() => {}}>
-                  <MiniIconText>🎨</MiniIconText>
-                </MiniIconButton>
-              </AvatarWrap>
-
-              <FormCol>
-                <Field>
-                  <Label>Name</Label>
-                  <Input value={name} onChangeText={setName} placeholder="Your name" />
-                </Field>
-
-                <Field>
-                  <Label>Email</Label>
-                  <Input
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="you@email.com"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
+      <StickyHeader>
+        <Page>
+          <HeaderRow>
+            <BackPress onPress={() => router.back()}>
+              <BackText>‹ Back</BackText>
+            </BackPress>
+            <HeaderCenter />
+          </HeaderRow>
+        </Page>
+      </StickyHeader>
+  
+      <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingTop: 60 }}>
+        <Page>
+          <HeaderBlock>
+            <H1>Settings</H1>
+            <P>Customize your reading experience</P>
+          </HeaderBlock>
+  
+          {/* Profile */}
+          <Card style={[{ marginTop: 14 }, softShadow]}>
+            <CardBody>
+              <H2>Profile</H2>
+  
+              <ProfileRow>
+                <AvatarWrap>
+                  <Avatar
+                    source={{
+                      uri: "https://i.pravatar.cc/300?img=32",
+                    }}
                   />
-                </Field>
-
-                <Field>
-                  <Label>Bio</Label>
-                  <BioInput
-                    value={bio}
-                    onChangeText={setBio}
-                    placeholder="Tell us about your reading taste..."
-                    multiline
-                    textAlignVertical="top"
-                  />
-                </Field>
-              </FormCol>
-            </ProfileRow>
-
-            <RightRow>
-              <Button onPress={() => {}}>
-                <ButtonText>Save Changes</ButtonText>
-              </Button>
-            </RightRow>
-          </CardBody>
-        </Card>
-
-        {/* Appearance */}
-        <Card style={[{ marginTop: 16 }, softShadow]}>
-          <CardBody>
-            <H2>Appearance</H2>
-            <Small style={{ marginTop: 6 }}>
-              Choose a theme that matches your reading mood
-            </Small>
-
-            <ThemeGrid>
-              {themeOptions.map((opt) => {
-                const active = opt.key === themeKey;
-
-                return (
-                  <ThemeTile
-                    key={opt.key}
-                    active={active}
-                    onPress={() => setThemeKey(opt.key)}
-                  >
-                    {active && <CheckPill>✓</CheckPill>}
-
-                    <PreviewBox
-                      style={{
-                        backgroundColor: opt.previewBg,
-                        borderColor: opt.previewBorder,
-                      }}
+                  <MiniIconButton onPress={() => {}}>
+                    <MiniIconText>🎨</MiniIconText>
+                  </MiniIconButton>
+                </AvatarWrap>
+  
+                <FormCol>
+                  <Field>
+                    <Label>Name</Label>
+                    <Input value={name} onChangeText={setName} placeholder="Your name" />
+                  </Field>
+  
+                  <Field>
+                    <Label>Email</Label>
+                    <Input
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder="you@email.com"
+                      autoCapitalize="none"
+                      keyboardType="email-address"
                     />
-
-                    <TileTitleRow>
-                      <TileTitle numberOfLines={1}>{opt.name}</TileTitle>
-                    </TileTitleRow>
-
-                    <TileDesc numberOfLines={2}>{opt.description}</TileDesc>
-                  </ThemeTile>
-                );
-              })}
-            </ThemeGrid>
-          </CardBody>
-        </Card>
-
-        <FooterSpace />
-      </Page>
+                  </Field>
+  
+                  <Field>
+                    <Label>Bio</Label>
+                    <BioInput
+                      value={bio}
+                      onChangeText={setBio}
+                      placeholder="Tell us about your reading taste..."
+                      multiline
+                      textAlignVertical="top"
+                    />
+                  </Field>
+                </FormCol>
+              </ProfileRow>
+  
+              <RightRow>
+                <Button onPress={() => {}}>
+                  <ButtonText>Save Changes</ButtonText>
+                </Button>
+              </RightRow>
+            </CardBody>
+          </Card>
+  
+          {/* Appearance */}
+          <Card style={[{ marginTop: 16 }, softShadow]}>
+            <CardBody>
+              <H2>Appearance</H2>
+              <Small style={{ marginTop: 6 }}>
+                Choose a theme that matches your reading mood
+              </Small>
+  
+              <ThemeGrid>
+                {themeOptions.map((opt) => {
+                  const active = opt.key === themeKey;
+  
+                  return (
+                    <ThemeTile
+                      key={opt.key}
+                      active={active}
+                      onPress={() => setThemeKey(opt.key)}
+                    >
+                      {active && <CheckPill>✓</CheckPill>}
+  
+                      <PreviewBox
+                        style={{
+                          backgroundColor: opt.previewBg,
+                          borderColor: opt.previewBorder,
+                        }}
+                      />
+  
+                      <TileTitleRow>
+                        <TileTitle numberOfLines={1}>{opt.name}</TileTitle>
+                      </TileTitleRow>
+  
+                      <TileDesc numberOfLines={2}>{opt.description}</TileDesc>
+                    </ThemeTile>
+                  );
+                })}
+              </ThemeGrid>
+            </CardBody>
+          </Card>
+  
+          <FooterSpace />
+        </Page>
       </ScrollView>
     </Screen>
   );
 }
 
 /* ------- styles ------- */
+
+const StickyHeader = styled.View`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding-top: 12px;
+  background: ${({ theme }) => theme.colors.background};
+  
+`;
 
 const HeaderRow = styled.View`
   flex-direction: row;
