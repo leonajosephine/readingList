@@ -174,7 +174,8 @@ const StickyHeader = styled.View`
   z-index: 20;
   padding-top: 12px;
   background: ${({ theme }) => theme.colors.background};
-  
+  border-bottom-width: 1px;
+  border-bottom-color: ${({ theme }) => theme.colors.border};
 `;
 
 const HeaderRow = styled.View`
