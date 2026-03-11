@@ -105,7 +105,15 @@ export default function ListsScreen() {
           </ViewToggle>
 
           <CreateButton onPress={() => Alert.alert("Create List", "Coming soon")}>
-            <CreateButtonText>{isMobile ? "+" : "+ Create List"}</CreateButtonText>
+            {isMobile ? (
+              <Ionicons
+                name="add"
+                size={24}
+                color="#fff"
+              />
+            ) : (
+              <CreateButtonText>+ Create List</CreateButtonText>
+            )}
           </CreateButton>
         </ActionsRow>
 
@@ -213,7 +221,6 @@ const ToggleButton = styled.Pressable<{ active: boolean }>`
 const CreateButton = styled.Pressable`
   min-width: 44px;
   height: 44px;
-  padding: 0 14px;
   border-radius: 999px;
   align-items: center;
   justify-content: center;
@@ -224,6 +231,7 @@ const CreateButtonText = styled.Text`
   color: ${({ theme }) => theme.colors.primaryForeground};
   font-weight: ${({ theme }) => theme.font.family.semibold};
   font-size: 15px;
+  padding: 0 14px;
 `;
 
 const ListWrap = styled.View`
