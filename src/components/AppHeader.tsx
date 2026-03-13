@@ -37,6 +37,8 @@ const Wrap = styled.View`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  border-bottom-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
 `;
 
 const Left = styled.View`
