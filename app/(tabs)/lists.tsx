@@ -20,6 +20,28 @@ export default function ListsScreen() {
 
   const isMobile = width < 520;
 
+  const contentMaxWidth = 1000;
+  const contentWidth = Math.min(width, contentMaxWidth);
+
+  const horizontalPadding = 18 * 2;
+
+  const listGap = 14;
+  const gridGap = 12;
+
+  const isTablet = width >= 768;
+  const isDesktop = width >= 1100;
+
+  const listColumns = isTablet ? 2 : 1;
+  const gridColumns = isDesktop ? 3 : 2;
+
+  const listCardWidth =
+    (contentWidth - horizontalPadding - listGap * (listColumns - 1)) /
+    listColumns;
+
+  const gridCardWidth =
+    (contentWidth - horizontalPadding - gridGap * (gridColumns - 1)) /
+    gridColumns;
+
   const lists = useMemo<ReadingList[]>(
     () => [
       {
@@ -72,93 +94,103 @@ export default function ListsScreen() {
       <AppHeader />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        <TopRow>
-          <TitleBlock>
-            <Title>My Reading Lists</Title>
-            <Subtitle>Organize your books into custom collections</Subtitle>
-          </TitleBlock>
-        </TopRow>
+        <Content>
+          <TopRow>
+            <TitleBlock>
+              <Title>My Reading Lists</Title>
+              <Subtitle>Organize your books into custom collections</Subtitle>
+            </TitleBlock>
+          </TopRow>
 
-        <ActionsRow>
-          <ViewToggle>
-            <ToggleButton
-              active={mode === "list"}
-              onPress={() => setMode("list")}
+          <ActionsRow>
+            <ViewToggle>
+              <ToggleButton
+                active={mode === "list"}
+                onPress={() => setMode("list")}
+              >
+                <Ionicons
+                  name="list-outline"
+                  size={18}
+                  color={mode === "list" ? "#fff" : "#6b7280"}
+                />
+              </ToggleButton>
+
+              <ToggleButton
+                active={mode === "grid"}
+                onPress={() => setMode("grid")}
+              >
+                <Ionicons
+                  name="grid-outline"
+                  size={18}
+                  color={mode === "grid" ? "#fff" : "#6b7280"}
+                />
+              </ToggleButton>
+            </ViewToggle>
+
+            <CreateButton
+              onPress={() => Alert.alert("Create List", "Coming soon")}
             >
-              <Ionicons
-                name="list-outline"
-                size={18}
-                color={mode === "list" ? "#fff" : "#6b7280"}
-              />
-            </ToggleButton>
+              {isMobile ? (
+                <Ionicons name="add" size={24} color="#fff" />
+              ) : (
+                <CreateButtonText>+ Create List</CreateButtonText>
+              )}
+            </CreateButton>
+          </ActionsRow>
 
-            <ToggleButton
-              active={mode === "grid"}
-              onPress={() => setMode("grid")}
-            >
-              <Ionicons
-                name="grid-outline"
-                size={18}
-                color={mode === "grid" ? "#fff" : "#6b7280"}
-              />
-            </ToggleButton>
-          </ViewToggle>
+          {mode === "list" ? (
+            <ListWrap>
+              {lists.map((list) => (
+                <ListCard key={list.id} style={{ width: listCardWidth }}>
+                  <ListCardTop>
+                    <ListTextWrap>
+                      <ListTitle numberOfLines={1}>{list.title}</ListTitle>
+                      {!!list.subtitle && <ListMeta>{list.subtitle}</ListMeta>}
+                    </ListTextWrap>
 
-          <CreateButton onPress={() => Alert.alert("Create List", "Coming soon")}>
-            {isMobile ? (
-              <Ionicons
-                name="add"
-                size={24}
-                color="#fff"
-              />
-            ) : (
-              <CreateButtonText>+ Create List</CreateButtonText>
-            )}
-          </CreateButton>
-        </ActionsRow>
+                    <MenuButton onPress={() => onMenu(list)}>
+                      <Ionicons
+                        name="ellipsis-horizontal"
+                        size={18}
+                        color="#6b7280"
+                      />
+                    </MenuButton>
+                  </ListCardTop>
 
-        {mode === "list" ? (
-          <ListWrap>
-            {lists.map((list) => (
-              <ListCard key={list.id}>
-                <ListCardTop>
-                  <ListTextWrap>
-                    <ListTitle numberOfLines={1}>{list.title}</ListTitle>
-                    {!!list.subtitle && <ListMeta>{list.subtitle}</ListMeta>}
-                  </ListTextWrap>
+                  <CoverRow>
+                    {list.covers.map((cover, index) => (
+                      <MiniCover
+                        key={`${list.id}-${index}`}
+                        source={{ uri: cover }}
+                      />
+                    ))}
+                  </CoverRow>
+                </ListCard>
+              ))}
+            </ListWrap>
+          ) : (
+            <GridWrap>
+              {lists.map((list) => (
+                <GridCard key={list.id} style={{ width: gridCardWidth }}>
+                  <GridTop>
+                    <GridTitle numberOfLines={2}>{list.title}</GridTitle>
+                    <MenuButton onPress={() => onMenu(list)}>
+                      <Ionicons
+                        name="ellipsis-horizontal"
+                        size={18}
+                        color="#6b7280"
+                      />
+                    </MenuButton>
+                  </GridTop>
 
-                  <MenuButton onPress={() => onMenu(list)}>
-                    <Ionicons name="ellipsis-horizontal" size={18} color="#6b7280" />
-                  </MenuButton>
-                </ListCardTop>
+                  <GridMeta>{list.subtitle}</GridMeta>
 
-                <CoverRow>
-                  {list.covers.map((cover, index) => (
-                    <MiniCover key={`${list.id}-${index}`} source={{ uri: cover }} />
-                  ))}
-                </CoverRow>
-              </ListCard>
-            ))}
-          </ListWrap>
-        ) : (
-          <GridWrap>
-            {lists.map((list) => (
-              <GridCard key={list.id}>
-                <GridTop>
-                  <GridTitle numberOfLines={2}>{list.title}</GridTitle>
-                  <MenuButton onPress={() => onMenu(list)}>
-                    <Ionicons name="ellipsis-horizontal" size={18} color="#6b7280" />
-                  </MenuButton>
-                </GridTop>
-
-                <GridMeta>{list.subtitle}</GridMeta>
-
-                {/* Später kannst du hier ein Cover als Hintergrund setzen */}
-                <GridPreview />
-              </GridCard>
-            ))}
-          </GridWrap>
-        )}
+                  <GridPreview />
+                </GridCard>
+              ))}
+            </GridWrap>
+          )}
+        </Content>
       </ScrollView>
     </Screen>
   );
@@ -167,6 +199,12 @@ export default function ListsScreen() {
 const Screen = styled.View`
   flex: 1;
   background: ${({ theme }) => theme.colors.background};
+`;
+
+const Content = styled.View`
+  width: 100%;
+  max-width: 1000px;
+  align-self: center;
 `;
 
 const TopRow = styled.View`
@@ -236,6 +274,8 @@ const CreateButtonText = styled.Text`
 
 const ListWrap = styled.View`
   padding: 0 18px;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 14px;
 `;
 
@@ -305,7 +345,6 @@ const GridWrap = styled.View`
 `;
 
 const GridCard = styled.View`
-  width: 48%;
   min-height: 180px;
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.lg}px;
