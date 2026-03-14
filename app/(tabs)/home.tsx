@@ -8,73 +8,108 @@ import { SegmentedControl } from "../../src/components/SegmentedControl";
 
 export default function HomeScreen() {
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
-
   const { width } = useWindowDimensions();
 
-    const horizontalPadding = 18 * 2;
-    const gap = 14;
-    const availableWidth = width - horizontalPadding - gap;
-    const cardWidth = Math.min(availableWidth / 2, 256);
+  const contentMaxWidth = 920;
+  const contentWidth = Math.min(width, contentMaxWidth);
+
+  const horizontalPadding = 18 * 2;
+  const cardsGap = 14;
+  const availableCardsWidth = contentWidth - horizontalPadding - cardsGap;
+  const cardWidth = Math.min(availableCardsWidth / 2, 256);
+
+  const isTablet = width >= 768;
+  const isDesktop = width >= 1100;
+
+  const libraryColumns = isDesktop ? 4 : isTablet ? 3 : 2;
+  const libraryGap = 12;
+  const libraryTileWidth =
+    (contentWidth - horizontalPadding - libraryGap * (libraryColumns - 1)) /
+    libraryColumns;
 
   return (
     <Screen>
       <AppHeader />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
-        <H1>Hi Leona</H1>
-        <Sub>Track, organize, and discover your next favorite book</Sub>
+        <Content>
+          <H1>Hi Leona</H1>
+          <Sub>Track, organize, and discover your next favorite book</Sub>
 
-        <StatsRow>
-          <StatCard label="Reading" value="2" />
-          <StatCard label="To Read" value="3" />
-          <StatCard label="Done" value="3" />
-        </StatsRow>
+          <StatsRow>
+            <StatCard label="Reading" value="2" />
+            <StatCard label="To Read" value="3" />
+            <StatCard label="Done" value="3" />
+          </StatsRow>
 
-        <SectionTitle>Currently Reading</SectionTitle>
-        <CardsRow>
-          <BookCard
-            style={{ width: cardWidth }}
-            book={{
+          <SectionTitle>Currently Reading</SectionTitle>
+          <CardsRow>
+            <BookCard
+              style={{ width: cardWidth }}
+              book={{
                 id: "1",
                 title: "The Midnight Library",
                 author: "Matt Haig",
                 rating: "4.5",
                 coverUrl: "https://picsum.photos/400/600",
                 status: "reading",
-            }}
+              }}
             />
-          <BookCard 
-            style={{ width: cardWidth }}
-            book={{
+            <BookCard
+              style={{ width: cardWidth }}
+              book={{
                 id: "2",
                 title: "Dune",
                 author: "Frank Herbert",
                 rating: "4.3",
                 coverUrl: "https://picsum.photos/402/600",
                 status: "reading",
-             }}
+              }}
             />
-        </CardsRow>
+            <BookCard
+              style={{ width: cardWidth }}
+              book={{
+                id: "3",
+                title: "The Name of the Wind",
+                author: "Patrick Rothfuss",
+                rating: "4.6",
+                coverUrl: "https://picsum.photos/401/600",
+                status: "reading",
+              }}
+            />
+            <BookCard
+              style={{ width: cardWidth }}
+              book={{
+                id: "3",
+                title: "The Name of the Wind",
+                author: "Patrick Rothfuss",
+                rating: "4.6",
+                coverUrl: "https://picsum.photos/401/600",
+                status: "reading",
+              }}
+            />
+          </CardsRow>
 
-        <SectionTitle>Your Library</SectionTitle>
-        <SegmentWrap>
-          <SegmentedControl
-            value={filter}
-            onChange={(k) => setFilter(k as any)}
-            options={[
-              { key: "all", label: "All" },
-              { key: "toRead", label: "To Read" },
-              { key: "done", label: "Done" },
-            ]}
-          />
-        </SegmentWrap>
+          <SectionTitle>Your Library</SectionTitle>
+          <SegmentWrap>
+            <SegmentedControl
+              value={filter}
+              onChange={(k) => setFilter(k as any)}
+              options={[
+                { key: "all", label: "All" },
+                { key: "toRead", label: "To Read" },
+                { key: "done", label: "Done" },
+              ]}
+            />
+          </SegmentWrap>
 
-        <LibraryGrid>
-          <Tile />
-          <Tile />
-          <Tile />
-          <Tile />
-        </LibraryGrid>
+          <LibraryGrid>
+            <Tile style={{ width: libraryTileWidth }} />
+            <Tile style={{ width: libraryTileWidth }} />
+            <Tile style={{ width: libraryTileWidth }} />
+            <Tile style={{ width: libraryTileWidth }} />
+          </LibraryGrid>
+        </Content>
       </ScrollView>
     </Screen>
   );
@@ -83,6 +118,12 @@ export default function HomeScreen() {
 const Screen = styled.View`
   flex: 1;
   background: ${({ theme }) => theme.colors.background};
+`;
+
+const Content = styled.View`
+  width: 100%;
+  max-width: 920px;
+  align-self: center;
 `;
 
 const H1 = styled.Text`
@@ -119,13 +160,15 @@ const SectionTitle = styled.Text`
 
 const CardsRow = styled.View`
   flex-direction: row;
+  flex-wrap: wrap;
   gap: 14px;
   padding: 0 18px 18px 18px;
-  justify-content: flex-start;
 `;
 
 const SegmentWrap = styled.View`
   padding: 0 18px;
+  width: 100%;
+  max-width: 420px;
 `;
 
 const LibraryGrid = styled.View`
@@ -136,7 +179,6 @@ const LibraryGrid = styled.View`
 `;
 
 const Tile = styled.View`
-  width: 48%;
   height: 180px;
   border-radius: ${({ theme }) => theme.radius.lg}px;
   background: ${({ theme }) => theme.colors.card};
