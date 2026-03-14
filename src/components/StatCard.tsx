@@ -29,6 +29,6 @@ const Label = styled.Text`
 const Value = styled.Text`
   color: ${({ theme }) => theme.colors.foreground};
   font-size: 28px;
-  font-weight: ${({ theme }) => theme.font.family.medium};
+  font-weight: ${({ theme }) => theme.font.family.semibold};
   margin-top: 8px;
 `;
