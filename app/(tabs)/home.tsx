@@ -10,7 +10,7 @@ export default function HomeScreen() {
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
   const { width } = useWindowDimensions();
 
-  const contentMaxWidth = 920;
+  const contentMaxWidth = 1200;
   const contentWidth = Math.min(width, contentMaxWidth);
 
   const horizontalPadding = 18 * 2;
@@ -122,7 +122,7 @@ const Screen = styled.View`
 
 const Content = styled.View`
   width: 100%;
-  max-width: 920px;
+  max-width: 1000px;
   align-self: center;
 `;
 

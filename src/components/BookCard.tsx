@@ -92,7 +92,7 @@ export function BookCard({
 
 const CardWrap = styled.View`
   width: 100%;
-  max-width: 256px;
+  max-width: 225px;
 `;
 
 const Card = styled.View`
