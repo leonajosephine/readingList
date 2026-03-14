@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Alert, ScrollView } from "react-native";
+import { Alert, ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -16,6 +16,22 @@ type Friend = {
 };
 
 export default function FriendsScreen() {
+  const { width } = useWindowDimensions();
+
+  const contentMaxWidth = 1000;
+  const contentWidth = Math.min(width, contentMaxWidth);
+
+  const horizontalPadding = 18 * 2;
+  const gap = 16;
+
+  const isTablet = width >= 768;
+  const isDesktop = width >= 1100;
+
+  const columns = isDesktop ? 3 : isTablet ? 2 : 1;
+
+  const cardWidth =
+    (contentWidth - horizontalPadding - gap * (columns - 1)) / columns;
+
   const friends = useMemo<Friend[]>(
     () => [
       {
@@ -64,7 +80,11 @@ export default function FriendsScreen() {
     if (f.status === "pending_in") {
       Alert.alert(f.name, "Friend request", [
         { text: "Accept", onPress: () => Alert.alert("Accepted") },
-        { text: "Decline", style: "destructive", onPress: () => Alert.alert("Declined") },
+        {
+          text: "Decline",
+          style: "destructive",
+          onPress: () => Alert.alert("Declined"),
+        },
         { text: "Cancel", style: "cancel" },
       ]);
       return;
@@ -72,7 +92,11 @@ export default function FriendsScreen() {
 
     if (f.status === "pending_out") {
       Alert.alert(f.name, "Request pending", [
-        { text: "Cancel request", style: "destructive", onPress: () => Alert.alert("Canceled") },
+        {
+          text: "Cancel request",
+          style: "destructive",
+          onPress: () => Alert.alert("Canceled"),
+        },
         { text: "OK", style: "cancel" },
       ]);
       return;
@@ -86,60 +110,73 @@ export default function FriendsScreen() {
       <AppHeader />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 84 }}>
-        <TopRow>
-          <TitleBlock>
-            <Title>Friends</Title>
-            <Subtitle>Connect and share your reading journey</Subtitle>
-          </TitleBlock>
-        </TopRow>
+        <Content>
+          <TopRow>
+            <TitleBlock>
+              <Title>Friends</Title>
+              <Subtitle>Connect and share your reading journey</Subtitle>
+            </TitleBlock>
+          </TopRow>
 
-        <HeaderActions>
-          {pendingInCount > 0 && <Badge>{pendingInCount}</Badge>}
-          <AddButton onPress={onAddFriend}>
-            <Ionicons name="person-add-outline" size={18} color="#fff" />
-            <AddText>Add Friend</AddText>
-          </AddButton>
-        </HeaderActions>
+          <HeaderActions>
+            {pendingInCount > 0 && <Badge>{pendingInCount}</Badge>}
 
-        <CardsWrap>
-          {friends.map((f) => (
-            <FriendCard key={f.id} style={softShadow} onPress={() => onFriendPress(f)}>
-              <CardTop>
-                <AvatarWrap>
-                  <Avatar source={{ uri: f.avatarUrl }} />
-                </AvatarWrap>
+            <AddButton onPress={onAddFriend}>
+              <Ionicons name="person-add-outline" size={18} color="#fff" />
+              <AddText>Add Friend</AddText>
+            </AddButton>
+          </HeaderActions>
 
-                <InfoWrap>
-                  <FriendName numberOfLines={1}>{f.name}</FriendName>
+          <CardsWrap>
+            {friends.map((f) => (
+              <FriendCard
+                key={f.id}
+                style={[softShadow, { width: cardWidth }]}
+                onPress={() => onFriendPress(f)}
+              >
+                <CardTop>
+                  <AvatarWrap>
+                    <Avatar source={{ uri: f.avatarUrl }} />
+                  </AvatarWrap>
 
-                  <BooksRow>
+                  <InfoWrap>
+                    <FriendName numberOfLines={1}>{f.name}</FriendName>
+
+                    <BooksRow>
+                      <Ionicons
+                        name="book-outline"
+                        size={16}
+                        color="#7A7A8C"
+                      />
+                      <BooksText>{f.booksRead} books read</BooksText>
+                    </BooksRow>
+                  </InfoWrap>
+                </CardTop>
+
+                <CommonBadge>
+                  <CommonBadgeText>
+                    {f.booksInCommon} books in common
+                  </CommonBadgeText>
+                </CommonBadge>
+
+                <BottomRow>
+                  <ShareButton>
                     <Ionicons
-                      name="book-outline"
+                      name="share-social-outline"
                       size={16}
-                      color="#7A7A8C"
+                      color="#1A1A1A"
                     />
-                    <BooksText>{f.booksRead} books read</BooksText>
-                  </BooksRow>
-                </InfoWrap>
-              </CardTop>
+                    <ShareButtonText>Share List</ShareButtonText>
+                  </ShareButton>
 
-              <CommonBadge>
-                <CommonBadgeText>{f.booksInCommon} books in common</CommonBadgeText>
-              </CommonBadge>
-
-              <BottomRow>
-                <ShareButton>
-                  <Ionicons name="share-social-outline" size={16} color="#1A1A1A" />
-                  <ShareButtonText>Share List</ShareButtonText>
-                </ShareButton>
-
-                <IconButton>
-                  <Ionicons name="mail-outline" size={16} color="#1A1A1A" />
-                </IconButton>
-              </BottomRow>
-            </FriendCard>
-          ))}
-        </CardsWrap>
+                  <IconButton>
+                    <Ionicons name="mail-outline" size={16} color="#1A1A1A" />
+                  </IconButton>
+                </BottomRow>
+              </FriendCard>
+            ))}
+          </CardsWrap>
+        </Content>
       </ScrollView>
     </Screen>
   );
@@ -148,6 +185,12 @@ export default function FriendsScreen() {
 const Screen = styled.View`
   flex: 1;
   background: ${({ theme }) => theme.colors.background};
+`;
+
+const Content = styled.View`
+  width: 100%;
+  max-width: 1000px;
+  align-self: center;
 `;
 
 const TopRow = styled.View`
@@ -190,7 +233,8 @@ const Badge = styled.Text`
 `;
 
 const AddButton = styled.Pressable`
-  flex: 1;
+  width: 100%;
+  max-width: 220px;
   height: 44px;
   background: ${({ theme }) => theme.colors.primary};
   border-radius: 12px;
@@ -208,6 +252,8 @@ const AddText = styled.Text`
 
 const CardsWrap = styled.View`
   padding: 0 18px;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 16px;
 `;
 
