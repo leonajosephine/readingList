@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { AppThemeProvider } from "../src/theme/ThemeContext";
+import { LibraryProvider } from "../src/store/LibraryContext";
 import { useFonts } from "expo-font";
 import {
   Inter_400Regular,
@@ -21,8 +22,10 @@ export default function RootLayout() {
   }
   
   return (
-    <AppThemeProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </AppThemeProvider>
+    <LibraryProvider>
+      <AppThemeProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </AppThemeProvider>
+    </LibraryProvider>
   );
 }

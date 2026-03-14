@@ -1,29 +1,56 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { StatCard } from "../../src/components/StatCard";
 import { BookCard } from "../../src/components/BookCard";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
+import { useLibrary } from "../../src/store/LibraryContext";
 
 export default function HomeScreen() {
+  const { books } = useLibrary();
+
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
   const { width } = useWindowDimensions();
 
-  const contentMaxWidth = 1200;
+  const contentMaxWidth = 1000;
   const contentWidth = Math.min(width, contentMaxWidth);
 
   const horizontalPadding = 18 * 2;
   const cardsGap = 14;
-  const availableCardsWidth = contentWidth - horizontalPadding - cardsGap;
-  const cardWidth = Math.min(availableCardsWidth / 2, 256);
 
   const isTablet = width >= 768;
   const isDesktop = width >= 1100;
 
+  const currentlyReading = useMemo(
+    () => books.filter((book) => book.status === "reading"),
+    [books]
+  );
+
+  const toReadBooks = useMemo(
+    () => books.filter((book) => book.status === "to-read"),
+    [books]
+  );
+
+  const doneBooks = useMemo(
+    () => books.filter((book) => book.status === "done"),
+    [books]
+  );
+
+  const libraryBooks = useMemo(() => {
+    if (filter === "toRead") return toReadBooks;
+    if (filter === "done") return doneBooks;
+    return books;
+  }, [books, doneBooks, filter, toReadBooks]);
+
+  const readingColumns = isDesktop ? 4 : isTablet ? 3 : 2;
+  const readingCardWidth =
+    (contentWidth - horizontalPadding - cardsGap * (readingColumns - 1)) /
+    readingColumns;
+
   const libraryColumns = isDesktop ? 4 : isTablet ? 3 : 2;
   const libraryGap = 12;
-  const libraryTileWidth =
+  const libraryCardWidth =
     (contentWidth - horizontalPadding - libraryGap * (libraryColumns - 1)) /
     libraryColumns;
 
@@ -37,64 +64,34 @@ export default function HomeScreen() {
           <Sub>Track, organize, and discover your next favorite book</Sub>
 
           <StatsRow>
-            <StatCard label="Reading" value="2" />
-            <StatCard label="To Read" value="3" />
-            <StatCard label="Done" value="3" />
+            <StatCard label="Reading" value={String(currentlyReading.length)} />
+            <StatCard label="To Read" value={String(toReadBooks.length)} />
+            <StatCard label="Done" value={String(doneBooks.length)} />
           </StatsRow>
 
           <SectionTitle>Currently Reading</SectionTitle>
           <CardsRow>
-            <BookCard
-              style={{ width: cardWidth }}
-              book={{
-                id: "1",
-                title: "The Midnight Library",
-                author: "Matt Haig",
-                rating: "4.5",
-                coverUrl: "https://picsum.photos/400/600",
-                status: "reading",
-              }}
-            />
-            <BookCard
-              style={{ width: cardWidth }}
-              book={{
-                id: "2",
-                title: "Dune",
-                author: "Frank Herbert",
-                rating: "4.3",
-                coverUrl: "https://picsum.photos/402/600",
-                status: "reading",
-              }}
-            />
-            <BookCard
-              style={{ width: cardWidth }}
-              book={{
-                id: "3",
-                title: "The Name of the Wind",
-                author: "Patrick Rothfuss",
-                rating: "4.6",
-                coverUrl: "https://picsum.photos/401/600",
-                status: "reading",
-              }}
-            />
-            <BookCard
-              style={{ width: cardWidth }}
-              book={{
-                id: "3",
-                title: "The Name of the Wind",
-                author: "Patrick Rothfuss",
-                rating: "4.6",
-                coverUrl: "https://picsum.photos/401/600",
-                status: "reading",
-              }}
-            />
+            {currentlyReading.map((book) => (
+              <BookCard
+                key={book.id}
+                style={{ width: readingCardWidth }}
+                book={{
+                  id: book.id,
+                  title: book.title,
+                  author: book.author,
+                  rating: book.rating ?? "0.0",
+                  coverUrl: book.coverUrl,
+                  status: book.status,
+                }}
+              />
+            ))}
           </CardsRow>
 
           <SectionTitle>Your Library</SectionTitle>
           <SegmentWrap>
             <SegmentedControl
               value={filter}
-              onChange={(k) => setFilter(k as any)}
+              onChange={(k) => setFilter(k as "all" | "toRead" | "done")}
               options={[
                 { key: "all", label: "All" },
                 { key: "toRead", label: "To Read" },
@@ -104,10 +101,20 @@ export default function HomeScreen() {
           </SegmentWrap>
 
           <LibraryGrid>
-            <Tile style={{ width: libraryTileWidth }} />
-            <Tile style={{ width: libraryTileWidth }} />
-            <Tile style={{ width: libraryTileWidth }} />
-            <Tile style={{ width: libraryTileWidth }} />
+            {libraryBooks.map((book) => (
+              <BookCard
+                key={book.id}
+                style={{ width: libraryCardWidth }}
+                book={{
+                  id: book.id,
+                  title: book.title,
+                  author: book.author,
+                  rating: book.rating ?? "0.0",
+                  coverUrl: book.coverUrl,
+                  status: book.status,
+                }}
+              />
+            ))}
           </LibraryGrid>
         </Content>
       </ScrollView>
@@ -176,12 +183,4 @@ const LibraryGrid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
   gap: 12px;
-`;
-
-const Tile = styled.View`
-  height: 180px;
-  border-radius: ${({ theme }) => theme.radius.lg}px;
-  background: ${({ theme }) => theme.colors.card};
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
 `;

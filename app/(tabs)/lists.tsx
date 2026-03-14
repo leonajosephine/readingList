@@ -4,19 +4,14 @@ import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppHeader } from "../../src/components/AppHeader";
+import { useLibrary } from "../../src/store/LibraryContext";
 
 type ViewMode = "grid" | "list";
-
-type ReadingList = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  covers: string[];
-};
 
 export default function ListsScreen() {
   const [mode, setMode] = useState<ViewMode>("list");
   const { width } = useWindowDimensions();
+  const { lists, books, deleteList } = useLibrary();
 
   const isMobile = width < 520;
 
@@ -42,51 +37,36 @@ export default function ListsScreen() {
     (contentWidth - horizontalPadding - gridGap * (gridColumns - 1)) /
     gridColumns;
 
-  const lists = useMemo<ReadingList[]>(
-    () => [
-      {
-        id: "1",
-        title: "Summer Reads 2026",
-        subtitle: "2 books",
-        covers: [
-          "https://picsum.photos/200/300?random=11",
-          "https://picsum.photos/200/300?random=12",
-        ],
-      },
-      {
-        id: "2",
-        title: "Book Club Picks",
-        subtitle: "3 books",
-        covers: [
-          "https://picsum.photos/200/300?random=13",
-          "https://picsum.photos/200/300?random=14",
-          "https://picsum.photos/200/300?random=15",
-        ],
-      },
-      {
-        id: "3",
-        title: "Fantasy Favorites",
-        subtitle: "4 books",
-        covers: [
-          "https://picsum.photos/200/300?random=16",
-          "https://picsum.photos/200/300?random=17",
-          "https://picsum.photos/200/300?random=18",
-        ],
-      },
-    ],
-    []
-  );
+  const enrichedLists = useMemo(() => {
+    return lists.map((list) => {
+      const listBooks = list.bookIds
+        .map((bookId) => books.find((book) => book.id === bookId))
+        .filter(Boolean);
 
-  const onMenu = (list: ReadingList) => {
+      return {
+        ...list,
+        subtitle: `${list.bookIds.length} book${list.bookIds.length === 1 ? "" : "s"}`,
+        covers: listBooks
+          .slice(0, 3)
+          .map((book) => book!.coverUrl),
+      };
+    });
+  }, [lists, books]);
+
+  const onMenu = (list: (typeof enrichedLists)[number]) => {
     Alert.alert(list.title, "What do you want to do?", [
       { text: "Share", onPress: () => Alert.alert("Share", "Coming soon") },
       {
         text: "Delete",
         style: "destructive",
-        onPress: () => Alert.alert("Delete", "Coming soon"),
+        onPress: () => deleteList(list.id),
       },
       { text: "Cancel", style: "cancel" },
     ]);
+  };
+
+  const onCreateList = () => {
+    Alert.alert("Create List", "Coming soon");
   };
 
   return (
@@ -127,9 +107,7 @@ export default function ListsScreen() {
               </ToggleButton>
             </ViewToggle>
 
-            <CreateButton
-              onPress={() => Alert.alert("Create List", "Coming soon")}
-            >
+            <CreateButton onPress={onCreateList}>
               {isMobile ? (
                 <Ionicons name="add" size={24} color="#fff" />
               ) : (
@@ -140,12 +118,12 @@ export default function ListsScreen() {
 
           {mode === "list" ? (
             <ListWrap>
-              {lists.map((list) => (
+              {enrichedLists.map((list) => (
                 <ListCard key={list.id} style={{ width: listCardWidth }}>
                   <ListCardTop>
                     <ListTextWrap>
                       <ListTitle numberOfLines={1}>{list.title}</ListTitle>
-                      {!!list.subtitle && <ListMeta>{list.subtitle}</ListMeta>}
+                      <ListMeta>{list.subtitle}</ListMeta>
                     </ListTextWrap>
 
                     <MenuButton onPress={() => onMenu(list)}>
@@ -158,19 +136,25 @@ export default function ListsScreen() {
                   </ListCardTop>
 
                   <CoverRow>
-                    {list.covers.map((cover, index) => (
-                      <MiniCover
-                        key={`${list.id}-${index}`}
-                        source={{ uri: cover }}
-                      />
-                    ))}
+                    {list.covers.length > 0 ? (
+                      list.covers.map((cover, index) => (
+                        <MiniCover
+                          key={`${list.id}-${index}`}
+                          source={{ uri: cover }}
+                        />
+                      ))
+                    ) : (
+                      <EmptyCoverPlaceholder>
+                        <EmptyCoverText>No books yet</EmptyCoverText>
+                      </EmptyCoverPlaceholder>
+                    )}
                   </CoverRow>
                 </ListCard>
               ))}
             </ListWrap>
           ) : (
             <GridWrap>
-              {lists.map((list) => (
+              {enrichedLists.map((list) => (
                 <GridCard key={list.id} style={{ width: gridCardWidth }}>
                   <GridTop>
                     <GridTitle numberOfLines={2}>{list.title}</GridTitle>
@@ -185,7 +169,16 @@ export default function ListsScreen() {
 
                   <GridMeta>{list.subtitle}</GridMeta>
 
-                  <GridPreview />
+                    <GridPreview>
+                    {list.covers.length > 0 ? (
+                      <GridMiniCover
+                      key={`${list.id}-grid-0`}
+                      source={{ uri: list.covers[0] }}
+                      />
+                    ) : (
+                      <EmptyGridText>No books yet</EmptyGridText>
+                    )}
+                    </GridPreview>
                 </GridCard>
               ))}
             </GridWrap>
@@ -329,12 +322,27 @@ const CoverRow = styled.View`
   flex-direction: row;
   gap: 10px;
   margin-top: 16px;
+  min-height: 110px;
 `;
 
 const MiniCover = styled.Image`
   width: 74px;
   height: 110px;
   border-radius: 10px;
+`;
+
+const EmptyCoverPlaceholder = styled.View`
+  width: 100%;
+  min-height: 110px;
+  border-radius: 10px;
+  background: ${({ theme }) => theme.colors.muted};
+  align-items: center;
+  justify-content: center;
+`;
+
+const EmptyCoverText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const GridWrap = styled.View`
@@ -386,4 +394,24 @@ const GridPreview = styled.View`
   min-height: 90px;
   border-radius: 12px;
   background: ${({ theme }) => theme.colors.muted};
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+`;
+
+const GridPreviewRow = styled.View`
+  width: 100%;
+  flex-direction: row;
+  gap: 8px;
+`;
+
+const GridMiniCover = styled.Image`
+  flex: 1;
+  height: 88px;
+  border-radius: 8px;
+`;
+
+const EmptyGridText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;

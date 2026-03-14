@@ -4,15 +4,7 @@ import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { BookCard } from "../../src/components/BookCard";
 import { Ionicons } from "@expo/vector-icons";
-
-type Book = {
-  id: string;
-  title: string;
-  author: string;
-  rating?: string;
-  coverUrl: string;
-  genre: string;
-};
+import { useLibrary } from "../../src/store/LibraryContext";
 
 const GENRES = [
   "All",
@@ -25,62 +17,10 @@ const GENRES = [
 ];
 
 export default function SearchScreen() {
+  const { books } = useLibrary();
+
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All");
-
-  const books = useMemo<Book[]>(
-    () => [
-      {
-        id: "1",
-        title: "The Midnight Library",
-        author: "Matt Haig",
-        rating: "4.5",
-        coverUrl: "https://picsum.photos/400/601",
-        genre: "Fantasy",
-      },
-      {
-        id: "2",
-        title: "The Name of the Wind",
-        author: "Patrick Rothfuss",
-        rating: "4.6",
-        coverUrl: "https://picsum.photos/401/601",
-        genre: "Fantasy",
-      },
-      {
-        id: "3",
-        title: "Gone Girl",
-        author: "Gillian Flynn",
-        rating: "4.1",
-        coverUrl: "https://picsum.photos/402/601",
-        genre: "Mystery",
-      },
-      {
-        id: "4",
-        title: "Pride and Prejudice",
-        author: "Jane Austen",
-        rating: "4.4",
-        coverUrl: "https://picsum.photos/403/601",
-        genre: "Classics",
-      },
-      {
-        id: "5",
-        title: "Dune",
-        author: "Frank Herbert",
-        rating: "4.3",
-        coverUrl: "https://picsum.photos/404/601",
-        genre: "Sci-Fi",
-      },
-      {
-        id: "6",
-        title: "It Ends With Us",
-        author: "Colleen Hoover",
-        rating: "4.2",
-        coverUrl: "https://picsum.photos/405/601",
-        genre: "Romance",
-      },
-    ],
-    []
-  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -163,17 +103,17 @@ export default function SearchScreen() {
           <ResultsText>{filtered.length} books found</ResultsText>
 
           <Grid>
-            {filtered.map((b) => (
+            {filtered.map((book) => (
               <BookCard
-                key={b.id}
+                key={book.id}
                 style={{ width: cardWidth }}
                 book={{
-                  id: b.id,
-                  title: b.title,
-                  author: b.author,
-                  rating: b.rating ?? "0.0",
-                  coverUrl: b.coverUrl,
-                  status: "to-read",
+                  id: book.id,
+                  title: book.title,
+                  author: book.author,
+                  rating: book.rating ?? "0.0",
+                  coverUrl: book.coverUrl,
+                  status: book.status,
                 }}
               />
             ))}
@@ -245,7 +185,6 @@ const Chip = styled.Pressable<{ active: boolean }>`
   border-radius: 20px;
   background: ${({ active, theme }) =>
     active ? theme.colors.primary : theme.colors.muted};
-  
 `;
 
 const ChipText = styled.Text<{ active: boolean }>`

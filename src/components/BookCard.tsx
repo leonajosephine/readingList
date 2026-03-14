@@ -1,8 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { Animated, Pressable, ViewStyle } from "react-native";
 import styled from "styled-components/native";
-
-export type BookStatus = "to-read" | "reading" | "completed";
+import { BookStatus } from "../store/LibraryContext";
 
 export type BookCardBook = {
   id: string;
@@ -32,7 +31,7 @@ export function BookCard({
     const map: Record<BookStatus, string> = {
       "to-read": "To Read",
       reading: "Reading",
-      completed: "Completed",
+      done: "Completed",
     };
     return map[status];
   }, [status]);
