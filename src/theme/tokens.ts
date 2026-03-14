@@ -1,4 +1,12 @@
-export type ThemeKey = "light" | "dark" | "fantasy" | "romance" | "mystery" | "scifi";
+export type ThemeKey =
+  | "light"
+  | "dark"
+  | "fantasy"
+  | "romance"
+  | "mystery"
+  | "scifi"
+  | "glass"
+  | "matcha";
 
 export type Tokens = {
   background: string;
@@ -202,4 +210,64 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     radius: 10,
   },
+
+  glass: {
+    background: "#f4f7fb",
+    foreground: "#1f2937",
+
+    card: "#ffffff",
+    cardForeground: "#1f2937",
+
+    primary: "#7c8cff",
+    primaryForeground: "#ffffff",
+
+    secondary: "#e9eef8",
+    secondaryForeground: "#1f2937",
+
+    muted: "#eef3fb",
+    mutedForeground: "#6b7280",
+
+    accent: "#dbeafe",
+    accentForeground: "#1f2937",
+
+    border: "rgba(255,255,255,0.65)",
+
+    inputBackground: "#f8fbff",
+
+    destructive: "#ef4444",
+    destructiveForeground: "#ffffff",
+
+    radius: 14,
+  },
+
+  matcha: {
+    background: "#f6f7f2",
+    foreground: "#203126",
+
+    card: "#ffffff",
+    cardForeground: "#203126",
+
+    primary: "#3f6b4b",
+    primaryForeground: "#ffffff",
+
+    secondary: "#dde8dd",
+    secondaryForeground: "#203126",
+
+    muted: "#e8efe6",
+    mutedForeground: "#6b7b6d",
+
+    accent: "#b8d5b0",
+    accentForeground: "#203126",
+
+    border: "rgba(63,107,75,0.18)",
+
+    inputBackground: "#f3f7f1",
+
+    destructive: "#b42318",
+    destructiveForeground: "#ffffff",
+
+    radius: 12,
+  },
+
 };
+

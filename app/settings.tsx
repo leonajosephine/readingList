@@ -31,14 +31,16 @@ export default function SettingsScreen() {
   const [email, setEmail] = useState("leona@example.com");
   const [bio, setBio] = useState("Building a reading app ✨");
 
-  const themeOptions = useMemo<ThemeOption[]>(
+  const themeOptions = useMemo<ThemeOption[]>( // add more: cherry, very girly, classy, 
     () => [
       { key: "light", name: "Light Mode", description: "Clean and bright", previewBg: "#ffffff", previewBorder: "rgba(0,0,0,0.12)" },
       { key: "dark", name: "Dark Mode", description: "Easy on the eyes", previewBg: "#0f0f10", previewBorder: "rgba(255,255,255,0.16)" },
-      { key: "fantasy", name: "Fantasy", description: "Magical adventures", previewBg: "#faf8f5", previewBorder: "rgba(107,68,35,0.22)" },
+      { key: "fantasy", name: "Fantasy - Dragons & Faes", description: "Magical adventures", previewBg: "#faf8f5", previewBorder: "rgba(107,68,35,0.22)" },
       { key: "romance", name: "Romance", description: "Love stories", previewBg: "#fff5f8", previewBorder: "rgba(217,70,166,0.22)" },
       { key: "mystery", name: "Mystery", description: "Dark and thrilling", previewBg: "#0f0f1e", previewBorder: "rgba(124,58,237,0.35)" },
       { key: "scifi", name: "Sci-Fi", description: "Future worlds", previewBg: "#0a0e1a", previewBorder: "rgba(6,182,212,0.35)" },
+      { key: "glass", name: "Glass", description: "Soft frosted elegance", previewBg: "#f4f7fb", previewBorder: "rgba(255,255,255,0.75)" },
+      { key: "matcha", name: "Matcha Time", description: "Calm natural reading", previewBg: "#f6f7f2", previewBorder: "rgba(63,107,75,0.20)" },
     ],
     []
   );
@@ -56,7 +58,7 @@ export default function SettingsScreen() {
         </Page>
       </StickyHeader>
   
-      <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingTop: 60 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingTop: 85 }}>
         <Page>
           <HeaderBlock>
             <H1>Settings</H1>
@@ -172,7 +174,8 @@ const StickyHeader = styled.View`
   left: 0;
   right: 0;
   z-index: 20;
-  padding-top: 12px;
+  padding-top: 40px;
+  margin-bottom: 10px;
   background: ${({ theme }) => theme.colors.background};
   border-bottom-width: 1px;
   border-bottom-color: ${({ theme }) => theme.colors.border};

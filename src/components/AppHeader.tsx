@@ -44,7 +44,7 @@ export function AppHeader() {
 }
 
 const Wrap = styled.View`
-  padding: 18px 18px 8px 18px;
+  padding: 60px 18px 8px 18px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
