@@ -1,18 +1,24 @@
 import React from "react";
-import styled from "styled-components/native";
+import styled, { useTheme } from "styled-components/native";
 import { Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 export function AppHeader() {
   const router = useRouter();
+  const theme = useTheme();
 
   return (
     <Wrap>
       <Left>
         <Mark>
-          <Ionicons name="book-outline" size={18} color="#000" />
+          <Ionicons
+            name="book-outline"
+            size={18}
+            color={theme.colors.foreground}
+          />
         </Mark>
+
         <Brand>ReadList</Brand>
       </Left>
 
@@ -23,10 +29,15 @@ export function AppHeader() {
               uri: "https://i.pravatar.cc/200?img=32",
             }}
           />
-          <Gear>
-            <Ionicons name="settings-outline" size={14} color="#fff" />
-          </Gear>
         </AvatarWrap>
+
+        <Gear>
+          <Ionicons
+            name="settings-outline"
+            size={14}
+            color={theme.colors.primaryForeground}
+          />
+        </Gear>
       </Pressable>
     </Wrap>
   );
@@ -83,6 +94,7 @@ const Gear = styled.View`
   position: absolute;
   right: -5px;
   bottom: -5px;
+  z-index: 1;
   width: 22px;
   height: 22px;
   border-radius: 11px;
