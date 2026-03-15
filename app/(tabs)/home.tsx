@@ -6,6 +6,7 @@ import { StatCard } from "../../src/components/StatCard";
 import { BookCard } from "../../src/components/BookCard";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
 import { useLibrary } from "../../src/store/LibraryContext";
+import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
   const { books } = useLibrary();
@@ -53,6 +54,8 @@ export default function HomeScreen() {
   const libraryCardWidth =
     (contentWidth - horizontalPadding - libraryGap * (libraryColumns - 1)) /
     libraryColumns;
+  
+  const router = useRouter();
 
   return (
     <Screen>
@@ -75,6 +78,7 @@ export default function HomeScreen() {
               <BookCard
                 key={book.id}
                 style={{ width: readingCardWidth }}
+                onPress={() => router.push(`/book/${book.id}`)}
                 book={{
                   id: book.id,
                   title: book.title,
@@ -105,6 +109,7 @@ export default function HomeScreen() {
               <BookCard
                 key={book.id}
                 style={{ width: libraryCardWidth }}
+                onPress={() => router.push(`/book/${book.id}`)}
                 book={{
                   id: book.id,
                   title: book.title,

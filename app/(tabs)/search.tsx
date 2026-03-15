@@ -5,6 +5,7 @@ import { AppHeader } from "../../src/components/AppHeader";
 import { BookCard } from "../../src/components/BookCard";
 import { Ionicons } from "@expo/vector-icons";
 import { useLibrary } from "../../src/store/LibraryContext";
+import { useRouter } from "expo-router";
 
 const GENRES = [
   "All",
@@ -52,6 +53,8 @@ export default function SearchScreen() {
 
   const cardWidth =
     (contentWidth - horizontalPadding - gap * (columns - 1)) / columns;
+
+  const router = useRouter();
 
   return (
     <Screen>
@@ -107,6 +110,7 @@ export default function SearchScreen() {
               <BookCard
                 key={book.id}
                 style={{ width: cardWidth }}
+                onPress={() => router.push(`/book/${book.id}`)}
                 book={{
                   id: book.id,
                   title: book.title,
