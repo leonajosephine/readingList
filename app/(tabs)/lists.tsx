@@ -1,5 +1,11 @@
 import React, { useMemo, useState } from "react";
-import { Alert, ScrollView, useWindowDimensions } from "react-native";
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  TextInput,
+  useWindowDimensions,
+} from "react-native";
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -10,8 +16,11 @@ type ViewMode = "grid" | "list";
 
 export default function ListsScreen() {
   const [mode, setMode] = useState<ViewMode>("list");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newListTitle, setNewListTitle] = useState("");
+
   const { width } = useWindowDimensions();
-  const { lists, books, deleteList } = useLibrary();
+  const { lists, books, deleteList, createList } = useLibrary();
 
   const isMobile = width < 520;
 
@@ -46,9 +55,7 @@ export default function ListsScreen() {
       return {
         ...list,
         subtitle: `${list.bookIds.length} book${list.bookIds.length === 1 ? "" : "s"}`,
-        covers: listBooks
-          .slice(0, 3)
-          .map((book) => book!.coverUrl),
+        covers: listBooks.slice(0, 3).map((book) => book!.coverUrl),
       };
     });
   }, [lists, books]);
@@ -66,7 +73,24 @@ export default function ListsScreen() {
   };
 
   const onCreateList = () => {
-    Alert.alert("Create List", "Coming soon");
+    setCreateOpen(true);
+  };
+
+  const onCloseCreate = () => {
+    setCreateOpen(false);
+    setNewListTitle("");
+  };
+
+  const onSubmitCreate = () => {
+    const trimmed = newListTitle.trim();
+
+    if (!trimmed) {
+      Alert.alert("Missing title", "Please enter a name for your list.");
+      return;
+    }
+
+    createList(trimmed);
+    onCloseCreate();
   };
 
   return (
@@ -169,22 +193,60 @@ export default function ListsScreen() {
 
                   <GridMeta>{list.subtitle}</GridMeta>
 
-                    <GridPreview>
+                  <GridPreview>
                     {list.covers.length > 0 ? (
-                      <GridMiniCover
-                      key={`${list.id}-grid-0`}
-                      source={{ uri: list.covers[0] }}
-                      />
+                      <GridPreviewRow>
+                        {list.covers.slice(0, 3).map((cover, index) => (
+                          <GridMiniCover
+                            key={`${list.id}-grid-${index}`}
+                            source={{ uri: cover }}
+                          />
+                        ))}
+                      </GridPreviewRow>
                     ) : (
                       <EmptyGridText>No books yet</EmptyGridText>
                     )}
-                    </GridPreview>
+                  </GridPreview>
                 </GridCard>
               ))}
             </GridWrap>
           )}
         </Content>
       </ScrollView>
+
+      <Modal
+        visible={createOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={onCloseCreate}
+      >
+        <ModalOverlay>
+          <ModalCard>
+            <ModalTitle>Create New List</ModalTitle>
+            <ModalSubtitle>
+              Give your new reading list a name
+            </ModalSubtitle>
+
+            <TitleInput
+              value={newListTitle}
+              onChangeText={setNewListTitle}
+              placeholder="e.g. Cozy Autumn Reads"
+              placeholderTextColor="rgba(113, 113, 130, 0.9)"
+              autoFocus
+            />
+
+            <ModalActions>
+              <SecondaryButton onPress={onCloseCreate}>
+                <SecondaryButtonText>Cancel</SecondaryButtonText>
+              </SecondaryButton>
+
+              <PrimaryButton onPress={onSubmitCreate}>
+                <PrimaryButtonText>Create</PrimaryButtonText>
+              </PrimaryButton>
+            </ModalActions>
+          </ModalCard>
+        </ModalOverlay>
+      </Modal>
     </Screen>
   );
 }
@@ -414,4 +476,85 @@ const GridMiniCover = styled.Image`
 const EmptyGridText = styled.Text`
   color: ${({ theme }) => theme.colors.mutedForeground};
   font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const ModalOverlay = styled.View`
+  flex: 1;
+  background: rgba(0, 0, 0, 0.35);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+`;
+
+const ModalCard = styled.View`
+  width: 100%;
+  max-width: 420px;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
+`;
+
+const ModalTitle = styled.Text`
+  font-size: 22px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+  color: ${({ theme }) => theme.colors.foreground};
+`;
+
+const ModalSubtitle = styled.Text`
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const TitleInput = styled(TextInput)`
+  margin-top: 16px;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
+`;
+
+const ModalActions = styled.View`
+  margin-top: 18px;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 10px;
+`;
+
+const SecondaryButton = styled.Pressable`
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.card};
+  align-items: center;
+  justify-content: center;
+`;
+
+const SecondaryButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const PrimaryButton = styled.Pressable`
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: ${({ theme }) => theme.colors.primary};
+  align-items: center;
+  justify-content: center;
+`;
+
+const PrimaryButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
