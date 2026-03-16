@@ -1,19 +1,22 @@
-import React from "react";
-import { Alert, ScrollView, useWindowDimensions } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Alert, Modal, ScrollView, useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+
 
 import { useLibrary } from "../../src/store/LibraryContext";
 
 export default function BookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { books } = useLibrary();
+  const { books, lists, addBookToList, removeBookFromList } = useLibrary();
+
   const theme = useTheme();
   const { width } = useWindowDimensions();
 
   const book = books.find((item) => item.id === id);
+  const [listModalOpen, setListModalOpen] = useState(false);
 
   const isTablet = width >= 768;
   const coverWidth = isTablet ? 280 : Math.min(width * 0.52, 220);
@@ -47,6 +50,25 @@ export default function BookDetailScreen() {
       : book.status === "done"
         ? "Completed"
         : "To Read";
+
+  const listsWithSelection = useMemo(() => {
+            if (!book) return [];
+          
+            return lists.map((list) => ({
+              ...list,
+              selected: list.bookIds.includes(book.id),
+            }));
+          }, [lists, book]);
+        
+  const onToggleBookInList = (listId: string, selected: boolean) => {
+            if (!book) return;
+          
+            if (selected) {
+              removeBookFromList(book.id, listId);
+            } else {
+              addBookToList(book.id, listId);
+            }
+          };
 
   return (
     <Screen>
@@ -128,15 +150,68 @@ export default function BookDetailScreen() {
 
       <StickyBottomBar>
         <BottomActions>
-          <PrimaryButton onPress={() => Alert.alert("Add to List", "Coming soon")}>
-            <PrimaryButtonText>Add to List</PrimaryButtonText>
-          </PrimaryButton>
+            <PrimaryButton onPress={() => setListModalOpen(true)}>
+                <PrimaryButtonText>Add to List</PrimaryButtonText>
+            </PrimaryButton>
 
           <SecondaryButton onPress={() => Alert.alert("Notes", "Coming soon")}>
             <SecondaryButtonText>Add Note</SecondaryButtonText>
           </SecondaryButton>
         </BottomActions>
       </StickyBottomBar>
+
+      <Modal
+        visible={listModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setListModalOpen(false)}
+        >
+        <ModalOverlay>
+            <ListModalCard>
+            <ModalHeaderRow>
+                <ModalTitle>Add to Lists</ModalTitle>
+
+                <CloseButton onPress={() => setListModalOpen(false)}>
+                <Ionicons name="close" size={18} color={theme.colors.foreground} />
+                </CloseButton>
+            </ModalHeaderRow>
+
+            <ModalSubtitle>
+                Choose one or more lists for this book
+            </ModalSubtitle>
+
+            <ListOptions>
+                {listsWithSelection.map((list) => (
+                <ListOptionButton
+                    key={list.id}
+                    onPress={() => onToggleBookInList(list.id, list.selected)}
+                >
+                    <ListOptionTextWrap>
+                    <ListOptionTitle numberOfLines={1}>{list.title}</ListOptionTitle>
+                    <ListOptionMeta>
+                        {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"}
+                    </ListOptionMeta>
+                    </ListOptionTextWrap>
+
+                    <Checkbox active={list.selected}>
+                    {list.selected ? (
+                        <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.colors.primaryForeground}
+                        />
+                    ) : null}
+                    </Checkbox>
+                </ListOptionButton>
+                ))}
+            </ListOptions>
+
+            <DoneButton onPress={() => setListModalOpen(false)}>
+                <DoneButtonText>Done</DoneButtonText>
+            </DoneButton>
+            </ListModalCard>
+        </ModalOverlay>
+        </Modal>
     </Screen>
   );
 }
@@ -316,7 +391,6 @@ const StickyBottomBar = styled.View`
   bottom: 0;
   z-index: 20;
   background: ${({ theme }) => theme.colors.background};
-  
   padding: 12px 18px 20px 18px;
 `;
 
@@ -377,4 +451,115 @@ const EmptyText = styled.Text`
   margin-top: 8px;
   font-size: 15px;
   color: ${({ theme }) => theme.colors.mutedForeground};
+`;
+
+const ModalOverlay = styled.View`
+  flex: 1;
+  background: rgba(0, 0, 0, 0.35);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+`;
+
+const ListModalCard = styled.View`
+  width: 100%;
+  max-width: 460px;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
+`;
+
+const ModalHeaderRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const ModalTitle = styled.Text`
+  font-size: 22px;
+  color: ${({ theme }) => theme.colors.foreground};
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const ModalSubtitle = styled.Text`
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const CloseButton = styled.Pressable`
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const ListOptions = styled.View`
+  margin-top: 18px;
+  gap: 10px;
+`;
+
+const ListOptionButton = styled.Pressable`
+  min-height: 58px;
+  border-radius: 14px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.card};
+  padding: 12px 14px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const ListOptionTextWrap = styled.View`
+  flex: 1;
+`;
+
+const ListOptionTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const ListOptionMeta = styled.Text`
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const Checkbox = styled.View<{ active: boolean }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  border-width: 1.5px;
+  border-color: ${({ active, theme }) =>
+    active ? theme.colors.primary : theme.colors.border};
+  background: ${({ active, theme }) =>
+    active ? theme.colors.primary : "transparent"};
+`;
+
+const DoneButton = styled.Pressable`
+  margin-top: 18px;
+  height: 46px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const DoneButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
