@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { Alert, ScrollView, useWindowDimensions } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Alert, Modal, ScrollView, useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,7 +12,8 @@ export default function ListDetailScreen() {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { lists, books, removeBookFromList } = useLibrary();
+  const { lists, books, addBookToList , removeBookFromList } = useLibrary();
+  const [addBooksOpen, setAddBooksOpen] = useState(false);
 
   const list = lists.find((item) => item.id === id);
 
@@ -23,6 +24,15 @@ export default function ListDetailScreen() {
       .map((bookId) => books.find((book) => book.id === bookId))
       .filter(Boolean);
   }, [list, books]);
+
+  const selectableBooks = useMemo(() => {
+    if (!list) return [];
+  
+    return books.map((book) => ({
+      ...book,
+      selected: list.bookIds.includes(book.id),
+    }));
+  }, [books, list]);
 
   const contentMaxWidth = 1000;
   const contentWidth = Math.min(width, contentMaxWidth);
@@ -53,6 +63,16 @@ export default function ListDetailScreen() {
         },
       ]
     );
+  };
+
+  const onToggleBookInList = (bookId: string, selected: boolean) => {
+    if (!list) return;
+  
+    if (selected) {
+      removeBookFromList(bookId, list.id);
+    } else {
+      addBookToList(bookId, list.id);
+    }
   };
 
   if (!list) {
@@ -102,8 +122,8 @@ export default function ListDetailScreen() {
           </HeaderBlock>
 
           <TopActions>
-            <PrimaryAction onPress={() => Alert.alert("Add Books", "Coming soon")}>
-              <PrimaryActionText>Add Books</PrimaryActionText>
+            <PrimaryAction onPress={() => setAddBooksOpen(true)}>
+                <PrimaryActionText>Add Books</PrimaryActionText>
             </PrimaryAction>
 
             <SecondaryAction onPress={() => Alert.alert("Share List", "Coming soon")}>
@@ -150,6 +170,61 @@ export default function ListDetailScreen() {
           )}
         </Content>
       </ScrollView>
+
+      <Modal
+        visible={addBooksOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAddBooksOpen(false)}
+        >
+        <ModalOverlay>
+            <SelectModalCard>
+            <ModalHeaderRow>
+                <ModalTitle>Add Books</ModalTitle>
+
+                <CloseButton onPress={() => setAddBooksOpen(false)}>
+                <Ionicons name="close" size={18} color={theme.colors.foreground} />
+                </CloseButton>
+            </ModalHeaderRow>
+
+            <ModalSubtitle>
+                Add or remove books from this list
+            </ModalSubtitle>
+
+            <SelectableList>
+                {selectableBooks.map((book) => (
+                <SelectableRow
+                    key={book.id}
+                    onPress={() => onToggleBookInList(book.id, book.selected)}
+                >
+                    <SelectableInfo>
+                    <SelectableTitle numberOfLines={1}>
+                        {book.title}
+                    </SelectableTitle>
+                    <SelectableMeta numberOfLines={1}>
+                        {book.author}
+                    </SelectableMeta>
+                    </SelectableInfo>
+
+                    <Checkbox active={book.selected}>
+                    {book.selected ? (
+                        <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.colors.primaryForeground}
+                        />
+                    ) : null}
+                    </Checkbox>
+                </SelectableRow>
+                ))}
+            </SelectableList>
+
+            <DoneButton onPress={() => setAddBooksOpen(false)}>
+                <DoneButtonText>Done</DoneButtonText>
+            </DoneButton>
+            </SelectModalCard>
+        </ModalOverlay>
+        </Modal>
     </Screen>
   );
 }
@@ -320,4 +395,116 @@ const EmptyText = styled.Text`
   margin-top: 8px;
   font-size: 15px;
   color: ${({ theme }) => theme.colors.mutedForeground};
+`;
+
+const ModalOverlay = styled.View`
+  flex: 1;
+  background: rgba(0, 0, 0, 0.35);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+`;
+
+const SelectModalCard = styled.View`
+  width: 100%;
+  max-width: 460px;
+  max-height: 80%;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
+`;
+
+const ModalHeaderRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const ModalTitle = styled.Text`
+  font-size: 22px;
+  color: ${({ theme }) => theme.colors.foreground};
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const ModalSubtitle = styled.Text`
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const CloseButton = styled.Pressable`
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const SelectableList = styled.ScrollView`
+  margin-top: 18px;
+`;
+
+const SelectableRow = styled.Pressable`
+  min-height: 60px;
+  border-radius: 14px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.card};
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const SelectableInfo = styled.View`
+  flex: 1;
+`;
+
+const SelectableTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const SelectableMeta = styled.Text`
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const Checkbox = styled.View<{ active: boolean }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  border-width: 1.5px;
+  border-color: ${({ active, theme }) =>
+    active ? theme.colors.primary : theme.colors.border};
+  background: ${({ active, theme }) =>
+    active ? theme.colors.primary : "transparent"};
+`;
+
+const DoneButton = styled.Pressable`
+  margin-top: 8px;
+  height: 46px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const DoneButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
