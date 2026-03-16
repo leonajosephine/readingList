@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 import { AppHeader } from "../../src/components/AppHeader";
 import { useLibrary } from "../../src/store/LibraryContext";
@@ -21,6 +22,8 @@ export default function ListsScreen() {
 
   const { width } = useWindowDimensions();
   const { lists, books, deleteList, createList } = useLibrary();
+
+  const router = useRouter();
 
   const isMobile = width < 520;
 
@@ -143,7 +146,7 @@ export default function ListsScreen() {
           {mode === "list" ? (
             <ListWrap>
               {enrichedLists.map((list) => (
-                <ListCard key={list.id} style={{ width: listCardWidth }}>
+                <ListCard key={list.id} style={{ width: listCardWidth }} onPress={() => router.push(`/list/${list.id}`)}>
                   <ListCardTop>
                     <ListTextWrap>
                       <ListTitle numberOfLines={1}>{list.title}</ListTitle>
@@ -179,7 +182,7 @@ export default function ListsScreen() {
           ) : (
             <GridWrap>
               {enrichedLists.map((list) => (
-                <GridCard key={list.id} style={{ width: gridCardWidth }}>
+                <GridCard key={list.id} style={{ width: gridCardWidth }} onPress={() => router.push(`/list/${list.id}`)}>
                   <GridTop>
                     <GridTitle numberOfLines={2}>{list.title}</GridTitle>
                     <MenuButton onPress={() => onMenu(list)}>
@@ -334,7 +337,7 @@ const ListWrap = styled.View`
   gap: 14px;
 `;
 
-const ListCard = styled.View`
+const ListCard = styled.Pressable`
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.lg}px;
   border-width: 1px;
@@ -414,7 +417,7 @@ const GridWrap = styled.View`
   gap: 12px;
 `;
 
-const GridCard = styled.View`
+const GridCard = styled.Pressable`
   min-height: 180px;
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.lg}px;
