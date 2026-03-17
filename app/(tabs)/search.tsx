@@ -2,10 +2,12 @@ import React, { useMemo, useState } from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
-import { BookCard } from "../../src/components/BookCard";
+import { BookCard, BookCardBook } from "../../src/components/BookCard";
 import { Ionicons } from "@expo/vector-icons";
 import { useLibrary } from "../../src/store/LibraryContext";
 import { useRouter } from "expo-router";
+import { BookActionsSheet } from "../../src/components/BookActionsSheet";
+import { BookListPickerModal } from "../../src/components/BookListPickerModal";
 
 const GENRES = [
   "All",
@@ -18,10 +20,15 @@ const GENRES = [
 ];
 
 export default function SearchScreen() {
-  const { books } = useLibrary();
+  const router = useRouter();
+  const { books, updateBookStatus } = useLibrary();
 
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All");
+
+  const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [listPickerOpen, setListPickerOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -54,7 +61,20 @@ export default function SearchScreen() {
   const cardWidth =
     (contentWidth - horizontalPadding - gap * (columns - 1)) / columns;
 
-  const router = useRouter();
+  const openBookActions = (book: BookCardBook) => {
+    setSelectedBook(book);
+    setActionsOpen(true);
+  };
+
+  const closeBookActions = () => {
+    setActionsOpen(false);
+  };
+
+  const closeAllBookMenus = () => {
+    setActionsOpen(false);
+    setListPickerOpen(false);
+    setSelectedBook(null);
+  };
 
   return (
     <Screen>
@@ -106,24 +126,65 @@ export default function SearchScreen() {
           <ResultsText>{filtered.length} books found</ResultsText>
 
           <Grid>
-            {filtered.map((book) => (
-              <BookCard
-                key={book.id}
-                style={{ width: cardWidth }}
-                onPress={() => router.push(`/book/${book.id}`)}
-                book={{
-                  id: book.id,
-                  title: book.title,
-                  author: book.author,
-                  rating: book.rating ?? "0.0",
-                  coverUrl: book.coverUrl,
-                  status: book.status,
-                }}
-              />
-            ))}
+            {filtered.map((book) => {
+              const mappedBook: BookCardBook = {
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                rating: book.rating ?? "0.0",
+                coverUrl: book.coverUrl,
+                status: book.status,
+              };
+
+              return (
+                <BookCard
+                  key={book.id}
+                  style={{ width: cardWidth }}
+                  onPress={() => router.push(`/book/${book.id}`)}
+                  onLongPress={() => openBookActions(mappedBook)}
+                  book={mappedBook}
+                />
+              );
+            })}
           </Grid>
         </Content>
       </ScrollView>
+
+      <BookActionsSheet
+        visible={actionsOpen}
+        title={selectedBook?.title}
+        author={selectedBook?.author}
+        coverUrl={selectedBook?.coverUrl}
+        currentStatus={selectedBook?.status}
+        onClose={closeAllBookMenus}
+        onAddToList={() => {
+          closeBookActions();
+          setTimeout(() => {
+            setListPickerOpen(true);
+          }, 180);
+        }}
+        onMarkReading={() => {
+          if (!selectedBook) return;
+          updateBookStatus(selectedBook.id, "reading");
+          closeAllBookMenus();
+        }}
+        onMarkCompleted={() => {
+          if (!selectedBook) return;
+          updateBookStatus(selectedBook.id, "done");
+          closeAllBookMenus();
+        }}
+        onMarkToRead={() => {
+          if (!selectedBook) return;
+          updateBookStatus(selectedBook.id, "to-read");
+          closeAllBookMenus();
+        }}
+      />
+
+      <BookListPickerModal
+        visible={listPickerOpen}
+        bookId={selectedBook?.id}
+        onClose={closeAllBookMenus}
+      />
     </Screen>
   );
 }

@@ -5,15 +5,24 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useLibrary } from "../../src/store/LibraryContext";
-import { BookCard } from "../../src/components/BookCard";
+import { BookCard, BookCardBook } from "../../src/components/BookCard";
+import { BookActionsSheet } from "../../src/components/BookActionsSheet";
+import { BookListPickerModal } from "../../src/components/BookListPickerModal";
 
 export default function ListDetailScreen() {
   const router = useRouter();
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { lists, books, addBookToList , removeBookFromList } = useLibrary();
+
+  const { lists, books, addBookToList, removeBookFromList, updateBookStatus } =
+    useLibrary();
+
   const [addBooksOpen, setAddBooksOpen] = useState(false);
+
+  const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [listPickerOpen, setListPickerOpen] = useState(false);
 
   const list = lists.find((item) => item.id === id);
 
@@ -27,7 +36,7 @@ export default function ListDetailScreen() {
 
   const selectableBooks = useMemo(() => {
     if (!list) return [];
-  
+
     return books.map((book) => ({
       ...book,
       selected: list.bookIds.includes(book.id),
@@ -48,31 +57,29 @@ export default function ListDetailScreen() {
   const cardWidth =
     (contentWidth - horizontalPadding - gap * (columns - 1)) / columns;
 
-  const onRemoveBook = (bookId: string, title: string) => {
-    if (!list) return;
-
-    Alert.alert(
-      "Remove book",
-      `Remove "${title}" from this list?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => removeBookFromList(bookId, list.id),
-        },
-      ]
-    );
-  };
-
-  const onToggleBookInList = (bookId: string, selected: boolean) => {
+  const onToggleBookInList = (bookId: string, selected: boolean) => {    
     if (!list) return;
   
     if (selected) {
       removeBookFromList(bookId, list.id);
-    } else {
+    } else { 
       addBookToList(bookId, list.id);
-    }
+    } 
+  };
+  
+  const openBookActions = (book: BookCardBook) => {
+    setSelectedBook(book);
+    setActionsOpen(true);
+  };
+
+  const closeBookActions = () => {
+    setActionsOpen(false);
+  };
+
+  const closeAllBookMenus = () => {
+    setActionsOpen(false);
+    setListPickerOpen(false);
+    setSelectedBook(null);
   };
 
   if (!list) {
@@ -117,13 +124,14 @@ export default function ListDetailScreen() {
           <HeaderBlock>
             <Title>{list.title}</Title>
             <Subtitle>
-              {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"} in this list
+              {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"} in
+              this list
             </Subtitle>
           </HeaderBlock>
 
           <TopActions>
             <PrimaryAction onPress={() => setAddBooksOpen(true)}>
-                <PrimaryActionText>Add Books</PrimaryActionText>
+              <PrimaryActionText>Add Books</PrimaryActionText>
             </PrimaryAction>
 
             <SecondaryAction onPress={() => Alert.alert("Share List", "Coming soon")}>
@@ -133,32 +141,29 @@ export default function ListDetailScreen() {
 
           {listBooks.length > 0 ? (
             <Grid>
-              {listBooks.map((book) => (
-                <BookCardWrap key={book!.id}>
-                  <BookCard
-                    style={{ width: cardWidth }}
-                    onPress={() => router.push(`/book/${book!.id}`)}
-                    book={{
-                      id: book!.id,
-                      title: book!.title,
-                      author: book!.author,
-                      rating: book!.rating ?? "0.0",
-                      coverUrl: book!.coverUrl,
-                      status: book!.status,
-                    }}
-                  />
+              {listBooks.map((book) => {
+                if (!book) return null;
 
-                  <RemoveButton
-                    onPress={() => onRemoveBook(book!.id, book!.title)}
-                  >
-                    <Ionicons
-                      name="close"
-                      size={16}
-                      color={theme.colors.foreground}
+                const mappedBook: BookCardBook = {
+                  id: book.id,
+                  title: book.title,
+                  author: book.author,
+                  rating: book.rating ?? "0.0",
+                  coverUrl: book.coverUrl,
+                  status: book.status,
+                };
+
+                return (
+                  <BookCardWrap key={book.id}>
+                    <BookCard
+                      style={{ width: cardWidth }}
+                      onPress={() => router.push(`/book/${book.id}`)}
+                      onLongPress={() => openBookActions(mappedBook)}
+                      book={mappedBook}
                     />
-                  </RemoveButton>
-                </BookCardWrap>
-              ))}
+                  </BookCardWrap>
+                );
+              })}
             </Grid>
           ) : (
             <EmptyStateCard>
@@ -176,55 +181,108 @@ export default function ListDetailScreen() {
         transparent
         animationType="fade"
         onRequestClose={() => setAddBooksOpen(false)}
-        >
+      >
         <ModalOverlay>
-            <SelectModalCard>
+          <SelectModalCard>
             <ModalHeaderRow>
-                <ModalTitle>Add Books</ModalTitle>
+              <ModalTitle>Add Books</ModalTitle>
 
-                <CloseButton onPress={() => setAddBooksOpen(false)}>
+              <CloseButton onPress={() => setAddBooksOpen(false)}>
                 <Ionicons name="close" size={18} color={theme.colors.foreground} />
-                </CloseButton>
+              </CloseButton>
             </ModalHeaderRow>
 
-            <ModalSubtitle>
-                Add or remove books from this list
-            </ModalSubtitle>
+            <ModalSubtitle>Add or remove books from this list</ModalSubtitle>
 
             <SelectableList>
-                {selectableBooks.map((book) => (
+              {selectableBooks.map((book) => (
                 <SelectableRow
-                    key={book.id}
-                    onPress={() => onToggleBookInList(book.id, book.selected)}
+                  key={book.id}
+                  onPress={() => onToggleBookInList(book.id, book.selected)}
                 >
-                    <SelectableInfo>
+                  <SelectableInfo>
                     <SelectableTitle numberOfLines={1}>
-                        {book.title}
+                      {book.title}
                     </SelectableTitle>
                     <SelectableMeta numberOfLines={1}>
-                        {book.author}
+                      {book.author}
                     </SelectableMeta>
-                    </SelectableInfo>
+                  </SelectableInfo>
 
-                    <Checkbox active={book.selected}>
+                  <Checkbox active={book.selected}>
                     {book.selected ? (
-                        <Ionicons
+                      <Ionicons
                         name="checkmark"
                         size={16}
                         color={theme.colors.primaryForeground}
-                        />
+                      />
                     ) : null}
-                    </Checkbox>
+                  </Checkbox>
                 </SelectableRow>
-                ))}
+              ))}
             </SelectableList>
 
             <DoneButton onPress={() => setAddBooksOpen(false)}>
-                <DoneButtonText>Done</DoneButtonText>
+              <DoneButtonText>Done</DoneButtonText>
             </DoneButton>
-            </SelectModalCard>
+          </SelectModalCard>
         </ModalOverlay>
-        </Modal>
+      </Modal>
+
+      <BookActionsSheet
+        visible={actionsOpen}
+        title={selectedBook?.title}
+        author={selectedBook?.author}
+        coverUrl={selectedBook?.coverUrl}
+        currentStatus={selectedBook?.status}
+        onClose={closeAllBookMenus}
+        onAddToList={() => {
+          closeBookActions();
+          setTimeout(() => {
+            setListPickerOpen(true);
+          }, 180);
+        }}
+        onMarkReading={() => {
+          if (!selectedBook) return;
+          updateBookStatus(selectedBook.id, "reading");
+          closeAllBookMenus();
+        }}
+        onMarkCompleted={() => {
+          if (!selectedBook) return;
+          updateBookStatus(selectedBook.id, "done");
+          closeAllBookMenus();
+        }}
+        onMarkToRead={() => {
+          if (!selectedBook) return;
+          updateBookStatus(selectedBook.id, "to-read");
+          closeAllBookMenus();
+        }}
+        onRemoveFromList={() => {
+          if (!selectedBook || !list) return;
+        
+          Alert.alert(
+            `Remove "${selectedBook.title}"?`,
+            "This book will be removed from the list.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Remove",
+                style: "destructive",
+                onPress: () => {
+                  removeBookFromList(selectedBook.id, list.id);
+                  closeAllBookMenus();
+                },
+              },
+            ]
+          );
+        }}
+      />
+
+      <BookListPickerModal
+        visible={listPickerOpen}
+        bookId={selectedBook?.id}
+        onClose={closeAllBookMenus}
+      />
     </Screen>
   );
 }

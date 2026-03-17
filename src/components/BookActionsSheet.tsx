@@ -15,6 +15,7 @@ type Props = {
   onMarkReading?: () => void;
   onMarkCompleted?: () => void;
   onMarkToRead?: () => void;
+  onRemoveFromList?: () => void;
 };
 
 export function BookActionsSheet({
@@ -28,6 +29,7 @@ export function BookActionsSheet({
   onMarkReading,
   onMarkCompleted,
   onMarkToRead,
+  onRemoveFromList,
 }: Props) {
   const statusLabel =
     currentStatus === "reading"
@@ -130,6 +132,18 @@ export function BookActionsSheet({
                   </ActionButton>
                 ) : null}
               </ActionsGroup>
+
+              {onRemoveFromList ? (
+                <DangerActionButton onPress={onRemoveFromList}>
+                  <ActionLeft>
+                    <ActionIconWrap>
+                      <Ionicons name="trash-outline" size={18} color="currentColor" />
+                    </ActionIconWrap>
+                    <DangerActionText>Remove from List</DangerActionText>
+                  </ActionLeft>
+                  <Chevron name="chevron-forward" size={18} />
+                </DangerActionButton>
+              ) : null}
 
               <CancelButton onPress={onClose}>
                 <CancelText>Cancel</CancelText>
@@ -274,6 +288,22 @@ const ActionText = styled.Text`
 const Chevron = styled(Ionicons).attrs(({ theme }) => ({
   color: theme.colors.mutedForeground,
 }))``;
+
+const DangerActionButton = styled.Pressable`
+  min-height: 54px;
+  padding: 14px 12px;
+  border-radius: 16px;
+  background: ${({ theme }) => theme.colors.secondary};
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const DangerActionText = styled.Text`
+  color: #d64545;
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
 
 const CancelButton = styled.Pressable`
   padding: 15px 12px;
