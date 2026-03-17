@@ -1,19 +1,25 @@
 import React, { useMemo, useState } from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
+import { useRouter } from "expo-router";
+
 import { AppHeader } from "../../src/components/AppHeader";
 import { StatCard } from "../../src/components/StatCard";
 import { BookCard, BookCardBook } from "../../src/components/BookCard";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
-import { useLibrary } from "../../src/store/LibraryContext";
-import { useRouter } from "expo-router";
 import { BookActionsSheet } from "../../src/components/BookActionsSheet";
+import { BookListPickerModal } from "../../src/components/BookListPickerModal";
+import { useLibrary } from "../../src/store/LibraryContext";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { books, updateBookStatus } = useLibrary();
-  const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
 
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
+  const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [listPickerOpen, setListPickerOpen] = useState(false);
+
   const { width } = useWindowDimensions();
 
   const contentMaxWidth = 1000;
@@ -56,10 +62,21 @@ export default function HomeScreen() {
   const libraryCardWidth =
     (contentWidth - horizontalPadding - libraryGap * (libraryColumns - 1)) /
     libraryColumns;
-  
-  const router = useRouter();
 
-  const closeSheet = () => setSelectedBook(null);
+  const openBookActions = (book: BookCardBook) => {
+    setSelectedBook(book);
+    setActionsOpen(true);
+  };
+
+  const closeBookActions = () => {
+    setActionsOpen(false);
+  };
+
+  const closeAllBookMenus = () => {
+    setActionsOpen(false);
+    setListPickerOpen(false);
+    setSelectedBook(null);
+  };
 
   return (
     <Screen>
@@ -83,7 +100,16 @@ export default function HomeScreen() {
                 key={book.id}
                 style={{ width: readingCardWidth }}
                 onPress={() => router.push(`/book/${book.id}`)}
-                onLongPress={() => {setSelectedBook(book); }}
+                onLongPress={() =>
+                  openBookActions({
+                    id: book.id,
+                    title: book.title,
+                    author: book.author,
+                    rating: book.rating ?? "0.0",
+                    coverUrl: book.coverUrl,
+                    status: book.status,
+                  })
+                }
                 book={{
                   id: book.id,
                   title: book.title,
@@ -97,6 +123,7 @@ export default function HomeScreen() {
           </CardsRow>
 
           <SectionTitle>Your Library</SectionTitle>
+
           <SegmentWrap>
             <SegmentedControl
               value={filter}
@@ -115,7 +142,16 @@ export default function HomeScreen() {
                 key={book.id}
                 style={{ width: libraryCardWidth }}
                 onPress={() => router.push(`/book/${book.id}`)}
-                onLongPress={() => {setSelectedBook(book); }}
+                onLongPress={() =>
+                  openBookActions({
+                    id: book.id,
+                    title: book.title,
+                    author: book.author,
+                    rating: book.rating ?? "0.0",
+                    coverUrl: book.coverUrl,
+                    status: book.status,
+                  })
+                }
                 book={{
                   id: book.id,
                   title: book.title,
@@ -129,27 +165,40 @@ export default function HomeScreen() {
           </LibraryGrid>
 
           <BookActionsSheet
-                visible={!!selectedBook}
-                title={selectedBook?.title}
-                currentStatus={selectedBook?.status}
-                onClose={closeSheet}
-                onAddToList={() => {
-                  console.log("Add to list", selectedBook?.id);
-                  closeSheet();
-                }}
-                onMarkReading={() => {
-                  console.log("Mark reading", selectedBook?.id);
-                  closeSheet();
-                }}
-                onMarkCompleted={() => {
-                  console.log("Mark completed", selectedBook?.id);
-                  closeSheet();
-                }}
-                onMarkToRead={() => {
-                  console.log("Mark to-read", selectedBook?.id);
-                  closeSheet();
-                }}
-              />
+            visible={actionsOpen}
+            title={selectedBook?.title}
+            author={selectedBook?.author}
+            coverUrl={selectedBook?.coverUrl}
+            currentStatus={selectedBook?.status}
+            onClose={closeAllBookMenus}
+            onAddToList={() => {
+              closeBookActions();
+              setTimeout(() => {
+                setListPickerOpen(true);
+              }, 180);
+            }}
+            onMarkReading={() => {
+              if (!selectedBook) return;
+              updateBookStatus(selectedBook.id, "reading");
+              closeAllBookMenus();
+            }}
+            onMarkCompleted={() => {
+              if (!selectedBook) return;
+              updateBookStatus(selectedBook.id, "done");
+              closeAllBookMenus();
+            }}
+            onMarkToRead={() => {
+              if (!selectedBook) return;
+              updateBookStatus(selectedBook.id, "to-read");
+              closeAllBookMenus();
+            }}
+          />
+
+          <BookListPickerModal
+            visible={listPickerOpen}
+            bookId={selectedBook?.id}
+            onClose={closeAllBookMenus}
+          />
         </Content>
       </ScrollView>
     </Screen>

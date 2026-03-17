@@ -1,16 +1,17 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Modal, ScrollView, useWindowDimensions } from "react-native";
+import { Alert, ScrollView, useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { BookListPickerModal } from "../../src/components/BookListPickerModal";
 
 import { useLibrary } from "../../src/store/LibraryContext";
 
 export default function BookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { books, lists, addBookToList, removeBookFromList } = useLibrary();
+  const { books } = useLibrary();
 
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -50,25 +51,6 @@ export default function BookDetailScreen() {
       : book.status === "done"
         ? "Completed"
         : "To Read";
-
-  const listsWithSelection = useMemo(() => {
-            if (!book) return [];
-          
-            return lists.map((list) => ({
-              ...list,
-              selected: list.bookIds.includes(book.id),
-            }));
-          }, [lists, book]);
-        
-  const onToggleBookInList = (listId: string, selected: boolean) => {
-            if (!book) return;
-          
-            if (selected) {
-              removeBookFromList(book.id, listId);
-            } else {
-              addBookToList(book.id, listId);
-            }
-          };
 
   return (
     <Screen>
@@ -160,58 +142,11 @@ export default function BookDetailScreen() {
         </BottomActions>
       </StickyBottomBar>
 
-      <Modal
+      <BookListPickerModal
         visible={listModalOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setListModalOpen(false)}
-        >
-        <ModalOverlay>
-            <ListModalCard>
-            <ModalHeaderRow>
-                <ModalTitle>Add to Lists</ModalTitle>
-
-                <CloseButton onPress={() => setListModalOpen(false)}>
-                <Ionicons name="close" size={18} color={theme.colors.foreground} />
-                </CloseButton>
-            </ModalHeaderRow>
-
-            <ModalSubtitle>
-                Choose one or more lists for this book
-            </ModalSubtitle>
-
-            <ListOptions>
-                {listsWithSelection.map((list) => (
-                <ListOptionButton
-                    key={list.id}
-                    onPress={() => onToggleBookInList(list.id, list.selected)}
-                >
-                    <ListOptionTextWrap>
-                    <ListOptionTitle numberOfLines={1}>{list.title}</ListOptionTitle>
-                    <ListOptionMeta>
-                        {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"}
-                    </ListOptionMeta>
-                    </ListOptionTextWrap>
-
-                    <Checkbox active={list.selected}>
-                    {list.selected ? (
-                        <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={theme.colors.primaryForeground}
-                        />
-                    ) : null}
-                    </Checkbox>
-                </ListOptionButton>
-                ))}
-            </ListOptions>
-
-            <DoneButton onPress={() => setListModalOpen(false)}>
-                <DoneButtonText>Done</DoneButtonText>
-            </DoneButton>
-            </ListModalCard>
-        </ModalOverlay>
-        </Modal>
+        bookId={book.id}
+        onClose={() => setListModalOpen(false)}
+      />
     </Screen>
   );
 }
