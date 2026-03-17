@@ -15,7 +15,14 @@ export default function ListDetailScreen() {
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const { lists, books, addBookToList, removeBookFromList, updateBookStatus } =
+  const { 
+    lists, 
+    books,
+    addBookToList, 
+    removeBookFromList, 
+    updateBookStatus,
+    renameList,
+   } =
     useLibrary();
 
   const [addBooksOpen, setAddBooksOpen] = useState(false);
@@ -23,6 +30,9 @@ export default function ListDetailScreen() {
   const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [listPickerOpen, setListPickerOpen] = useState(false);
+  
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
 
   const list = lists.find((item) => item.id === id);
 
@@ -66,7 +76,7 @@ export default function ListDetailScreen() {
       addBookToList(bookId, list.id);
     } 
   };
-  
+
   const openBookActions = (book: BookCardBook) => {
     setSelectedBook(book);
     setActionsOpen(true);
@@ -80,6 +90,26 @@ export default function ListDetailScreen() {
     setActionsOpen(false);
     setListPickerOpen(false);
     setSelectedBook(null);
+  };
+
+  const openRenameModal = () => {
+    if (!list) return;
+    setRenameValue(list.title);
+    setRenameOpen(true);
+  };
+  
+  const onSaveRename = () => {
+    if (!list) return;
+  
+    const trimmed = renameValue.trim();
+  
+    if (!trimmed) {
+      Alert.alert("Missing title", "Please enter a name for your list.");
+      return;
+    }
+  
+    renameList(list.id, trimmed);
+    setRenameOpen(false);
   };
 
   if (!list) {
@@ -121,13 +151,24 @@ export default function ListDetailScreen() {
 
       <ScrollView contentContainerStyle={{ paddingTop: 82, paddingBottom: 40 }}>
         <Content>
-          <HeaderBlock>
+        <HeaderBlock>
+          <TitleRow>
             <Title>{list.title}</Title>
-            <Subtitle>
-              {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"} in
-              this list
-            </Subtitle>
-          </HeaderBlock>
+
+            <EditTitleButton onPress={openRenameModal}>
+              <Ionicons
+                name="pencil-outline"
+                size={18}
+                color={theme.colors.foreground}
+              />
+            </EditTitleButton>
+          </TitleRow>
+
+          <Subtitle>
+            {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"} in this
+            list
+          </Subtitle>
+        </HeaderBlock>
 
           <TopActions>
             <PrimaryAction onPress={() => setAddBooksOpen(true)}>
@@ -226,6 +267,46 @@ export default function ListDetailScreen() {
               <DoneButtonText>Done</DoneButtonText>
             </DoneButton>
           </SelectModalCard>
+        </ModalOverlay>
+      </Modal>
+
+      <Modal
+        visible={renameOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRenameOpen(false)}
+      >
+        <ModalOverlay>
+          <RenameModalCard>
+            <ModalHeaderRow>
+              <ModalTitle>Rename List</ModalTitle>
+
+              <CloseButton onPress={() => setRenameOpen(false)}>
+                <Ionicons name="close" size={18} color={theme.colors.foreground} />
+              </CloseButton>
+            </ModalHeaderRow>
+
+            <ModalSubtitle>Choose a new name for this list</ModalSubtitle>
+
+            <RenameInput
+              value={renameValue}
+              onChangeText={setRenameValue}
+              placeholder="List name"
+              placeholderTextColor="rgba(113, 113, 130, 0.9)"
+              autoFocus
+              maxLength={60}
+            />
+
+            <RenameActions>
+              <RenameSecondaryButton onPress={() => setRenameOpen(false)}>
+                <RenameSecondaryButtonText>Cancel</RenameSecondaryButtonText>
+              </RenameSecondaryButton>
+
+              <RenamePrimaryButton onPress={onSaveRename}>
+                <RenamePrimaryButtonText>Save</RenamePrimaryButtonText>
+              </RenamePrimaryButton>
+            </RenameActions>
+          </RenameModalCard>
         </ModalOverlay>
       </Modal>
 
@@ -332,6 +413,82 @@ const BackButton = styled.Pressable`
 const HeaderBlock = styled.View`
   gap: 8px;
   margin-top: 26px;
+`;
+
+const TitleRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+`;
+
+const EditTitleButton = styled.Pressable`
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const RenameModalCard = styled.View`
+  width: 100%;
+  max-width: 460px;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
+`;
+
+const RenameInput = styled.TextInput`
+  margin-top: 18px;
+  height: 50px;
+  border-radius: 14px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.background};
+  padding: 0 14px;
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-family: ${({ theme }) => theme.font.family.medium};
+`;
+
+const RenameActions = styled.View`
+  margin-top: 18px;
+  flex-direction: row;
+  gap: 10px;
+`;
+
+const RenameSecondaryButton = styled.Pressable`
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const RenameSecondaryButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const RenamePrimaryButton = styled.Pressable`
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const RenamePrimaryButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
 const Title = styled.Text`

@@ -24,6 +24,7 @@ type LibraryContextValue = {
 
   updateBookStatus: (bookId: string, status: BookStatus) => void;
   createList: (title: string) => void;
+  renameList: (listId: string, title: string) => void;
   deleteList: (listId: string) => void;
   addBookToList: (bookId: string, listId: string) => void;
   removeBookFromList: (bookId: string, listId: string) => void;
@@ -110,7 +111,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [lists, setLists] = useState<ReadingList[]>([
     {
       id: "1",
-      title: "Summer Reads 2026",
+      title: "Summer Reads 2026 🐉",
       bookIds: ["1", "3"],
     },
     {
@@ -145,6 +146,17 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         bookIds: [],
       },
     ]);
+  };
+
+  const renameList = (listId: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+  
+    setLists((prev) =>
+      prev.map((list) =>
+        list.id === listId ? { ...list, title: trimmed } : list
+      )
+    );
   };
 
   const deleteList = (listId: string) => {
@@ -184,6 +196,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       lists,
       updateBookStatus,
       createList,
+      renameList,
       deleteList,
       addBookToList,
       removeBookFromList,
