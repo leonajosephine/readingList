@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 
 import { AppHeader } from "../../src/components/AppHeader";
 import { useLibrary } from "../../src/store/LibraryContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 type ViewMode = "grid" | "list";
 
@@ -50,18 +51,19 @@ export default function ListsScreen() {
     gridColumns;
 
   const enrichedLists = useMemo(() => {
-    return lists.map((list) => {
-      const listBooks = list.bookIds
-        .map((bookId) => books.find((book) => book.id === bookId))
-        .filter(Boolean);
-
-      return {
-        ...list,
-        subtitle: `${list.bookIds.length} book${list.bookIds.length === 1 ? "" : "s"}`,
-        covers: listBooks.slice(0, 3).map((book) => book!.coverUrl),
-      };
-    });
-  }, [lists, books]);
+      return lists.map((list) => {
+        const listBooks = list.bookIds
+          .map((bookId) => books.find((book) => book.id === bookId))
+          .filter(Boolean);
+    
+        return {
+          ...list,
+          subtitle: `${list.bookIds.length} book${list.bookIds.length === 1 ? "" : "s"}`,
+          covers: listBooks.slice(0, 3).map((book) => book!.coverUrl),
+          previewCover: listBooks[0]?.coverUrl ?? null,
+        };
+      });
+    }, [lists, books]);
 
   const onMenu = (list: (typeof enrichedLists)[number]) => {
     Alert.alert(list.title, "What do you want to do?", [
@@ -182,34 +184,48 @@ export default function ListsScreen() {
           ) : (
             <GridWrap>
               {enrichedLists.map((list) => (
-                <GridCard key={list.id} style={{ width: gridCardWidth }} onPress={() => router.push(`/list/${list.id}`)}>
-                  <GridTop>
-                    <GridTitle numberOfLines={2}>{list.title}</GridTitle>
-                    <MenuButton onPress={() => onMenu(list)}>
+                <GridCard
+                  key={list.id}
+                  style={{ width: gridCardWidth }}
+                  onPress={() => router.push(`/list/${list.id}`)}
+                >
+                  {list.previewCover ? (
+                    <GridBackgroundImage
+                      source={{ uri: list.previewCover }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <GridEmptyBackground>
+                      <Ionicons name="book-outline" size={28} color="#6b7280" />
+                    </GridEmptyBackground>
+                  )}
+
+                  <GridOverlay pointerEvents="none">
+                    <LinearGradient
+                      colors={[
+                        "rgba(18, 18, 24, 0.05)",
+                        "rgba(18, 18, 24, 0.25)",
+                        "rgba(18, 18, 24, 0.65)",
+                      ]}
+                      locations={[0, 0.5, 1]}
+                      style={{ flex: 1 }}
+                    />
+                  </GridOverlay>
+
+                  <GridCardTop>
+                    <GridMenuButton onPress={() => onMenu(list)}>
                       <Ionicons
                         name="ellipsis-horizontal"
                         size={18}
-                        color="#6b7280"
+                        color="#ffffff"
                       />
-                    </MenuButton>
-                  </GridTop>
+                    </GridMenuButton>
+                  </GridCardTop>
 
-                  <GridMeta>{list.subtitle}</GridMeta>
-
-                  <GridPreview>
-                    {list.covers.length > 0 ? (
-                      <GridPreviewRow>
-                        {list.covers.slice(0, 3).map((cover, index) => (
-                          <GridMiniCover
-                            key={`${list.id}-grid-${index}`}
-                            source={{ uri: cover }}
-                          />
-                        ))}
-                      </GridPreviewRow>
-                    ) : (
-                      <EmptyGridText>No books yet</EmptyGridText>
-                    )}
-                  </GridPreview>
+                  <GridCardBottom>
+                    <GridTitleOnImage numberOfLines={2}>{list.title}</GridTitleOnImage>
+                    <GridMetaOnImage>{list.subtitle}</GridMetaOnImage>
+                  </GridCardBottom>
                 </GridCard>
               ))}
             </GridWrap>
@@ -418,67 +434,92 @@ const GridWrap = styled.View`
 `;
 
 const GridCard = styled.Pressable`
-  min-height: 180px;
+  position: relative;
+  min-height: 210px;
+  overflow: hidden;
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  
   background: ${({ theme }) => theme.colors.card};
-  border-radius: ${({ theme }) => theme.radius.lg}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-  padding: 14px;
 
   shadow-color: #000;
-  shadow-opacity: 0.08;
-  shadow-radius: 10px;
+  shadow-opacity: 0.1;
+  shadow-radius: 12px;
   shadow-offset: 0px 6px;
-  elevation: 3;
+  elevation: 4;
 `;
 
-const GridTop = styled.View`
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
+const GridBackgroundImage = styled.Image`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
 `;
 
-const GridTitle = styled.Text`
-  flex: 1;
-  font-size: 16px;
-  font-weight: ${({ theme }) => theme.font.family.semibold};
-  color: ${({ theme }) => theme.colors.foreground};
-`;
-
-const GridMeta = styled.Text`
-  margin-top: 8px;
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.family.medium};
-`;
-
-const GridPreview = styled.View`
-  margin-top: 14px;
-  flex: 1;
-  min-height: 90px;
-  border-radius: 12px;
+const GridEmptyBackground = styled.View`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: ${({ theme }) => theme.colors.muted};
   align-items: center;
   justify-content: center;
-  padding: 10px;
 `;
 
-const GridPreviewRow = styled.View`
-  width: 100%;
-  flex-direction: row;
-  gap: 8px;
+const GridOverlay = styled.View`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
 `;
 
-const GridMiniCover = styled.Image`
-  flex: 1;
-  height: 88px;
-  border-radius: 8px;
+const GridCardTop = styled.View`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
 `;
 
-const EmptyGridText = styled.Text`
-  color: ${({ theme }) => theme.colors.mutedForeground};
+const GridMenuButton = styled.Pressable`
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+`;
+
+const GridCardBottom = styled.View`
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+`;
+
+const GridTitleOnImage = styled.Text`
+  font-size: 20px;
+  line-height: 24px;
+  color: #ffffff;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+  text-shadow-color: rgba(0, 0, 0, 0.35);
+  text-shadow-offset: 0px 1px;
+  text-shadow-radius: 3px;
+`;
+
+const GridMetaOnImage = styled.Text`
+  margin-top: 6px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: ${({ theme }) => theme.font.family.medium};
+  text-shadow-color: rgba(0, 0, 0, 0.35);
+  text-shadow-offset: 0px 1px;
+  text-shadow-radius: 3px;
 `;
 
 const ModalOverlay = styled.View`
