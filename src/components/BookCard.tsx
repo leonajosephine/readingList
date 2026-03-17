@@ -7,7 +7,7 @@ export type BookCardBook = {
   id: string;
   title: string;
   author: string;
-  rating: string;
+  rating?: string;
   coverUrl: string;
   status?: BookStatus;
 };
@@ -15,11 +15,13 @@ export type BookCardBook = {
 export function BookCard({
   book,
   onPress,
+  onLongPress,
   style,
   showStatus = true,
 }: {
   book: BookCardBook;
   onPress?: () => void;
+  onLongPress?: () => void;
   style?: ViewStyle;
   showStatus?: boolean;
 }) {
@@ -56,7 +58,13 @@ export function BookCard({
 
   return (
     <CardWrap style={style}>
-      <Pressable onPress={onPress} onPressIn={pressIn} onPressOut={pressOut}>
+      <Pressable
+        onPress={onPress}
+        onLongPress={onLongPress}
+        delayLongPress={250}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+      >
         <Card>
           <CoverWrap>
             <AnimatedCover
@@ -166,7 +174,6 @@ const RatingText = styled.Text`
 const StatusBadge = styled.View`
   padding: 6px 10px;
   border-radius: 999px;
-  
   border-color: ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.secondary};
 `;

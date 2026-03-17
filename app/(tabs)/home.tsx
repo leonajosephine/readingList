@@ -3,13 +3,15 @@ import { ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { StatCard } from "../../src/components/StatCard";
-import { BookCard } from "../../src/components/BookCard";
+import { BookCard, BookCardBook } from "../../src/components/BookCard";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
 import { useLibrary } from "../../src/store/LibraryContext";
 import { useRouter } from "expo-router";
+import { BookActionsSheet } from "../../src/components/BookActionsSheet";
 
 export default function HomeScreen() {
-  const { books } = useLibrary();
+  const { books, updateBookStatus } = useLibrary();
+  const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
 
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
   const { width } = useWindowDimensions();
@@ -57,6 +59,8 @@ export default function HomeScreen() {
   
   const router = useRouter();
 
+  const closeSheet = () => setSelectedBook(null);
+
   return (
     <Screen>
       <AppHeader />
@@ -79,6 +83,7 @@ export default function HomeScreen() {
                 key={book.id}
                 style={{ width: readingCardWidth }}
                 onPress={() => router.push(`/book/${book.id}`)}
+                onLongPress={() => {setSelectedBook(book); }}
                 book={{
                   id: book.id,
                   title: book.title,
@@ -110,6 +115,7 @@ export default function HomeScreen() {
                 key={book.id}
                 style={{ width: libraryCardWidth }}
                 onPress={() => router.push(`/book/${book.id}`)}
+                onLongPress={() => {setSelectedBook(book); }}
                 book={{
                   id: book.id,
                   title: book.title,
@@ -121,6 +127,29 @@ export default function HomeScreen() {
               />
             ))}
           </LibraryGrid>
+
+          <BookActionsSheet
+                visible={!!selectedBook}
+                title={selectedBook?.title}
+                currentStatus={selectedBook?.status}
+                onClose={closeSheet}
+                onAddToList={() => {
+                  console.log("Add to list", selectedBook?.id);
+                  closeSheet();
+                }}
+                onMarkReading={() => {
+                  console.log("Mark reading", selectedBook?.id);
+                  closeSheet();
+                }}
+                onMarkCompleted={() => {
+                  console.log("Mark completed", selectedBook?.id);
+                  closeSheet();
+                }}
+                onMarkToRead={() => {
+                  console.log("Mark to-read", selectedBook?.id);
+                  closeSheet();
+                }}
+              />
         </Content>
       </ScrollView>
     </Screen>
