@@ -34,6 +34,8 @@ export default function ListDetailScreen() {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const list = lists.find((item) => item.id === id);
 
   const listBooks = useMemo(() => {
@@ -45,13 +47,24 @@ export default function ListDetailScreen() {
   }, [list, books]);
 
   const selectableBooks = useMemo(() => {
-    if (!list) return [];
+  if (!list) return [];
 
-    return books.map((book) => ({
+  const q = searchQuery.trim().toLowerCase();
+
+  return books
+    .filter((book) => {
+      if (!q) return true;
+
+      return (
+        book.title.toLowerCase().includes(q) ||
+        book.author.toLowerCase().includes(q)
+      );
+    })
+    .map((book) => ({
       ...book,
       selected: list.bookIds.includes(book.id),
     }));
-  }, [books, list]);
+}, [books, list, searchQuery]);
 
   const contentMaxWidth = 1000;
   const contentWidth = Math.min(width, contentMaxWidth);
@@ -235,20 +248,30 @@ export default function ListDetailScreen() {
 
             <ModalSubtitle>Add or remove books from this list</ModalSubtitle>
 
+            <SearchInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search books..."
+              placeholderTextColor="rgba(113, 113, 130, 0.9)"
+            />
+
             <SelectableList>
               {selectableBooks.map((book) => (
                 <SelectableRow
                   key={book.id}
                   onPress={() => onToggleBookInList(book.id, book.selected)}
                 >
-                  <SelectableInfo>
-                    <SelectableTitle numberOfLines={1}>
-                      {book.title}
-                    </SelectableTitle>
-                    <SelectableMeta numberOfLines={1}>
-                      {book.author}
-                    </SelectableMeta>
-                  </SelectableInfo>
+                  <RowLeft>
+                    <MiniCover source={{ uri: book.coverUrl }} />
+                    <SelectableInfo>
+                      <SelectableTitle numberOfLines={1}>
+                        {book.title}
+                      </SelectableTitle>
+                      <SelectableMeta numberOfLines={1}>
+                        {book.author}
+                      </SelectableMeta>
+                    </SelectableInfo>
+                  </RowLeft>
 
                   <Checkbox active={book.selected}>
                     {book.selected ? (
@@ -652,6 +675,19 @@ const ModalSubtitle = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
+const SearchInput = styled.TextInput`
+  margin-top: 14px;
+  height: 46px;
+  border-radius: 12px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.background};
+  padding: 0 14px;
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-family: ${({ theme }) => theme.font.family.medium};
+`;
+
 const CloseButton = styled.Pressable`
   width: 36px;
   height: 36px;
@@ -677,6 +713,19 @@ const SelectableRow = styled.Pressable`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+`;
+
+const RowLeft = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+`;
+
+const MiniCover = styled.Image`
+  width: 40px;
+  height: 60px;
+  border-radius: 6px;
 `;
 
 const SelectableInfo = styled.View`
