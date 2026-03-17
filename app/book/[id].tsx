@@ -235,8 +235,7 @@ const MetaBadge = styled.View<{ secondary?: boolean }>`
   border-radius: 999px;
   background: ${({ theme, secondary }) =>
     secondary ? theme.colors.muted : theme.colors.secondary};
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
+  
 `;
 
 const MetaBadgeText = styled.Text<{ secondary?: boolean }>`
