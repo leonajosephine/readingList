@@ -2,6 +2,37 @@ import React, { createContext, useContext, useMemo, useState } from "react";
 
 export type BookStatus = "reading" | "to-read" | "done";
 
+export type BookRatingCategory =
+  | "overall"
+  | "spice"
+  | "tension"
+  | "humor"
+  | "romance"
+  | "tears";
+
+export type BookRatings = {
+  overall?: number;
+  spice?: number;
+  tension?: number;
+  humor?: number;
+  romance?: number;
+  tears?: number;
+};
+
+export type BookNote =
+  | {
+      id: string;
+      type: "note";
+      content: string;
+    }
+  | {
+      id: string;
+      type: "quote";
+      content: string;
+      page?: string;
+      chapter?: string;
+    };
+
 export type Book = {
   id: string;
   title: string;
@@ -9,7 +40,9 @@ export type Book = {
   rating?: string;
   coverUrl: string;
   genre?: string;
-  status?: BookStatus; // can be empty - still has to be implemented in the UI
+  status?: BookStatus;
+  userRatings?: BookRatings;
+  notes?: BookNote[];
 };
 
 export type ReadingList = {
@@ -23,6 +56,18 @@ type LibraryContextValue = {
   lists: ReadingList[];
 
   updateBookStatus: (bookId: string, status: BookStatus) => void;
+  updateBookRatings: (bookId: string, ratings: BookRatings) => void;
+  addBookNote: (
+    bookId: string,
+    note: Omit<BookNote, "id">
+  ) => void;
+  updateBookNote: (
+    bookId: string,
+    noteId: string,
+    patch: Partial<Omit<BookNote, "id" | "type">>
+  ) => void;
+  deleteBookNote: (bookId: string, noteId: string) => void;
+
   createList: (title: string) => void;
   renameList: (listId: string, title: string) => void;
   deleteList: (listId: string) => void;
@@ -42,6 +87,26 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=101",
       genre: "Fantasy",
       status: "reading",
+      userRatings: {
+        overall: 4,
+        tension: 2,
+        humor: 2,
+        tears: 4,
+      },
+      notes: [
+        {
+          id: "n1",
+          type: "note",
+          content: "Very reflective and comforting. Good book for a quiet evening.",
+        },
+        {
+          id: "n2",
+          type: "quote",
+          content: "Between life and death there is a library.",
+          page: "12",
+          chapter: "1",
+        },
+      ],
     },
     {
       id: "2",
@@ -51,6 +116,11 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=102",
       genre: "Sci-Fi",
       status: "reading",
+      userRatings: {
+        overall: 5,
+        tension: 5,
+      },
+      notes: [],
     },
     {
       id: "3",
@@ -60,6 +130,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=103",
       genre: "Mystery",
       status: "to-read",
+      userRatings: {},
+      notes: [],
     },
     {
       id: "4",
@@ -69,6 +141,12 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=104",
       genre: "Classics",
       status: "done",
+      userRatings: {
+        overall: 5,
+        romance: 4,
+        humor: 4,
+      },
+      notes: [],
     },
     {
       id: "5",
@@ -78,6 +156,13 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=105",
       genre: "Romance",
       status: "done",
+      userRatings: {
+        overall: 3,
+        romance: 4,
+        spice: 2,
+        tears: 4,
+      },
+      notes: [],
     },
     {
       id: "6",
@@ -87,6 +172,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=106",
       genre: "Fantasy",
       status: "to-read",
+      userRatings: {},
+      notes: [],
     },
     {
       id: "7",
@@ -96,6 +183,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=107",
       genre: "Sci-Fi",
       status: "to-read",
+      userRatings: {},
+      notes: [],
     },
     {
       id: "8",
@@ -105,6 +194,12 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=108",
       genre: "Romance",
       status: "done",
+      userRatings: {
+        overall: 5,
+        romance: 4,
+        tears: 5,
+      },
+      notes: [],
     },
   ]);
 
@@ -134,6 +229,70 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const updateBookRatings = (bookId: string, ratings: BookRatings) => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === bookId
+          ? {
+              ...book,
+              userRatings: ratings,
+            }
+          : book
+      )
+    );
+  };
+
+  const addBookNote = (bookId: string, note: Omit<BookNote, "id">) => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === bookId
+          ? {
+              ...book,
+              notes: [
+                ...(book.notes ?? []),
+                {
+                  ...note,
+                  id: Date.now().toString(),
+                } as BookNote,
+              ],
+            }
+          : book
+      )
+    );
+  };
+
+  const updateBookNote = (
+    bookId: string,
+    noteId: string,
+    patch: Partial<Omit<BookNote, "id" | "type">>
+  ) => {
+    setBooks((prev) =>
+      prev.map((book) => {
+        if (book.id !== bookId) return book;
+
+        return {
+          ...book,
+          notes: (book.notes ?? []).map((note) =>
+            note.id === noteId ? { ...note, ...patch } : note
+          ),
+        };
+      })
+    );
+  };
+
+  const deleteBookNote = (bookId: string, noteId: string) => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === bookId
+          ? {
+              ...book,
+              notes: (book.notes ?? []).filter((note) => note.id !== noteId),
+            }
+          : book
+      )
+    );
+  };
+
   const createList = (title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
@@ -151,7 +310,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const renameList = (listId: string, title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
-  
+
     setLists((prev) =>
       prev.map((list) =>
         list.id === listId ? { ...list, title: trimmed } : list
@@ -195,6 +354,10 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       books,
       lists,
       updateBookStatus,
+      updateBookRatings,
+      addBookNote,
+      updateBookNote,
+      deleteBookNote,
       createList,
       renameList,
       deleteList,

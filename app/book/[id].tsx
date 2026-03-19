@@ -1,26 +1,63 @@
-import React, { useMemo, useState } from "react";
-import { Alert, ScrollView, useWindowDimensions } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Modal, ScrollView, useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { BookListPickerModal } from "../../src/components/BookListPickerModal";
+import {
+  BookRatingCategory,
+  BookRatings,
+  useLibrary,
+} from "../../src/store/LibraryContext";
 
-import { useLibrary } from "../../src/store/LibraryContext";
+const RATING_CONFIG: {
+  key: BookRatingCategory;
+  label: string;
+  activeIcon: string;
+  inactiveIcon: string;
+}[] = [
+  { key: "overall", label: "Overall", activeIcon: "⭐️", inactiveIcon: "☆" }, //★
+  { key: "spice", label: "Spice", activeIcon: "🔥", inactiveIcon: "○" },
+  { key: "tension", label: "Tension", activeIcon: "⚡", inactiveIcon: "○" }, //⚡
+  { key: "humor", label: "Humor", activeIcon: "😊", inactiveIcon: "○" },
+  { key: "romance", label: "Romance", activeIcon: "❤️", inactiveIcon: "○" },
+  { key: "tears", label: "Tears", activeIcon: "💧", inactiveIcon: "○" },
+];
 
 export default function BookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { books } = useLibrary();
+  const { books, updateBookRatings } = useLibrary();
 
   const theme = useTheme();
   const { width } = useWindowDimensions();
 
   const book = books.find((item) => item.id === id);
+
   const [listModalOpen, setListModalOpen] = useState(false);
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [draftRatings, setDraftRatings] = useState<BookRatings>({});
 
   const isTablet = width >= 768;
   const coverWidth = isTablet ? 280 : Math.min(width * 0.52, 220);
+
+  useEffect(() => {
+    if (!book) return;
+    setDraftRatings(book.userRatings ?? {});
+  }, [book, ratingModalOpen]);
+
+  const activeRatings = useMemo(() => {
+    if (!book?.userRatings) return [];
+
+    return RATING_CONFIG.filter((item) => {
+      const value = book.userRatings?.[item.key] ?? 0;
+      return value > 0;
+    });
+  }, [book?.userRatings]);
+
+  const notesCount = book?.notes?.length ?? 0;
+  const activeRatingCount = activeRatings.length;
 
   if (!book) {
     return (
@@ -51,6 +88,74 @@ export default function BookDetailScreen() {
       : book.status === "done"
         ? "Completed"
         : "To Read";
+
+  const openRatingModal = () => {
+    setDraftRatings(book.userRatings ?? {});
+    setRatingModalOpen(true);
+  };
+
+  const closeRatingModal = () => {
+    setRatingModalOpen(false);
+  };
+
+  const setCategoryValue = (category: BookRatingCategory, value: number) => {
+    setDraftRatings((prev) => ({
+      ...prev,
+      [category]: value === 0 ? undefined : value,
+    }));
+  };
+
+  const onSaveRatings = () => {
+    updateBookRatings(book.id, draftRatings);
+    closeRatingModal();
+  };
+
+  const renderStaticRatingIcons = (
+    activeIcon: string,
+    inactiveIcon: string,
+    value: number
+  ) => {
+    return Array.from({ length: 5 }).map((_, index) => {
+      const filled = index < value;
+
+      return (
+        <RatingEmoji key={`${activeIcon}-${index}`} inactive={!filled}>
+          {filled ? activeIcon : inactiveIcon}
+        </RatingEmoji>
+      );
+    });
+  };
+
+  const renderEditableRatingIcons = (
+    category: BookRatingCategory,
+    activeIcon: string,
+    inactiveIcon: string,
+    value: number
+  ) => {
+    return (
+      <EditableIconsRow>
+        <ClearRatingButton onPress={() => setCategoryValue(category, 0)}>
+          <ClearRatingText>Clear</ClearRatingText>
+        </ClearRatingButton>
+
+        {Array.from({ length: 5 }).map((_, index) => {
+          const nextValue = index + 1;
+          const filled = index < value;
+
+          return (
+            <EditableEmojiButton
+              key={`${category}-${nextValue}`}
+              onPress={() => setCategoryValue(category, nextValue)}
+            >
+              <EditableEmoji inactive={!filled}>
+                {filled ? activeIcon : inactiveIcon}
+              </EditableEmoji>
+            </EditableEmojiButton>
+          );
+        })}
+      </EditableIconsRow>
+    );
+  };
 
   return (
     <Screen>
@@ -117,24 +222,66 @@ export default function BookDetailScreen() {
 
             <MiniStat>
               <MiniStatLabel>Your Rating</MiniStatLabel>
-              <MiniStatValue>—</MiniStatValue>
+              <MiniStatValue>{activeRatingCount}</MiniStatValue>
             </MiniStat>
 
             <MiniDivider />
 
             <MiniStat>
               <MiniStatLabel>Notes</MiniStatLabel>
-              <MiniStatValue>0</MiniStatValue>
+              <MiniStatValue>{notesCount}</MiniStatValue>
             </MiniStat>
           </StatsCard>
+
+          <Section>
+            <SectionHeaderRow>
+              <SectionTitle>My Rating</SectionTitle>
+
+              <SectionActionButton onPress={openRatingModal}>
+                <SectionActionButtonText>
+                  {activeRatings.length > 0 ? "Edit Rating" : "Add Rating"}
+                </SectionActionButtonText>
+              </SectionActionButton>
+            </SectionHeaderRow>
+
+            <RatingCard>
+              {activeRatings.length > 0 ? (
+                activeRatings.map((item) => {
+                  const value = book.userRatings?.[item.key] ?? 0;
+
+                  return (
+                    <RatingItem key={item.key}>
+                      <RatingItemLabel>{item.label}</RatingItemLabel>
+
+                      <RatingIconsRow>
+                        {renderStaticRatingIcons(
+                          item.activeIcon,
+                          item.inactiveIcon,
+                          value
+                        )}
+                      </RatingIconsRow>
+                    </RatingItem>
+                  );
+                })
+              ) : (
+                <EmptyRatingWrap>
+                  <EmptyRatingTitle>No personal ratings yet</EmptyRatingTitle>
+                  <EmptyRatingText>
+                    Add your own rating categories like spice, tension, humor,
+                    romance, or tears.
+                  </EmptyRatingText>
+                </EmptyRatingWrap>
+              )}
+            </RatingCard>
+          </Section>
         </Content>
       </ScrollView>
 
       <StickyBottomBar>
         <BottomActions>
-            <PrimaryButton onPress={() => setListModalOpen(true)}>
-                <PrimaryButtonText>Add to List</PrimaryButtonText>
-            </PrimaryButton>
+          <PrimaryButton onPress={() => setListModalOpen(true)}>
+            <PrimaryButtonText>Add to List</PrimaryButtonText>
+          </PrimaryButton>
 
           <SecondaryButton onPress={() => Alert.alert("Notes", "Coming soon")}>
             <SecondaryButtonText>Add Note</SecondaryButtonText>
@@ -147,6 +294,64 @@ export default function BookDetailScreen() {
         bookId={book.id}
         onClose={() => setListModalOpen(false)}
       />
+
+      <Modal
+        visible={ratingModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={closeRatingModal}
+      >
+        <ModalOverlay>
+          <RatingModalCard>
+            <ModalHeaderRow>
+              <ModalTitle>Edit Rating</ModalTitle>
+
+              <CloseButton onPress={closeRatingModal}>
+                <Ionicons name="close" size={18} color={theme.colors.foreground} />
+              </CloseButton>
+            </ModalHeaderRow>
+
+            <ModalSubtitle>
+              Rate only the categories you want to use for this book.
+            </ModalSubtitle>
+
+            <RatingEditorScroll
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 6 }}
+            >
+              {RATING_CONFIG.map((item) => {
+                const value = draftRatings[item.key] ?? 0;
+
+                return (
+                  <RatingEditorRow key={item.key}>
+                    <RatingEditorTop>
+                      <RatingEditorLabel>{item.label}</RatingEditorLabel>
+                      <RatingEditorValue>{value > 0 ? `${value}/5` : "—"}</RatingEditorValue>
+                    </RatingEditorTop>
+
+                    {renderEditableRatingIcons(
+                      item.key,
+                      item.activeIcon,
+                      item.inactiveIcon,
+                      value
+                    )}
+                  </RatingEditorRow>
+                );
+              })}
+            </RatingEditorScroll>
+
+            <ModalFooterRow>
+              <SecondaryModalButton onPress={closeRatingModal}>
+                <SecondaryModalButtonText>Cancel</SecondaryModalButtonText>
+              </SecondaryModalButton>
+
+              <PrimaryModalButton onPress={onSaveRatings}>
+                <PrimaryModalButtonText>Save</PrimaryModalButtonText>
+              </PrimaryModalButton>
+            </ModalFooterRow>
+          </RatingModalCard>
+        </ModalOverlay>
+      </Modal>
     </Screen>
   );
 }
@@ -235,7 +440,6 @@ const MetaBadge = styled.View<{ secondary?: boolean }>`
   border-radius: 999px;
   background: ${({ theme, secondary }) =>
     secondary ? theme.colors.muted : theme.colors.secondary};
-  
 `;
 
 const MetaBadgeText = styled.Text<{ secondary?: boolean }>`
@@ -268,10 +472,34 @@ const Section = styled.View`
   gap: 10px;
 `;
 
+const SectionHeaderRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
 const SectionTitle = styled.Text`
   font-size: 22px;
   color: ${({ theme }) => theme.colors.foreground};
   font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const SectionActionButton = styled.Pressable`
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const SectionActionButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
 const BodyText = styled.Text`
@@ -316,6 +544,54 @@ const MiniDivider = styled.View`
   width: 1px;
   height: 40px;
   background: ${({ theme }) => theme.colors.border};
+`;
+
+const RatingCard = styled.View`
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 18px;
+  gap: 14px;
+`;
+
+const RatingItem = styled.View`
+  gap: 8px;
+`;
+
+const RatingItemLabel = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const RatingIconsRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const RatingEmoji = styled.Text<{ inactive?: boolean }>`
+  font-size: 22px;
+  opacity: ${({ inactive }) => (inactive ? 0.35 : 1)};
+`;
+
+const EmptyRatingWrap = styled.View`
+  gap: 8px;
+`;
+
+const EmptyRatingTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const EmptyRatingText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const StickyBottomBar = styled.View`
@@ -395,9 +671,10 @@ const ModalOverlay = styled.View`
   padding: 24px;
 `;
 
-const ListModalCard = styled.View`
+const RatingModalCard = styled.View`
   width: 100%;
-  max-width: 460px;
+  max-width: 520px;
+  max-height: 84%;
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.xl}px;
   border-width: 1px;
@@ -435,56 +712,94 @@ const CloseButton = styled.Pressable`
   background: ${({ theme }) => theme.colors.muted};
 `;
 
-const ListOptions = styled.View`
+const RatingEditorScroll = styled.ScrollView`
   margin-top: 18px;
-  gap: 10px;
 `;
 
-const ListOptionButton = styled.Pressable`
-  min-height: 58px;
-  border-radius: 14px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.card};
-  padding: 12px 14px;
+const RatingEditorRow = styled.View`
+  padding: 14px 0;
+  border-bottom-width: 1px;
+  border-bottom-color: ${({ theme }) => theme.colors.border};
+  gap: 12px;
+`;
+
+const RatingEditorTop = styled.View`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 `;
 
-const ListOptionTextWrap = styled.View`
-  flex: 1;
+const RatingEditorLabel = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
-const ListOptionTitle = styled.Text`
+const RatingEditorValue = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const EditableIconsRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+`;
+
+const EditableEmojiButton = styled.Pressable`
+  min-width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+`;
+
+const EditableEmoji = styled.Text<{ inactive?: boolean }>`
+  font-size: 24px;
+  opacity: ${({ inactive }) => (inactive ? 0.28 : 1)};
+`;
+
+const ClearRatingButton = styled.Pressable`
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+  margin-right: 4px;
+`;
+
+const ClearRatingText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const ModalFooterRow = styled.View`
+  margin-top: 18px;
+  flex-direction: row;
+  gap: 10px;
+`;
+
+const SecondaryModalButton = styled.Pressable`
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const SecondaryModalButtonText = styled.Text`
   color: ${({ theme }) => theme.colors.foreground};
   font-size: 15px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
-const ListOptionMeta = styled.Text`
-  margin-top: 4px;
-  color: ${({ theme }) => theme.colors.mutedForeground};
-  font-size: 13px;
-  font-weight: ${({ theme }) => theme.font.family.medium};
-`;
-
-const Checkbox = styled.View<{ active: boolean }>`
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  align-items: center;
-  justify-content: center;
-  border-width: 1.5px;
-  border-color: ${({ active, theme }) =>
-    active ? theme.colors.primary : theme.colors.border};
-  background: ${({ active, theme }) =>
-    active ? theme.colors.primary : "transparent"};
-`;
-
-const DoneButton = styled.Pressable`
-  margin-top: 18px;
+const PrimaryModalButton = styled.Pressable`
+  flex: 1;
   height: 46px;
   border-radius: 14px;
   align-items: center;
@@ -492,8 +807,8 @@ const DoneButton = styled.Pressable`
   background: ${({ theme }) => theme.colors.primary};
 `;
 
-const DoneButtonText = styled.Text`
+const PrimaryModalButtonText = styled.Text`
   color: ${({ theme }) => theme.colors.primaryForeground};
-  font-size: 16px;
+  font-size: 15px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
