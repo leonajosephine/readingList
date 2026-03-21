@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { BookListPickerModal } from "../../src/components/BookListPickerModal";
 import {
+  BookNote,
   BookRatingCategory,
   BookRatings,
   useLibrary,
@@ -28,7 +29,7 @@ const RATING_CONFIG: {
 export default function BookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { books, updateBookRatings } = useLibrary();
+  const { books, updateBookRatings, updateBookNote, deleteBookNote, addBookNote } = useLibrary();
 
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -38,6 +39,12 @@ export default function BookDetailScreen() {
   const [listModalOpen, setListModalOpen] = useState(false);
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [draftRatings, setDraftRatings] = useState<BookRatings>({});
+
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [noteType, setNoteType] = useState<"note" | "quote">("note");
+  const [noteContent, setNoteContent] = useState("");
+  const [quotePage, setQuotePage] = useState("");
+  const [quoteChapter, setQuoteChapter] = useState("");
 
   const isTablet = width >= 768;
   const coverWidth = isTablet ? 280 : Math.min(width * 0.52, 220);
@@ -96,6 +103,61 @@ export default function BookDetailScreen() {
 
   const closeRatingModal = () => {
     setRatingModalOpen(false);
+  };
+
+  const openNoteModal = (type: "note" | "quote") => {
+    setNoteType(type);
+    setNoteContent("");
+    setQuotePage("");
+    setQuoteChapter("");
+    setNoteModalOpen(true);
+  };
+  
+  const closeNoteModal = () => {
+    setNoteModalOpen(false);
+    setNoteContent("");
+    setQuotePage("");
+    setQuoteChapter("");
+  };
+  
+  const onSaveNote = () => {
+    const trimmedContent = noteContent.trim();
+  
+    if (!trimmedContent) {
+      Alert.alert("Missing content", "Please enter some text first.");
+      return;
+    }
+  
+    if (noteType === "note") {
+      (book.id, {
+        type: "note",
+        content: trimmedContent,
+      });
+    } else {
+      addBookNote(book.id, {
+        type: "quote",
+        content: trimmedContent,
+        page: quotePage.trim() || undefined,
+        chapter: quoteChapter.trim() || undefined,
+      });
+    }
+  
+    closeNoteModal();
+  };
+  
+  const onDeleteNote = (note: BookNote) => {
+    Alert.alert(
+      note.type === "quote" ? "Delete quote?" : "Delete note?",
+      "This entry will be removed from the book.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteBookNote(book.id, note.id),
+        },
+      ]
+    );
   };
 
   const setCategoryValue = (category: BookRatingCategory, value: number) => {
@@ -222,13 +284,13 @@ export default function BookDetailScreen() {
 
             <MiniStat>
               <MiniStatLabel>Your Rating</MiniStatLabel>
-              <MiniStatValue>{activeRatingCount}</MiniStatValue>
+                <MiniStatValue>{book.userRatings?.overall ? `${book.userRatings.overall}/5` : "—"}</MiniStatValue>
             </MiniStat>
 
             <MiniDivider />
 
             <MiniStat>
-              <MiniStatLabel>Notes</MiniStatLabel>
+              <MiniStatLabel>Your Notes</MiniStatLabel>
               <MiniStatValue>{notesCount}</MiniStatValue>
             </MiniStat>
           </StatsCard>
@@ -274,6 +336,83 @@ export default function BookDetailScreen() {
               )}
             </RatingCard>
           </Section>
+
+          <Section>
+            <SectionHeaderRow>
+              <SectionTitle>Notes</SectionTitle>
+
+              <HeaderActionsRow>
+                <SmallGhostButton onPress={() => openNoteModal("note")}>
+                  <SmallGhostButtonText>Add Note</SmallGhostButtonText>
+                </SmallGhostButton>
+
+                <SmallGhostButton onPress={() => openNoteModal("quote")}>
+                  <SmallGhostButtonText>Add Quote</SmallGhostButtonText>
+                </SmallGhostButton>
+              </HeaderActionsRow>
+            </SectionHeaderRow>
+
+            <NotesWrap>
+              {book.notes && book.notes.length > 0 ? (
+                book.notes.map((note) =>
+                  note.type === "quote" ? (
+                    <QuoteCard key={note.id}>
+                      <QuoteTopRow>
+                        <QuoteBadge>
+                          <QuoteBadgeText>Quote</QuoteBadgeText>
+                        </QuoteBadge>
+
+                        <InlineDeleteButton onPress={() => onDeleteNote(note)}>
+                          <Ionicons
+                            name="trash-outline"
+                            size={16}
+                            color={theme.colors.mutedForeground}
+                          />
+                        </InlineDeleteButton>
+                      </QuoteTopRow>
+
+                      <QuoteText>“{note.content}”</QuoteText>
+
+                      {(note.page || note.chapter) && (
+                        <QuoteMetaRow>
+                          {note.page ? <QuoteMetaText>Page {note.page}</QuoteMetaText> : null}
+                          {note.page && note.chapter ? <QuoteMetaDot>·</QuoteMetaDot> : null}
+                          {note.chapter ? (
+                            <QuoteMetaText>Chapter {note.chapter}</QuoteMetaText>
+                          ) : null}
+                        </QuoteMetaRow>
+                      )}
+                    </QuoteCard>
+                  ) : (
+                    <NoteCard key={note.id}>
+                      <NoteTopRow>
+                        <NoteBadge>
+                          <NoteBadgeText>Note</NoteBadgeText>
+                        </NoteBadge>
+
+                        <InlineDeleteButton onPress={() => onDeleteNote(note)}>
+                          <Ionicons
+                            name="trash-outline"
+                            size={16}
+                            color={theme.colors.mutedForeground}
+                          />
+                        </InlineDeleteButton>
+                      </NoteTopRow>
+
+                      <NoteText>{note.content}</NoteText>
+                    </NoteCard>
+                  )
+                )
+              ) : (
+                <EmptyRatingWrap>
+                  <EmptyRatingTitle>No notes yet</EmptyRatingTitle>
+                  <EmptyRatingText>
+                    Save your thoughts, favorite quotes, pages, and chapter moments here.
+                  </EmptyRatingText>
+                </EmptyRatingWrap>
+              )}
+            </NotesWrap>
+          </Section>
         </Content>
       </ScrollView>
 
@@ -283,7 +422,7 @@ export default function BookDetailScreen() {
             <PrimaryButtonText>Add to List</PrimaryButtonText>
           </PrimaryButton>
 
-          <SecondaryButton onPress={() => Alert.alert("Notes", "Coming soon")}>
+          <SecondaryButton onPress={() => openNoteModal("note")}>
             <SecondaryButtonText>Add Note</SecondaryButtonText>
           </SecondaryButton>
         </BottomActions>
@@ -350,6 +489,78 @@ export default function BookDetailScreen() {
               </PrimaryModalButton>
             </ModalFooterRow>
           </RatingModalCard>
+        </ModalOverlay>
+      </Modal>
+
+      <Modal
+        visible={noteModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={closeNoteModal}
+      >
+        <ModalOverlay>
+          <NoteModalCard>
+            <ModalHeaderRow>
+              <ModalTitle>{noteType === "quote" ? "Add Quote" : "Add Note"}</ModalTitle>
+
+              <CloseButton onPress={closeNoteModal}>
+                <Ionicons name="close" size={18} color={theme.colors.foreground} />
+              </CloseButton>
+            </ModalHeaderRow>
+
+            <ModalSubtitle>
+              {noteType === "quote"
+                ? "Save a favorite quote and optionally add page or chapter details."
+                : "Write down your thoughts, reactions, or reminders for this book."}
+            </ModalSubtitle>
+
+            <NoteTextArea
+              value={noteContent}
+              onChangeText={setNoteContent}
+              placeholder={
+                noteType === "quote"
+                  ? "Enter your quote..."
+                  : "Write your note here..."
+              }
+              placeholderTextColor="rgba(113, 113, 130, 0.9)"
+              multiline
+              textAlignVertical="top"
+            />
+
+            {noteType === "quote" ? (
+              <QuoteFieldsRow>
+                <SmallInputWrap>
+                  <SmallInputLabel>Page</SmallInputLabel>
+                  <SmallInput
+                    value={quotePage}
+                    onChangeText={setQuotePage}
+                    placeholder="e.g. 184"
+                    placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                  />
+                </SmallInputWrap>
+
+                <SmallInputWrap>
+                  <SmallInputLabel>Chapter</SmallInputLabel>
+                  <SmallInput
+                    value={quoteChapter}
+                    onChangeText={setQuoteChapter}
+                    placeholder="e.g. 12"
+                    placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                  />
+                </SmallInputWrap>
+              </QuoteFieldsRow>
+            ) : null}
+
+            <ModalFooterRow>
+              <SecondaryModalButton onPress={closeNoteModal}>
+                <SecondaryModalButtonText>Cancel</SecondaryModalButtonText>
+              </SecondaryModalButton>
+
+              <PrimaryModalButton onPress={onSaveNote}>
+                <PrimaryModalButtonText>Save</PrimaryModalButtonText>
+              </PrimaryModalButton>
+            </ModalFooterRow>
+          </NoteModalCard>
         </ModalOverlay>
       </Modal>
     </Screen>
@@ -775,6 +986,188 @@ const ClearRatingText = styled.Text`
   color: ${({ theme }) => theme.colors.foreground};
   font-size: 12px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const HeaderActionsRow = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+`;
+
+const SmallGhostButton = styled.Pressable`
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const SmallGhostButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const NotesWrap = styled.View`
+  gap: 12px;
+`;
+
+const NoteCard = styled.View`
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 16px;
+  gap: 12px;
+`;
+
+const QuoteCard = styled.View`
+  background: ${({ theme }) => theme.colors.muted};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  border-left-width: 4px;
+  border-left-color: ${({ theme }) => theme.colors.primary};
+  padding: 16px;
+  gap: 12px;
+`;
+
+const NoteTopRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const QuoteTopRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const NoteBadge = styled.View`
+  align-self: flex-start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.secondary};
+`;
+
+const QuoteBadge = styled.View`
+  align-self: flex-start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const NoteBadgeText = styled.Text`
+  color: ${({ theme }) => theme.colors.secondaryForeground};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const QuoteBadgeText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const InlineDeleteButton = styled.Pressable`
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+`;
+
+const NoteText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const QuoteText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
+  line-height: 26px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+  font-style: italic;
+`;
+
+const QuoteMetaRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+const QuoteMetaText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const QuoteMetaDot = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+`;
+
+const NoteModalCard = styled.View`
+  width: 100%;
+  max-width: 520px;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
+`;
+
+const NoteTextArea = styled.TextInput`
+  margin-top: 18px;
+  min-height: 140px;
+  border-radius: 16px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.background};
+  padding: 14px;
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  line-height: 22px;
+  font-family: ${({ theme }) => theme.font.family.medium};
+`;
+
+const QuoteFieldsRow = styled.View`
+  margin-top: 14px;
+  flex-direction: row;
+  gap: 10px;
+`;
+
+const SmallInputWrap = styled.View`
+  flex: 1;
+  gap: 6px;
+`;
+
+const SmallInputLabel = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const SmallInput = styled.TextInput`
+  height: 46px;
+  border-radius: 12px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.background};
+  padding: 0 12px;
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 14px;
+  font-family: ${({ theme }) => theme.font.family.medium};
 `;
 
 const ModalFooterRow = styled.View`

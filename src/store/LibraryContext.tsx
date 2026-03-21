@@ -33,6 +33,18 @@ export type BookNote =
       chapter?: string;
     };
 
+ export type NewBookNote =
+    | {
+        type: "note";
+        content: string;
+      }
+    | {
+        type: "quote";
+        content: string;
+        page?: string;
+        chapter?: string;
+      };
+
 export type Book = {
   id: string;
   title: string;
@@ -57,10 +69,7 @@ type LibraryContextValue = {
 
   updateBookStatus: (bookId: string, status: BookStatus) => void;
   updateBookRatings: (bookId: string, ratings: BookRatings) => void;
-  addBookNote: (
-    bookId: string,
-    note: Omit<BookNote, "id">
-  ) => void;
+  addBookNote: (bookId: string, note: NewBookNote) => void;
   updateBookNote: (
     bookId: string,
     noteId: string,
@@ -242,7 +251,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const addBookNote = (bookId: string, note: Omit<BookNote, "id">) => {
+  const addBookNote = (bookId: string, note: NewBookNote) => {
     setBooks((prev) =>
       prev.map((book) =>
         book.id === bookId
