@@ -3,6 +3,7 @@ import {
   Alert,
   Modal,
   ScrollView,
+  Share,
   TextInput,
   useWindowDimensions,
 } from "react-native";
@@ -67,14 +68,62 @@ export default function ListsScreen() {
 
   const onMenu = (list: (typeof enrichedLists)[number]) => {
     Alert.alert(list.title, "What do you want to do?", [
-      { text: "Share", onPress: () => Alert.alert("Share", "Coming soon") },
+      { text: "Share", onPress: () => onShareList(list.id) },
       {
         text: "Delete",
         style: "destructive",
-        onPress: () => deleteList(list.id),
+        onPress: () => onDeleteList(list.id, list.title),
       },
       { text: "Cancel", style: "cancel" },
     ]);
+  };
+
+  const onShareList = async (listId: string) => {
+    const list = lists.find((item) => item.id === listId);
+    if (!list) return;
+  
+    const listBooks = list.bookIds
+      .map((bookId) => books.find((book) => book.id === bookId))
+      .filter(Boolean);
+  
+    const shareLines = [
+      "My Reading List",
+      list.title,
+      "",
+      ...listBooks.map((book, index) => {
+        if (!book) return null;
+        return `${index + 1}. ${book.title} — ${book.author}`;
+      }).filter(Boolean),
+      "",
+      "Shared from my ReadingApp ✨",
+    ];
+  
+    try {
+      await Share.share({
+        title: list.title,
+        message: shareLines.join("\n"),
+      });
+    } catch (error) {
+      Alert.alert(
+        "Share failed",
+        "Something went wrong while trying to share this list."
+      );
+    }
+  };
+
+  const onDeleteList = (listId: string, title: string) => {
+    Alert.alert(
+      `Delete "${title}"?`,
+      "This list will be permanently removed.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteList(listId),
+        },
+      ]
+    );
   };
 
   const onCreateList = () => {
