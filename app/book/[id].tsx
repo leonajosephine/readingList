@@ -265,19 +265,21 @@ export default function BookDetailScreen() {
             </Info>
           </Hero>
 
+          {/*add max characters for text otherwise "read more" */}            
           <Section>
             <SectionTitle>About this book</SectionTitle>
-            <BodyText>
+            <BodyText> 
               A full description will be added later. For now, this is the
               perfect place for a short summary, themes, mood, and why the book
-              is worth reading.
+              is worth reading. 
             </BodyText>
           </Section>
 
+          {/*add option to add current page.. if theres nothing committed then just write the number of pages , if set to done then make 384/384 */}         
           <StatsCard>
             <MiniStat>
-              <MiniStatLabel>Pages</MiniStatLabel>
-              <MiniStatValue>384</MiniStatValue>
+              <MiniStatLabel>Your Progress</MiniStatLabel>
+              <MiniStatValue>addPageNumber/384</MiniStatValue>
             </MiniStat>
 
             <MiniDivider />
@@ -289,10 +291,6 @@ export default function BookDetailScreen() {
 
             <MiniDivider />
 
-            <MiniStat>
-              <MiniStatLabel>Your Notes</MiniStatLabel>
-              <MiniStatValue>{notesCount}</MiniStatValue>
-            </MiniStat>
           </StatsCard>
 
           <Section>
@@ -412,6 +410,27 @@ export default function BookDetailScreen() {
                 </EmptyRatingWrap>
               )}
             </NotesWrap>
+          </Section>
+          <Section>
+            <BodyText>
+            Placeholder for friends that read the same book and which page they are on. 
+            And add function for lended books with name of the person etc. 
+            And add function to say with page you are currently reading, so that friends can see if they are ahead or behind you.
+            Add share function later: 
+            📖 Book Recommendation
+
+            The Midnight Library — Matt Haig
+
+            Community Rating: 4.5
+            My Rating:
+            Overall ⭐️⭐️⭐️⭐️
+            Tears 💧💧💧💧
+
+            Favorite Quote:
+            “Between life and death there is a library.”
+
+            Shared from my Reading App ✨
+            </BodyText>
           </Section>
         </Content>
       </ScrollView>
