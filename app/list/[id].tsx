@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Modal, ScrollView, useWindowDimensions } from "react-native";
+import { Alert, Modal, ScrollView, Share ,useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -125,6 +125,31 @@ export default function ListDetailScreen() {
     setRenameOpen(false);
   };
 
+  const onShareList = async () => {
+    if (!list) return;
+
+    const shareLines = [
+      "My Reading List:",
+      list.title,
+      "",
+      ...listBooks.map((book, index) => {
+        if (!book) return null;
+        return `${index + 1}. ${book.title} — ${book.author}`;
+      }).filter(Boolean),
+      "",
+      "Shared from my ReadingApp ✨",
+    ];
+
+    try {
+      await Share.share({
+        message: shareLines.join("\n"),
+        title: list.title,
+      });
+    } catch (error) {
+      Alert.alert("Share failed", "Something went wrong while trying to share this list.");
+    }
+  }; 
+
   if (!list) {
     return (
       <Screen>
@@ -188,7 +213,7 @@ export default function ListDetailScreen() {
               <PrimaryActionText>Add Books</PrimaryActionText>
             </PrimaryAction>
 
-            <SecondaryAction onPress={() => Alert.alert("Share List", "Coming soon")}>
+            <SecondaryAction onPress={onShareList}>
               <SecondaryActionText>Share</SecondaryActionText>
             </SecondaryAction>
           </TopActions>
