@@ -80,5 +80,5 @@ Styled-Components
 
 # Happy reading! 📚✨
 
-
+//to do: co read mit anderen friend - gleiches buch (man sollte sehen dass friend das buch liest und falls seite angegben dann auch auf welcher seite der friend ist)
 
