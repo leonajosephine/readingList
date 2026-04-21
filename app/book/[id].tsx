@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Modal, ScrollView, useWindowDimensions } from "react-native";
+import { Alert, Modal, ScrollView, Share, useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,9 +18,9 @@ const RATING_CONFIG: {
   activeIcon: string;
   inactiveIcon: string;
 }[] = [
-  { key: "overall", label: "Overall", activeIcon: "⭐️", inactiveIcon: "☆" }, //★
+  { key: "overall", label: "Overall", activeIcon: "⭐️", inactiveIcon: "☆" },
   { key: "spice", label: "Spice", activeIcon: "🔥", inactiveIcon: "○" },
-  { key: "tension", label: "Tension", activeIcon: "⚡", inactiveIcon: "○" }, //⚡
+  { key: "tension", label: "Tension", activeIcon: "⚡", inactiveIcon: "○" },
   { key: "humor", label: "Humor", activeIcon: "😊", inactiveIcon: "○" },
   { key: "romance", label: "Romance", activeIcon: "❤️", inactiveIcon: "○" },
   { key: "tears", label: "Tears", activeIcon: "💧", inactiveIcon: "○" },
@@ -29,7 +29,7 @@ const RATING_CONFIG: {
 export default function BookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { books, updateBookRatings, updateBookNote, deleteBookNote, addBookNote } = useLibrary();
+  const { books, updateBookRatings, deleteBookNote, addBookNote } = useLibrary();
 
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -63,9 +63,6 @@ export default function BookDetailScreen() {
     });
   }, [book?.userRatings]);
 
-  const notesCount = book?.notes?.length ?? 0;
-  const activeRatingCount = activeRatings.length;
-
   if (!book) {
     return (
       <Screen>
@@ -88,6 +85,8 @@ export default function BookDetailScreen() {
       </Screen>
     );
   }
+
+  const notesCount = book.notes?.length ?? 0;
 
   const statusLabel =
     book.status === "reading"
@@ -112,24 +111,24 @@ export default function BookDetailScreen() {
     setQuoteChapter("");
     setNoteModalOpen(true);
   };
-  
+
   const closeNoteModal = () => {
     setNoteModalOpen(false);
     setNoteContent("");
     setQuotePage("");
     setQuoteChapter("");
   };
-  
+
   const onSaveNote = () => {
     const trimmedContent = noteContent.trim();
-  
+
     if (!trimmedContent) {
       Alert.alert("Missing content", "Please enter some text first.");
       return;
     }
-  
+
     if (noteType === "note") {
-      (book.id, {
+      addBookNote(book.id, {
         type: "note",
         content: trimmedContent,
       });
@@ -141,10 +140,10 @@ export default function BookDetailScreen() {
         chapter: quoteChapter.trim() || undefined,
       });
     }
-  
+
     closeNoteModal();
   };
-  
+
   const onDeleteNote = (note: BookNote) => {
     Alert.alert(
       note.type === "quote" ? "Delete quote?" : "Delete note?",
@@ -170,6 +169,51 @@ export default function BookDetailScreen() {
   const onSaveRatings = () => {
     updateBookRatings(book.id, draftRatings);
     closeRatingModal();
+  };
+
+  const onShareBook = async () => {
+    const ratingLines = activeRatings.map((item) => {
+      const value = book.userRatings?.[item.key] ?? 0;
+      const icons = Array.from({ length: value })
+        .map(() => item.activeIcon)
+        .join("");
+      return `${item.label}: ${icons || "—"}`;
+    });
+
+    const favoriteQuote = book.notes?.find((note) => note.type === "quote");
+    const favoriteNote = book.notes?.find((note) => note.type === "note");
+
+    const shareLines = [
+      "📖 Book Recommendation",
+      "",
+      `${book.title} — ${book.author}`,
+      "",
+      `Genre: ${book.genre ?? "—"}`,
+      `Community Rating: ${book.rating ?? "—"}`,
+      "",
+      "My Rating:",
+      ...(ratingLines.length > 0 ? ratingLines : ["No personal ratings yet"]),
+      "",
+      favoriteQuote
+        ? `Favorite Quote:\n“${favoriteQuote.content}”`
+        : favoriteNote
+          ? `My Note:\n${favoriteNote.content}`
+          : "No notes yet",
+      "",
+      "Shared from my Reading App ✨",
+    ];
+
+    try {
+      await Share.share({
+        title: book.title,
+        message: shareLines.join("\n"),
+      });
+    } catch (error) {
+      Alert.alert(
+        "Share failed",
+        "Something went wrong while trying to share this book."
+      );
+    }
   };
 
   const renderStaticRatingIcons = (
@@ -262,16 +306,26 @@ export default function BookDetailScreen() {
                 <Star>★</Star>
                 <Rating>{book.rating ?? "0.0"}</Rating>
               </RatingRow>
+
+              <HeroActionsRow>
+                <HeroGhostButton onPress={onShareBook}>
+                  <Ionicons
+                    name="share-outline"
+                    size={16}
+                    color={theme.colors.foreground}
+                  />
+                  <HeroGhostButtonText>Share</HeroGhostButtonText>
+                </HeroGhostButton>
+              </HeroActionsRow>
             </Info>
           </Hero>
 
-          {/*add max characters for text otherwise "read more" */}            
           <Section>
             <SectionTitle>About this book</SectionTitle>
-            <BodyText> 
+            <BodyText>
               A full description will be added later. For now, this is the
               perfect place for a short summary, themes, mood, and why the book
-              is worth reading. 
+              is worth reading.
             </BodyText>
           </Section>
 
@@ -279,18 +333,24 @@ export default function BookDetailScreen() {
           <StatsCard>
             <MiniStat>
               <MiniStatLabel>Your Progress</MiniStatLabel>
-              <MiniStatValue>addPageNumber/384</MiniStatValue>
+              <MiniStatValue>— / 384</MiniStatValue>
             </MiniStat>
 
             <MiniDivider />
 
             <MiniStat>
               <MiniStatLabel>Your Rating</MiniStatLabel>
-                <MiniStatValue>{book.userRatings?.overall ? `${book.userRatings.overall}/5` : "—"}</MiniStatValue>
+              <MiniStatValue>
+                {book.userRatings?.overall ? `${book.userRatings.overall}/5` : "—"}
+              </MiniStatValue>
             </MiniStat>
 
             <MiniDivider />
 
+            <MiniStat>
+              <MiniStatLabel>Notes</MiniStatLabel>
+              <MiniStatValue>{notesCount}</MiniStatValue>
+            </MiniStat>
           </StatsCard>
 
           <Section>
@@ -373,8 +433,12 @@ export default function BookDetailScreen() {
 
                       {(note.page || note.chapter) && (
                         <QuoteMetaRow>
-                          {note.page ? <QuoteMetaText>Page {note.page}</QuoteMetaText> : null}
-                          {note.page && note.chapter ? <QuoteMetaDot>·</QuoteMetaDot> : null}
+                          {note.page ? (
+                            <QuoteMetaText>Page {note.page}</QuoteMetaText>
+                          ) : null}
+                          {note.page && note.chapter ? (
+                            <QuoteMetaDot>·</QuoteMetaDot>
+                          ) : null}
                           {note.chapter ? (
                             <QuoteMetaText>Chapter {note.chapter}</QuoteMetaText>
                           ) : null}
@@ -405,7 +469,8 @@ export default function BookDetailScreen() {
                 <EmptyRatingWrap>
                   <EmptyRatingTitle>No notes yet</EmptyRatingTitle>
                   <EmptyRatingText>
-                    Save your thoughts, favorite quotes, pages, and chapter moments here.
+                    Save your thoughts, favorite quotes, pages, and chapter
+                    moments here.
                   </EmptyRatingText>
                 </EmptyRatingWrap>
               )}
@@ -413,23 +478,9 @@ export default function BookDetailScreen() {
           </Section>
           <Section>
             <BodyText>
-            Placeholder for friends that read the same book and which page they are on. 
+            Placeholder: friends that read the same book & their page. 
             And add function for lended books with name of the person etc. 
-            And add function to say with page you are currently reading, so that friends can see if they are ahead or behind you.
-            Add share function later: 
-            📖 Book Recommendation
-
-            The Midnight Library — Matt Haig
-
-            Community Rating: 4.5
-            My Rating:
-            Overall ⭐️⭐️⭐️⭐️
-            Tears 💧💧💧💧
-
-            Favorite Quote:
-            “Between life and death there is a library.”
-
-            Shared from my Reading App ✨
+            Add function to say with page you are currently reading, so that friends can see if they are ahead or behind you.
             </BodyText>
           </Section>
         </Content>
@@ -484,7 +535,9 @@ export default function BookDetailScreen() {
                   <RatingEditorRow key={item.key}>
                     <RatingEditorTop>
                       <RatingEditorLabel>{item.label}</RatingEditorLabel>
-                      <RatingEditorValue>{value > 0 ? `${value}/5` : "—"}</RatingEditorValue>
+                      <RatingEditorValue>
+                        {value > 0 ? `${value}/5` : "—"}
+                      </RatingEditorValue>
                     </RatingEditorTop>
 
                     {renderEditableRatingIcons(
@@ -520,7 +573,9 @@ export default function BookDetailScreen() {
         <ModalOverlay>
           <NoteModalCard>
             <ModalHeaderRow>
-              <ModalTitle>{noteType === "quote" ? "Add Quote" : "Add Note"}</ModalTitle>
+              <ModalTitle>
+                {noteType === "quote" ? "Add Quote" : "Add Note"}
+              </ModalTitle>
 
               <CloseButton onPress={closeNoteModal}>
                 <Ionicons name="close" size={18} color={theme.colors.foreground} />
@@ -694,6 +749,31 @@ const Star = styled.Text`
 const Rating = styled.Text`
   font-size: 16px;
   color: ${({ theme }) => theme.colors.foreground};
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const HeroActionsRow = styled.View`
+  margin-top: 8px;
+  flex-direction: row;
+  gap: 10px;
+`;
+
+const HeroGhostButton = styled.Pressable`
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const HeroGhostButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 14px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
