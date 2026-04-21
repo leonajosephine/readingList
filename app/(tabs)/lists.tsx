@@ -10,10 +10,10 @@ import {
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { AppHeader } from "../../src/components/AppHeader";
 import { useLibrary } from "../../src/store/LibraryContext";
-import { LinearGradient } from "expo-linear-gradient";
 
 type ViewMode = "grid" | "list";
 
@@ -22,8 +22,12 @@ export default function ListsScreen() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
 
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+
   const { width } = useWindowDimensions();
-  const { lists, books, deleteList, createList } = useLibrary();
+  const { lists, books, deleteList, createList, renameList } = useLibrary();
 
   const router = useRouter();
 
@@ -52,22 +56,49 @@ export default function ListsScreen() {
     gridColumns;
 
   const enrichedLists = useMemo(() => {
-      return lists.map((list) => {
-        const listBooks = list.bookIds
-          .map((bookId) => books.find((book) => book.id === bookId))
-          .filter(Boolean);
-    
-        return {
-          ...list,
-          subtitle: `${list.bookIds.length} book${list.bookIds.length === 1 ? "" : "s"}`,
-          covers: listBooks.slice(0, 3).map((book) => book!.coverUrl),
-          previewCover: listBooks[0]?.coverUrl ?? null,
-        };
-      });
-    }, [lists, books]);
+    return lists.map((list) => {
+      const listBooks = list.bookIds
+        .map((bookId) => books.find((book) => book.id === bookId))
+        .filter(Boolean);
+
+      return {
+        ...list,
+        subtitle: `${list.bookIds.length} book${list.bookIds.length === 1 ? "" : "s"}`,
+        covers: listBooks.slice(0, 3).map((book) => book!.coverUrl),
+        previewCover: listBooks[0]?.coverUrl ?? null,
+      };
+    });
+  }, [lists, books]);
+
+  const openRenameModal = (listId: string, title: string) => {
+    setSelectedListId(listId);
+    setRenameValue(title);
+    setRenameOpen(true);
+  };
+
+  const closeRenameModal = () => {
+    setRenameOpen(false);
+    setRenameValue("");
+    setSelectedListId(null);
+  };
+
+  const onSaveRename = () => {
+    const trimmed = renameValue.trim();
+
+    if (!selectedListId) return;
+
+    if (!trimmed) {
+      Alert.alert("Missing title", "Please enter a name for your list.");
+      return;
+    }
+
+    renameList(selectedListId, trimmed);
+    closeRenameModal();
+  };
 
   const onMenu = (list: (typeof enrichedLists)[number]) => {
     Alert.alert(list.title, "What do you want to do?", [
+      { text: "Rename", onPress: () => openRenameModal(list.id, list.title) },
       { text: "Share", onPress: () => onShareList(list.id) },
       {
         text: "Delete",
@@ -81,23 +112,25 @@ export default function ListsScreen() {
   const onShareList = async (listId: string) => {
     const list = lists.find((item) => item.id === listId);
     if (!list) return;
-  
+
     const listBooks = list.bookIds
       .map((bookId) => books.find((book) => book.id === bookId))
       .filter(Boolean);
-  
+
     const shareLines = [
       "My Reading List",
       list.title,
       "",
-      ...listBooks.map((book, index) => {
-        if (!book) return null;
-        return `${index + 1}. ${book.title} — ${book.author}`;
-      }).filter(Boolean),
+      ...listBooks
+        .map((book, index) => {
+          if (!book) return null;
+          return `${index + 1}. ${book.title} — ${book.author}`;
+        })
+        .filter(Boolean),
       "",
       "Shared from my ReadingApp ✨",
     ];
-  
+
     try {
       await Share.share({
         title: list.title,
@@ -197,14 +230,23 @@ export default function ListsScreen() {
           {mode === "list" ? (
             <ListWrap>
               {enrichedLists.map((list) => (
-                <ListCard key={list.id} style={{ width: listCardWidth }} onPress={() => router.push(`/list/${list.id}`)}>
+                <ListCard
+                  key={list.id}
+                  style={{ width: listCardWidth }}
+                  onPress={() => router.push(`/list/${list.id}`)}
+                >
                   <ListCardTop>
                     <ListTextWrap>
                       <ListTitle numberOfLines={1}>{list.title}</ListTitle>
                       <ListMeta>{list.subtitle}</ListMeta>
                     </ListTextWrap>
 
-                    <MenuButton onPress={() => onMenu(list)}>
+                    <MenuButton
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        onMenu(list);
+                      }}
+                    >
                       <Ionicons
                         name="ellipsis-horizontal"
                         size={18}
@@ -262,7 +304,12 @@ export default function ListsScreen() {
                   </GridOverlay>
 
                   <GridCardTop>
-                    <GridMenuButton onPress={() => onMenu(list)}>
+                    <GridMenuButton
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        onMenu(list);
+                      }}
+                    >
                       <Ionicons
                         name="ellipsis-horizontal"
                         size={18}
@@ -272,7 +319,9 @@ export default function ListsScreen() {
                   </GridCardTop>
 
                   <GridCardBottom>
-                    <GridTitleOnImage numberOfLines={2}>{list.title}</GridTitleOnImage>
+                    <GridTitleOnImage numberOfLines={2}>
+                      {list.title}
+                    </GridTitleOnImage>
                     <GridMetaOnImage>{list.subtitle}</GridMetaOnImage>
                   </GridCardBottom>
                 </GridCard>
@@ -310,6 +359,39 @@ export default function ListsScreen() {
 
               <PrimaryButton onPress={onSubmitCreate}>
                 <PrimaryButtonText>Create</PrimaryButtonText>
+              </PrimaryButton>
+            </ModalActions>
+          </ModalCard>
+        </ModalOverlay>
+      </Modal>
+
+      <Modal
+        visible={renameOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={closeRenameModal}
+      >
+        <ModalOverlay>
+          <ModalCard>
+            <ModalTitle>Rename List</ModalTitle>
+            <ModalSubtitle>Choose a new name for this list</ModalSubtitle>
+
+            <TitleInput
+              value={renameValue}
+              onChangeText={setRenameValue}
+              placeholder="List name"
+              placeholderTextColor="rgba(113, 113, 130, 0.9)"
+              autoFocus
+              maxLength={60}
+            />
+
+            <ModalActions>
+              <SecondaryButton onPress={closeRenameModal}>
+                <SecondaryButtonText>Cancel</SecondaryButtonText>
+              </SecondaryButton>
+
+              <PrimaryButton onPress={onSaveRename}>
+                <PrimaryButtonText>Save</PrimaryButtonText>
               </PrimaryButton>
             </ModalActions>
           </ModalCard>
@@ -487,7 +569,6 @@ const GridCard = styled.Pressable`
   min-height: 210px;
   overflow: hidden;
   border-radius: ${({ theme }) => theme.radius.xl}px;
-  
   background: ${({ theme }) => theme.colors.card};
 
   shadow-color: #000;
