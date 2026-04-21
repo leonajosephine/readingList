@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Modal, ScrollView, Share ,useWindowDimensions } from "react-native";
+import { Alert, Modal, ScrollView, Share, useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,22 +15,20 @@ export default function ListDetailScreen() {
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const { 
-    lists, 
+  const {
+    lists,
     books,
-    addBookToList, 
-    removeBookFromList, 
+    addBookToList,
+    removeBookFromList,
     updateBookStatus,
     renameList,
-   } =
-    useLibrary();
+  } = useLibrary();
 
   const [addBooksOpen, setAddBooksOpen] = useState(false);
-
   const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [listPickerOpen, setListPickerOpen] = useState(false);
-  
+
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
 
@@ -47,24 +45,24 @@ export default function ListDetailScreen() {
   }, [list, books]);
 
   const selectableBooks = useMemo(() => {
-  if (!list) return [];
+    if (!list) return [];
 
-  const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
 
-  return books
-    .filter((book) => {
-      if (!q) return true;
+    return books
+      .filter((book) => {
+        if (!q) return true;
 
-      return (
-        book.title.toLowerCase().includes(q) ||
-        book.author.toLowerCase().includes(q)
-      );
-    })
-    .map((book) => ({
-      ...book,
-      selected: list.bookIds.includes(book.id),
-    }));
-}, [books, list, searchQuery]);
+        return (
+          book.title.toLowerCase().includes(q) ||
+          book.author.toLowerCase().includes(q)
+        );
+      })
+      .map((book) => ({
+        ...book,
+        selected: list.bookIds.includes(book.id),
+      }));
+  }, [books, list, searchQuery]);
 
   const contentMaxWidth = 1000;
   const contentWidth = Math.min(width, contentMaxWidth);
@@ -80,14 +78,24 @@ export default function ListDetailScreen() {
   const cardWidth =
     (contentWidth - horizontalPadding - gap * (columns - 1)) / columns;
 
-  const onToggleBookInList = (bookId: string, selected: boolean) => {    
+  const closeAddBooksModal = () => {
+    setAddBooksOpen(false);
+    setSearchQuery("");
+  };
+
+  const closeRenameModal = () => {
+    setRenameOpen(false);
+    setRenameValue("");
+  };
+
+  const onToggleBookInList = (bookId: string, selected: boolean) => {
     if (!list) return;
-  
+
     if (selected) {
       removeBookFromList(bookId, list.id);
-    } else { 
+    } else {
       addBookToList(bookId, list.id);
-    } 
+    }
   };
 
   const openBookActions = (book: BookCardBook) => {
@@ -110,19 +118,19 @@ export default function ListDetailScreen() {
     setRenameValue(list.title);
     setRenameOpen(true);
   };
-  
+
   const onSaveRename = () => {
     if (!list) return;
-  
+
     const trimmed = renameValue.trim();
-  
+
     if (!trimmed) {
       Alert.alert("Missing title", "Please enter a name for your list.");
       return;
     }
-  
+
     renameList(list.id, trimmed);
-    setRenameOpen(false);
+    closeRenameModal();
   };
 
   const onShareList = async () => {
@@ -132,10 +140,12 @@ export default function ListDetailScreen() {
       "My Reading List:",
       list.title,
       "",
-      ...listBooks.map((book, index) => {
-        if (!book) return null;
-        return `${index + 1}. ${book.title} — ${book.author}`;
-      }).filter(Boolean),
+      ...listBooks
+        .map((book, index) => {
+          if (!book) return null;
+          return `${index + 1}. ${book.title} — ${book.author}`;
+        })
+        .filter(Boolean),
       "",
       "Shared from my ReadingApp ✨",
     ];
@@ -146,9 +156,12 @@ export default function ListDetailScreen() {
         title: list.title,
       });
     } catch (error) {
-      Alert.alert("Share failed", "Something went wrong while trying to share this list.");
+      Alert.alert(
+        "Share failed",
+        "Something went wrong while trying to share this list."
+      );
     }
-  }; 
+  };
 
   if (!list) {
     return (
@@ -189,24 +202,24 @@ export default function ListDetailScreen() {
 
       <ScrollView contentContainerStyle={{ paddingTop: 82, paddingBottom: 40 }}>
         <Content>
-        <HeaderBlock>
-          <TitleRow>
-            <Title>{list.title}</Title>
+          <HeaderBlock>
+            <TitleRow>
+              <Title>{list.title}</Title>
 
-            <EditTitleButton onPress={openRenameModal}>
-              <Ionicons
-                name="pencil-outline"
-                size={18}
-                color={theme.colors.foreground}
-              />
-            </EditTitleButton>
-          </TitleRow>
+              <EditTitleButton onPress={openRenameModal}>
+                <Ionicons
+                  name="pencil-outline"
+                  size={18}
+                  color={theme.colors.foreground}
+                />
+              </EditTitleButton>
+            </TitleRow>
 
-          <Subtitle>
-            {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"} in this
-            list
-          </Subtitle>
-        </HeaderBlock>
+            <Subtitle>
+              {list.bookIds.length} book{list.bookIds.length === 1 ? "" : "s"} in
+              this list
+            </Subtitle>
+          </HeaderBlock>
 
           <TopActions>
             <PrimaryAction onPress={() => setAddBooksOpen(true)}>
@@ -259,14 +272,14 @@ export default function ListDetailScreen() {
         visible={addBooksOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setAddBooksOpen(false)}
+        onRequestClose={closeAddBooksModal}
       >
         <ModalOverlay>
           <SelectModalCard>
             <ModalHeaderRow>
               <ModalTitle>Add Books</ModalTitle>
 
-              <CloseButton onPress={() => setAddBooksOpen(false)}>
+              <CloseButton onPress={closeAddBooksModal}>
                 <Ionicons name="close" size={18} color={theme.colors.foreground} />
               </CloseButton>
             </ModalHeaderRow>
@@ -287,7 +300,7 @@ export default function ListDetailScreen() {
                   onPress={() => onToggleBookInList(book.id, book.selected)}
                 >
                   <RowLeft>
-                    <MiniCover source={{ uri: book.coverUrl }} />
+                    <MiniCoverSmall source={{ uri: book.coverUrl }} />
                     <SelectableInfo>
                       <SelectableTitle numberOfLines={1}>
                         {book.title}
@@ -311,7 +324,7 @@ export default function ListDetailScreen() {
               ))}
             </SelectableList>
 
-            <DoneButton onPress={() => setAddBooksOpen(false)}>
+            <DoneButton onPress={closeAddBooksModal}>
               <DoneButtonText>Done</DoneButtonText>
             </DoneButton>
           </SelectModalCard>
@@ -322,14 +335,14 @@ export default function ListDetailScreen() {
         visible={renameOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setRenameOpen(false)}
+        onRequestClose={closeRenameModal}
       >
         <ModalOverlay>
           <RenameModalCard>
             <ModalHeaderRow>
               <ModalTitle>Rename List</ModalTitle>
 
-              <CloseButton onPress={() => setRenameOpen(false)}>
+              <CloseButton onPress={closeRenameModal}>
                 <Ionicons name="close" size={18} color={theme.colors.foreground} />
               </CloseButton>
             </ModalHeaderRow>
@@ -346,7 +359,7 @@ export default function ListDetailScreen() {
             />
 
             <RenameActions>
-              <RenameSecondaryButton onPress={() => setRenameOpen(false)}>
+              <RenameSecondaryButton onPress={closeRenameModal}>
                 <RenameSecondaryButtonText>Cancel</RenameSecondaryButtonText>
               </RenameSecondaryButton>
 
@@ -388,7 +401,7 @@ export default function ListDetailScreen() {
         }}
         onRemoveFromList={() => {
           if (!selectedBook || !list) return;
-        
+
           Alert.alert(
             `Remove "${selectedBook.title}"?`,
             "This book will be removed from the list.",
@@ -603,21 +616,6 @@ const BookCardWrap = styled.View`
   position: relative;
 `;
 
-const RemoveButton = styled.Pressable`
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 5;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  align-items: center;
-  justify-content: center;
-  background: ${({ theme }) => theme.colors.card};
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-`;
-
 const EmptyStateCard = styled.View`
   margin-top: 24px;
   border-radius: ${({ theme }) => theme.radius.xl}px;
@@ -747,7 +745,7 @@ const RowLeft = styled.View`
   flex: 1;
 `;
 
-const MiniCover = styled.Image`
+const MiniCoverSmall = styled.Image`
   width: 40px;
   height: 60px;
   border-radius: 6px;
