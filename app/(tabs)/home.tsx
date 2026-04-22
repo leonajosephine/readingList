@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { ScrollView, useWindowDimensions } from "react-native";
+import React, { useMemo, useState, useEffect } from "react";
+import { Alert, ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { useRouter } from "expo-router";
 
@@ -10,6 +10,15 @@ import { SegmentedControl } from "../../src/components/SegmentedControl";
 import { BookActionsSheet } from "../../src/components/BookActionsSheet";
 import { BookListPickerModal } from "../../src/components/BookListPickerModal";
 import { useLibrary } from "../../src/store/LibraryContext";
+import { supabase } from "../../src/lib/supabase";
+
+
+const testConnection = async () => {
+  const { data, error } = await supabase.from("books").select("*").limit(1);
+  console.log("books:", data);
+  console.log("error:", error);
+};
+
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -19,6 +28,20 @@ export default function HomeScreen() {
   const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [listPickerOpen, setListPickerOpen] = useState(false);
+
+  useEffect(() => {
+    testConnection();
+  }, []);
+
+  const onLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+  
+    if (error) {
+      Alert.alert("Logout failed", error.message);
+    } else {
+      router.replace("/auth");
+    }
+  };
 
   const { width } = useWindowDimensions();
 
@@ -86,6 +109,10 @@ export default function HomeScreen() {
         <Content>
           <H1>Hi Leona</H1>
           <Sub>Track, organize, and discover your next favorite book</Sub>
+
+          <LogoutButton onPress={onLogout}>
+            <LogoutButtonText>Log out</LogoutButtonText>
+          </LogoutButton>
 
           <StatsRow>
             <StatCard label="Reading" value={String(currentlyReading.length)} />
@@ -266,4 +293,23 @@ const LibraryGrid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
   gap: 12px;
+`;
+
+const LogoutButton = styled.Pressable`
+  align-self: flex-start;
+  margin: 14px 18px 0 18px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const LogoutButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;

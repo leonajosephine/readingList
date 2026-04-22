@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Modal, ScrollView, Share, useWindowDimensions } from "react-native";
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  Share,
+  useWindowDimensions,
+} from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,7 +35,14 @@ const RATING_CONFIG: {
 export default function BookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { books, updateBookRatings, deleteBookNote, addBookNote } = useLibrary();
+  const {
+    books,
+    updateBookRatings,
+    updateBookNote,
+    deleteBookNote,
+    addBookNote,
+    updateBookProgress,
+  } = useLibrary();
 
   const theme = useTheme();
   const { width } = useWindowDimensions();
@@ -45,6 +58,11 @@ export default function BookDetailScreen() {
   const [noteContent, setNoteContent] = useState("");
   const [quotePage, setQuotePage] = useState("");
   const [quoteChapter, setQuoteChapter] = useState("");
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+
+  const [progressModalOpen, setProgressModalOpen] = useState(false);
+  const [draftCurrentPage, setDraftCurrentPage] = useState("");
+  const [draftTotalPages, setDraftTotalPages] = useState("");
 
   const isTablet = width >= 768;
   const coverWidth = isTablet ? 280 : Math.min(width * 0.52, 220);
@@ -53,6 +71,16 @@ export default function BookDetailScreen() {
     if (!book) return;
     setDraftRatings(book.userRatings ?? {});
   }, [book, ratingModalOpen]);
+
+  useEffect(() => {
+    if (!book) return;
+    setDraftCurrentPage(
+      book.currentPage !== undefined ? String(book.currentPage) : ""
+    );
+    setDraftTotalPages(
+      book.totalPages !== undefined ? String(book.totalPages) : ""
+    );
+  }, [book, progressModalOpen]);
 
   const activeRatings = useMemo(() => {
     if (!book?.userRatings) return [];
@@ -95,6 +123,15 @@ export default function BookDetailScreen() {
         ? "Completed"
         : "To Read";
 
+  const totalPages = book.totalPages ?? 384;
+  const currentPage =
+    book.status === "done"
+      ? totalPages
+      : Math.min(book.currentPage ?? 0, totalPages);
+
+  const progressPercentage =
+    totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
+
   const openRatingModal = () => {
     setDraftRatings(book.userRatings ?? {});
     setRatingModalOpen(true);
@@ -104,7 +141,54 @@ export default function BookDetailScreen() {
     setRatingModalOpen(false);
   };
 
+  const openProgressModal = () => {
+    setDraftCurrentPage(
+      book.currentPage !== undefined ? String(book.currentPage) : ""
+    );
+    setDraftTotalPages(
+      book.totalPages !== undefined ? String(book.totalPages) : ""
+    );
+    setProgressModalOpen(true);
+  };
+
+  const closeProgressModal = () => {
+    setProgressModalOpen(false);
+    setDraftCurrentPage("");
+    setDraftTotalPages("");
+  };
+
+  const onSaveProgress = () => {
+    const parsedTotal = Number(draftTotalPages);
+    const parsedCurrent = Number(draftCurrentPage);
+
+    if (!draftTotalPages.trim() || Number.isNaN(parsedTotal) || parsedTotal <= 0) {
+      Alert.alert(
+        "Invalid total pages",
+        "Please enter a valid total page count greater than 0."
+      );
+      return;
+    }
+
+    if (Number.isNaN(parsedCurrent) || parsedCurrent < 0) {
+      Alert.alert(
+        "Invalid current page",
+        "Please enter a valid current page number."
+      );
+      return;
+    }
+
+    const safeCurrent = Math.min(parsedCurrent, parsedTotal);
+
+    updateBookProgress(book.id, {
+      currentPage: safeCurrent,
+      totalPages: parsedTotal,
+    });
+
+    closeProgressModal();
+  };
+
   const openNoteModal = (type: "note" | "quote") => {
+    setEditingNoteId(null);
     setNoteType(type);
     setNoteContent("");
     setQuotePage("");
@@ -112,8 +196,25 @@ export default function BookDetailScreen() {
     setNoteModalOpen(true);
   };
 
+  const openEditNoteModal = (note: BookNote) => {
+    setEditingNoteId(note.id);
+    setNoteType(note.type);
+    setNoteContent(note.content);
+
+    if (note.type === "quote") {
+      setQuotePage(note.page ?? "");
+      setQuoteChapter(note.chapter ?? "");
+    } else {
+      setQuotePage("");
+      setQuoteChapter("");
+    }
+
+    setNoteModalOpen(true);
+  };
+
   const closeNoteModal = () => {
     setNoteModalOpen(false);
+    setEditingNoteId(null);
     setNoteContent("");
     setQuotePage("");
     setQuoteChapter("");
@@ -127,18 +228,32 @@ export default function BookDetailScreen() {
       return;
     }
 
-    if (noteType === "note") {
-      addBookNote(book.id, {
-        type: "note",
-        content: trimmedContent,
-      });
+    if (editingNoteId) {
+      if (noteType === "quote") {
+        updateBookNote(book.id, editingNoteId, {
+          content: trimmedContent,
+          page: quotePage.trim() || undefined,
+          chapter: quoteChapter.trim() || undefined,
+        });
+      } else {
+        updateBookNote(book.id, editingNoteId, {
+          content: trimmedContent,
+        });
+      }
     } else {
-      addBookNote(book.id, {
-        type: "quote",
-        content: trimmedContent,
-        page: quotePage.trim() || undefined,
-        chapter: quoteChapter.trim() || undefined,
-      });
+      if (noteType === "note") {
+        addBookNote(book.id, {
+          type: "note",
+          content: trimmedContent,
+        });
+      } else {
+        addBookNote(book.id, {
+          type: "quote",
+          content: trimmedContent,
+          page: quotePage.trim() || undefined,
+          chapter: quoteChapter.trim() || undefined,
+        });
+      }
     }
 
     closeNoteModal();
@@ -190,6 +305,7 @@ export default function BookDetailScreen() {
       "",
       `Genre: ${book.genre ?? "—"}`,
       `Community Rating: ${book.rating ?? "—"}`,
+      `Progress: ${currentPage}/${totalPages}`,
       "",
       "My Rating:",
       ...(ratingLines.length > 0 ? ratingLines : ["No personal ratings yet"]),
@@ -329,12 +445,14 @@ export default function BookDetailScreen() {
             </BodyText>
           </Section>
 
-          {/*add option to add current page.. if theres nothing committed then just write the number of pages , if set to done then make 384/384 */}         
           <StatsCard>
-            <MiniStat>
+            <MiniStatButton onPress={openProgressModal}>
               <MiniStatLabel>Your Progress</MiniStatLabel>
-              <MiniStatValue>— / 384</MiniStatValue>
-            </MiniStat>
+              <MiniStatValue>
+                {currentPage}/{totalPages}
+              </MiniStatValue>
+              <MiniStatHelper>{progressPercentage}%</MiniStatHelper>
+            </MiniStatButton>
 
             <MiniDivider />
 
@@ -352,6 +470,23 @@ export default function BookDetailScreen() {
               <MiniStatValue>{notesCount}</MiniStatValue>
             </MiniStat>
           </StatsCard>
+
+          <ProgressCard>
+            <ProgressHeaderRow>
+              <ProgressTitle>Reading Progress</ProgressTitle>
+              <ProgressEditButton onPress={openProgressModal}>
+                <ProgressEditButtonText>Edit</ProgressEditButtonText>
+              </ProgressEditButton>
+            </ProgressHeaderRow>
+
+            <ProgressBarTrack>
+              <ProgressBarFill style={{ width: `${progressPercentage}%` }} />
+            </ProgressBarTrack>
+
+            <ProgressMeta>
+              {currentPage} of {totalPages} pages
+            </ProgressMeta>
+          </ProgressCard>
 
           <Section>
             <SectionHeaderRow>
@@ -420,13 +555,23 @@ export default function BookDetailScreen() {
                           <QuoteBadgeText>Quote</QuoteBadgeText>
                         </QuoteBadge>
 
-                        <InlineDeleteButton onPress={() => onDeleteNote(note)}>
-                          <Ionicons
-                            name="trash-outline"
-                            size={16}
-                            color={theme.colors.mutedForeground}
-                          />
-                        </InlineDeleteButton>
+                        <InlineActionsRow>
+                          <InlineIconButton onPress={() => openEditNoteModal(note)}>
+                            <Ionicons
+                              name="pencil-outline"
+                              size={16}
+                              color={theme.colors.mutedForeground}
+                            />
+                          </InlineIconButton>
+
+                          <InlineIconButton onPress={() => onDeleteNote(note)}>
+                            <Ionicons
+                              name="trash-outline"
+                              size={16}
+                              color={theme.colors.mutedForeground}
+                            />
+                          </InlineIconButton>
+                        </InlineActionsRow>
                       </QuoteTopRow>
 
                       <QuoteText>“{note.content}”</QuoteText>
@@ -452,13 +597,23 @@ export default function BookDetailScreen() {
                           <NoteBadgeText>Note</NoteBadgeText>
                         </NoteBadge>
 
-                        <InlineDeleteButton onPress={() => onDeleteNote(note)}>
-                          <Ionicons
-                            name="trash-outline"
-                            size={16}
-                            color={theme.colors.mutedForeground}
-                          />
-                        </InlineDeleteButton>
+                        <InlineActionsRow>
+                          <InlineIconButton onPress={() => openEditNoteModal(note)}>
+                            <Ionicons
+                              name="pencil-outline"
+                              size={16}
+                              color={theme.colors.mutedForeground}
+                            />
+                          </InlineIconButton>
+
+                          <InlineIconButton onPress={() => onDeleteNote(note)}>
+                            <Ionicons
+                              name="trash-outline"
+                              size={16}
+                              color={theme.colors.mutedForeground}
+                            />
+                          </InlineIconButton>
+                        </InlineActionsRow>
                       </NoteTopRow>
 
                       <NoteText>{note.content}</NoteText>
@@ -475,13 +630,6 @@ export default function BookDetailScreen() {
                 </EmptyRatingWrap>
               )}
             </NotesWrap>
-          </Section>
-          <Section>
-            <BodyText>
-            Placeholder: friends that read the same book & their page. 
-            And add function for lended books with name of the person etc. 
-            Add function to say with page you are currently reading, so that friends can see if they are ahead or behind you.
-            </BodyText>
           </Section>
         </Content>
       </ScrollView>
@@ -503,6 +651,63 @@ export default function BookDetailScreen() {
         bookId={book.id}
         onClose={() => setListModalOpen(false)}
       />
+
+      <Modal
+        visible={progressModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={closeProgressModal}
+      >
+        <ModalOverlay>
+          <ProgressModalCard>
+            <ModalHeaderRow>
+              <ModalTitle>Update Progress</ModalTitle>
+
+              <CloseButton onPress={closeProgressModal}>
+                <Ionicons name="close" size={18} color={theme.colors.foreground} />
+              </CloseButton>
+            </ModalHeaderRow>
+
+            <ModalSubtitle>
+              Set how far you are in this book.
+            </ModalSubtitle>
+
+            <ProgressFieldsRow>
+              <SmallInputWrap>
+                <SmallInputLabel>Current Page</SmallInputLabel>
+                <SmallInput
+                  value={draftCurrentPage}
+                  onChangeText={setDraftCurrentPage}
+                  placeholder="e.g. 120"
+                  placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                  keyboardType="number-pad"
+                />
+              </SmallInputWrap>
+
+              <SmallInputWrap>
+                <SmallInputLabel>Total Pages</SmallInputLabel>
+                <SmallInput
+                  value={draftTotalPages}
+                  onChangeText={setDraftTotalPages}
+                  placeholder="e.g. 384"
+                  placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                  keyboardType="number-pad"
+                />
+              </SmallInputWrap>
+            </ProgressFieldsRow>
+
+            <ModalFooterRow>
+              <SecondaryModalButton onPress={closeProgressModal}>
+                <SecondaryModalButtonText>Cancel</SecondaryModalButtonText>
+              </SecondaryModalButton>
+
+              <PrimaryModalButton onPress={onSaveProgress}>
+                <PrimaryModalButtonText>Save</PrimaryModalButtonText>
+              </PrimaryModalButton>
+            </ModalFooterRow>
+          </ProgressModalCard>
+        </ModalOverlay>
+      </Modal>
 
       <Modal
         visible={ratingModalOpen}
@@ -574,7 +779,13 @@ export default function BookDetailScreen() {
           <NoteModalCard>
             <ModalHeaderRow>
               <ModalTitle>
-                {noteType === "quote" ? "Add Quote" : "Add Note"}
+                {editingNoteId
+                  ? noteType === "quote"
+                    ? "Edit Quote"
+                    : "Edit Note"
+                  : noteType === "quote"
+                    ? "Add Quote"
+                    : "Add Note"}
               </ModalTitle>
 
               <CloseButton onPress={closeNoteModal}>
@@ -631,7 +842,9 @@ export default function BookDetailScreen() {
               </SecondaryModalButton>
 
               <PrimaryModalButton onPress={onSaveNote}>
-                <PrimaryModalButtonText>Save</PrimaryModalButtonText>
+                <PrimaryModalButtonText>
+                  {editingNoteId ? "Update" : "Save"}
+                </PrimaryModalButtonText>
               </PrimaryModalButton>
             </ModalFooterRow>
           </NoteModalCard>
@@ -827,7 +1040,7 @@ const StatsCard = styled.View`
   border-color: ${({ theme }) => theme.colors.border};
   padding: 18px;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   gap: 12px;
 `;
@@ -835,6 +1048,14 @@ const StatsCard = styled.View`
 const MiniStat = styled.View`
   flex: 1;
   align-items: center;
+  justify-content: center;
+  gap: 6px;
+`;
+
+const MiniStatButton = styled.Pressable`
+  flex: 1;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
 `;
 
@@ -850,10 +1071,75 @@ const MiniStatValue = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
+const MiniStatHelper = styled.Text`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
 const MiniDivider = styled.View`
   width: 1px;
   height: 40px;
   background: ${({ theme }) => theme.colors.border};
+  align-self: center;
+`;
+
+const ProgressCard = styled.View`
+  margin-top: 16px;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 18px;
+  gap: 12px;
+`;
+
+const ProgressHeaderRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const ProgressTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const ProgressEditButton = styled.Pressable`
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const ProgressEditButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const ProgressBarTrack = styled.View`
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.muted};
+  overflow: hidden;
+`;
+
+const ProgressBarFill = styled.View`
+  height: 100%;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const ProgressMeta = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const RatingCard = styled.View`
@@ -979,6 +1265,16 @@ const ModalOverlay = styled.View`
   align-items: center;
   justify-content: center;
   padding: 24px;
+`;
+
+const ProgressModalCard = styled.View`
+  width: 100%;
+  max-width: 520px;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
 `;
 
 const RatingModalCard = styled.View`
@@ -1175,7 +1471,13 @@ const QuoteBadgeText = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
-const InlineDeleteButton = styled.Pressable`
+const InlineActionsRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+`;
+
+const InlineIconButton = styled.Pressable`
   width: 32px;
   height: 32px;
   border-radius: 999px;
@@ -1238,6 +1540,12 @@ const NoteTextArea = styled.TextInput`
   font-size: 15px;
   line-height: 22px;
   font-family: ${({ theme }) => theme.font.family.medium};
+`;
+
+const ProgressFieldsRow = styled.View`
+  margin-top: 18px;
+  flex-direction: row;
+  gap: 10px;
 `;
 
 const QuoteFieldsRow = styled.View`

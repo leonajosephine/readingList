@@ -33,17 +33,23 @@ export type BookNote =
       chapter?: string;
     };
 
- export type NewBookNote =
-    | {
-        type: "note";
-        content: string;
-      }
-    | {
-        type: "quote";
-        content: string;
-        page?: string;
-        chapter?: string;
-      };
+export type NewBookNote =
+  | {
+      type: "note";
+      content: string;
+    }
+  | {
+      type: "quote";
+      content: string;
+      page?: string;
+      chapter?: string;
+    };
+
+export type BookNotePatch = {
+  content?: string;
+  page?: string;
+  chapter?: string;
+};
 
 export type Book = {
   id: string;
@@ -55,6 +61,8 @@ export type Book = {
   status?: BookStatus;
   userRatings?: BookRatings;
   notes?: BookNote[];
+  currentPage?: number;
+  totalPages?: number;
 };
 
 export type ReadingList = {
@@ -69,11 +77,16 @@ type LibraryContextValue = {
 
   updateBookStatus: (bookId: string, status: BookStatus) => void;
   updateBookRatings: (bookId: string, ratings: BookRatings) => void;
+  updateBookProgress: (
+    bookId: string,
+    progress: { currentPage: number; totalPages: number }
+  ) => void;
+
   addBookNote: (bookId: string, note: NewBookNote) => void;
   updateBookNote: (
     bookId: string,
     noteId: string,
-    patch: Partial<Omit<BookNote, "id" | "type">>
+    patch: BookNotePatch
   ) => void;
   deleteBookNote: (bookId: string, noteId: string) => void;
 
@@ -96,6 +109,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=101",
       genre: "Fantasy",
       status: "reading",
+      currentPage: 120,
+      totalPages: 384,
       userRatings: {
         overall: 4,
         tension: 2,
@@ -106,7 +121,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         {
           id: "n1",
           type: "note",
-          content: "Very reflective and comforting. Good book for a quiet evening.",
+          content:
+            "Very reflective and comforting. Good book for a quiet evening.",
         },
         {
           id: "n2",
@@ -125,6 +141,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=102",
       genre: "Sci-Fi",
       status: "reading",
+      currentPage: 210,
+      totalPages: 688,
       userRatings: {
         overall: 5,
         tension: 5,
@@ -139,6 +157,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=103",
       genre: "Mystery",
       status: "to-read",
+      currentPage: 0,
+      totalPages: 432,
       userRatings: {},
       notes: [],
     },
@@ -150,6 +170,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=104",
       genre: "Classics",
       status: "done",
+      currentPage: 432,
+      totalPages: 432,
       userRatings: {
         overall: 5,
         romance: 4,
@@ -165,6 +187,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=105",
       genre: "Romance",
       status: "done",
+      currentPage: 376,
+      totalPages: 376,
       userRatings: {
         overall: 3,
         romance: 4,
@@ -181,6 +205,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=106",
       genre: "Fantasy",
       status: "to-read",
+      currentPage: 0,
+      totalPages: 662,
       userRatings: {},
       notes: [],
     },
@@ -192,6 +218,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=107",
       genre: "Sci-Fi",
       status: "to-read",
+      currentPage: 0,
+      totalPages: 496,
       userRatings: {},
       notes: [],
     },
@@ -203,6 +231,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       coverUrl: "https://picsum.photos/400/600?random=108",
       genre: "Romance",
       status: "done",
+      currentPage: 400,
+      totalPages: 400,
       userRatings: {
         overall: 5,
         romance: 4,
@@ -232,9 +262,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   const updateBookStatus = (bookId: string, status: BookStatus) => {
     setBooks((prev) =>
-      prev.map((book) =>
-        book.id === bookId ? { ...book, status } : book
-      )
+      prev.map((book) => (book.id === bookId ? { ...book, status } : book))
     );
   };
 
@@ -245,6 +273,23 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
           ? {
               ...book,
               userRatings: ratings,
+            }
+          : book
+      )
+    );
+  };
+
+  const updateBookProgress = (
+    bookId: string,
+    progress: { currentPage: number; totalPages: number }
+  ) => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book.id === bookId
+          ? {
+              ...book,
+              currentPage: progress.currentPage,
+              totalPages: progress.totalPages,
             }
           : book
       )
@@ -273,7 +318,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const updateBookNote = (
     bookId: string,
     noteId: string,
-    patch: Partial<Omit<BookNote, "id" | "type">>
+    patch: BookNotePatch
   ) => {
     setBooks((prev) =>
       prev.map((book) => {
@@ -364,6 +409,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       lists,
       updateBookStatus,
       updateBookRatings,
+      updateBookProgress,
       addBookNote,
       updateBookNote,
       deleteBookNote,
