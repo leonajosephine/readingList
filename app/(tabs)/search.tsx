@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
-import { ScrollView, useWindowDimensions } from "react-native";
-import styled from "styled-components/native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, ScrollView, useWindowDimensions } from "react-native";
+import styled, { useTheme } from "styled-components/native";
 import { AppHeader } from "../../src/components/AppHeader";
 import { BookCard, BookCardBook } from "../../src/components/BookCard";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,7 @@ import { useLibrary } from "../../src/store/LibraryContext";
 import { useRouter } from "expo-router";
 import { BookActionsSheet } from "../../src/components/BookActionsSheet";
 import { BookListPickerModal } from "../../src/components/BookListPickerModal";
+import { searchBooks, ExternalBook } from "../../src/services/bookApi";
 
 const GENRES = [
   "All",
@@ -21,7 +22,9 @@ const GENRES = [
 
 export default function SearchScreen() {
   const router = useRouter();
-  const { books, updateBookStatus } = useLibrary();
+  const theme = useTheme();
+
+  const { books, updateBookStatus, addExternalBookToLibrary } = useLibrary();
 
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All");
@@ -29,6 +32,10 @@ export default function SearchScreen() {
   const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [listPickerOpen, setListPickerOpen] = useState(false);
+
+  const [apiResults, setApiResults] = useState<ExternalBook[]>([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [addingBookId, setAddingBookId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -76,6 +83,66 @@ export default function SearchScreen() {
     setSelectedBook(null);
   };
 
+  const onSearchApi = async () => {
+    const trimmed = query.trim();
+
+    if (trimmed.length < 3) {
+      setApiResults([]);
+      return;
+    }
+
+    try {
+      setApiLoading(true);
+      const results = await searchBooks(trimmed);
+      setApiResults(results);
+    } catch (error) {
+      console.log("API search error:", error);
+      Alert.alert("Search failed", "Could not search books online.");
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const trimmed = query.trim();
+
+    if (trimmed.length < 3) {
+      setApiResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      onSearchApi();
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  const onAddExternalBook = async (book: ExternalBook) => {
+    try {
+      setAddingBookId(book.externalId);
+
+      const bookId = await addExternalBookToLibrary(book);
+
+      if (!bookId) {
+        Alert.alert("Could not add book", "Something went wrong.");
+        return;
+      }
+
+      router.push(`/book/${bookId}`);
+    } finally {
+      setAddingBookId(null);
+    }
+  };
+
+  const isAlreadyInLibrary = (externalBook: ExternalBook) => {
+    return books.some(
+      (book) =>
+        book.title.toLowerCase() === externalBook.title.toLowerCase() &&
+        book.author.toLowerCase() === externalBook.author.toLowerCase()
+    );
+  };
+
   return (
     <Screen>
       <AppHeader />
@@ -101,9 +168,25 @@ export default function SearchScreen() {
                 placeholderTextColor="rgba(113, 113, 130, 0.9)"
                 autoCorrect={false}
                 autoCapitalize="none"
+                returnKeyType="search"
+                onSubmitEditing={onSearchApi}
               />
+
+              <SearchSubmitButton onPress={onSearchApi} disabled={apiLoading}>
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color={theme.colors.primaryForeground}
+                />
+              </SearchSubmitButton>
             </SearchBox>
           </SearchWrap>
+
+          {apiLoading ? (
+            <SearchHint>Searching online...</SearchHint>
+          ) : query.trim().length > 0 && query.trim().length < 3 ? (
+            <SearchHint>Type at least 3 characters to search online</SearchHint>
+          ) : null}
 
           <ChipsScroll
             horizontal
@@ -123,7 +206,7 @@ export default function SearchScreen() {
             </ChipsRow>
           </ChipsScroll>
 
-          <ResultsText>{filtered.length} books found</ResultsText>
+          <ResultsText>{filtered.length} books in your library</ResultsText>
 
           <Grid>
             {filtered.map((book) => {
@@ -147,6 +230,67 @@ export default function SearchScreen() {
               );
             })}
           </Grid>
+
+          {apiResults.length > 0 ? (
+            <>
+              <OnlineSectionHeader>
+                <OnlineSectionTitle>Online Results</OnlineSectionTitle>
+                <OnlineSectionSub>
+                  Add books from Open Library to your personal library
+                </OnlineSectionSub>
+              </OnlineSectionHeader>
+
+              <ApiResultsWrap>
+                {apiResults.map((book) => {
+                  const alreadyAdded = isAlreadyInLibrary(book);
+                  const isAdding = addingBookId === book.externalId;
+
+                  return (
+                    <ApiResultCard key={book.externalId}>
+                      <ApiCover source={{ uri: book.coverUrl }} resizeMode="cover" />
+
+                      <ApiResultInfo>
+                        <ApiResultTitle numberOfLines={2}>
+                          {book.title}
+                        </ApiResultTitle>
+
+                        <ApiResultAuthor numberOfLines={1}>
+                          {book.author}
+                        </ApiResultAuthor>
+
+                        <ApiMetaRow>
+                          {book.publishedYear ? (
+                            <ApiMetaPill>
+                              <ApiMetaText>{book.publishedYear}</ApiMetaText>
+                            </ApiMetaPill>
+                          ) : null}
+
+                          {book.totalPages ? (
+                            <ApiMetaPill>
+                              <ApiMetaText>{book.totalPages} pages</ApiMetaText>
+                            </ApiMetaPill>
+                          ) : null}
+                        </ApiMetaRow>
+
+                        <AddBookButton
+                          disabled={alreadyAdded || isAdding}
+                          onPress={() => onAddExternalBook(book)}
+                        >
+                          <AddBookButtonText>
+                            {alreadyAdded
+                              ? "Already in Library"
+                              : isAdding
+                                ? "Adding..."
+                                : "Add to Library"}
+                          </AddBookButtonText>
+                        </AddBookButton>
+                      </ApiResultInfo>
+                    </ApiResultCard>
+                  );
+                })}
+              </ApiResultsWrap>
+            </>
+          ) : null}
         </Content>
       </ScrollView>
 
@@ -219,7 +363,7 @@ const SearchBox = styled.View`
   border-color: ${({ theme }) => theme.colors.border};
   flex-direction: row;
   align-items: center;
-  padding: 0 14px;
+  padding: 0 6px 0 14px;
 `;
 
 const SearchIconWrap = styled.View`
@@ -234,6 +378,23 @@ const SearchInput = styled.TextInput`
   font-size: 16px;
   color: ${({ theme }) => theme.colors.foreground};
   font-family: ${({ theme }) => theme.font.family.medium};
+`;
+
+const SearchSubmitButton = styled.Pressable`
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.primary};
+  opacity: ${({ disabled }) => (disabled ? 0.65 : 1)};
+`;
+
+const SearchHint = styled.Text`
+  padding: 0 18px 14px 18px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const ChipsScroll = styled.ScrollView`
@@ -270,4 +431,99 @@ const Grid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
   gap: 12px;
+`;
+
+const OnlineSectionHeader = styled.View`
+  padding: 28px 18px 12px 18px;
+`;
+
+const OnlineSectionTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 24px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const OnlineSectionSub = styled.Text`
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const ApiResultsWrap = styled.View`
+  padding: 0 18px 24px 18px;
+  gap: 12px;
+`;
+
+const ApiResultCard = styled.View`
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 12px;
+  flex-direction: row;
+  gap: 12px;
+`;
+
+const ApiCover = styled.Image`
+  width: 72px;
+  height: 108px;
+  border-radius: 10px;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const ApiResultInfo = styled.View`
+  flex: 1;
+`;
+
+const ApiResultTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const ApiResultAuthor = styled.Text`
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const ApiMetaRow = styled.View`
+  margin-top: 8px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+const ApiMetaPill = styled.View`
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const ApiMetaText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const AddBookButton = styled.Pressable`
+  align-self: flex-start;
+  margin-top: 12px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.primary};
+  opacity: ${({ disabled }) => (disabled ? 0.6 : 1)};
+`;
+
+const AddBookButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
