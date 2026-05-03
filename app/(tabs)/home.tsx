@@ -33,16 +33,6 @@ export default function HomeScreen() {
     testConnection();
   }, []);
 
-  const onLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-  
-    if (error) {
-      Alert.alert("Logout failed", error.message);
-    } else {
-      router.replace("/auth");
-    }
-  };
-
   const { width } = useWindowDimensions();
 
   const contentMaxWidth = 1000;
@@ -109,10 +99,6 @@ export default function HomeScreen() {
         <Content>
           <H1>Hi Leona</H1>
           <Sub>Track, organize, and discover your next favorite book</Sub>
-
-          <LogoutButton onPress={onLogout}>
-            <LogoutButtonText>Log out</LogoutButtonText>
-          </LogoutButton>
 
           <StatsRow>
             <StatCard label="Reading" value={String(currentlyReading.length)} />
@@ -293,23 +279,4 @@ const LibraryGrid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
   gap: 12px;
-`;
-
-const LogoutButton = styled.Pressable`
-  align-self: flex-start;
-  margin: 14px 18px 0 18px;
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 999px;
-  align-items: center;
-  justify-content: center;
-  background: ${({ theme }) => theme.colors.card};
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-`;
-
-const LogoutButtonText = styled.Text`
-  color: ${({ theme }) => theme.colors.foreground};
-  font-size: 14px;
-  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;

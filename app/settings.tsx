@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from "react";
-import { Image, ScrollView } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Image, ScrollView } from "react-native";
 import styled from "styled-components/native";
 import { useRouter } from "expo-router";
 
+import { supabase } from "../src/lib/supabase";
 import { useAppTheme } from "../src/theme/ThemeContext";
 import type { ThemeKey } from "../src/theme/tokens";
 
@@ -17,7 +18,6 @@ type ThemeOption = {
   key: ThemeKey;
   name: string;
   description: string;
-  // kleine Preview-Farbfläche (ähnlich wie die div preview box in deinem Web)
   previewBg: string;
   previewBorder: string;
 };
@@ -26,12 +26,43 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { themeKey, setThemeKey } = useAppTheme();
 
-  // Dummy user (später aus Store)
   const [name, setName] = useState("Leona");
-  const [email, setEmail] = useState("leona@example.com");
+  const [email, setEmail] = useState("");
   const [bio, setBio] = useState("Building a reading app ✨");
 
-  const themeOptions = useMemo<ThemeOption[]>( // add more: cherry, very girly, classy, 
+  useEffect(() => {
+    const loadUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setEmail(user?.email ?? "");
+    };
+
+    loadUser();
+  }, []);
+
+  const onLogout = () => {
+    Alert.alert("Log out?", "You will be signed out of your account.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Log out",
+        style: "destructive",
+        onPress: async () => {
+          const { error } = await supabase.auth.signOut();
+
+          if (error) {
+            Alert.alert("Logout failed", error.message);
+            return;
+          }
+
+          router.replace("/auth");
+        },
+      },
+    ]);
+  };
+
+  const themeOptions = useMemo<ThemeOption[]>(
     () => [
       { key: "light", name: "Light Mode", description: "Clean and bright", previewBg: "#ffffff", previewBorder: "rgba(0,0,0,0.12)" },
       { key: "dark", name: "Dark Mode", description: "Easy on the eyes", previewBg: "#0f0f10", previewBorder: "rgba(255,255,255,0.16)" },
@@ -57,37 +88,32 @@ export default function SettingsScreen() {
           </HeaderRow>
         </Page>
       </StickyHeader>
-  
+
       <ScrollView contentContainerStyle={{ paddingBottom: 80, paddingTop: 85 }}>
         <Page>
           <HeaderBlock>
             <H1>Settings</H1>
             <P>Customize your reading experience</P>
           </HeaderBlock>
-  
-          {/* Profile */}
+
           <Card style={[{ marginTop: 14 }, softShadow]}>
             <CardBody>
               <H2>Profile</H2>
-  
+
               <ProfileRow>
                 <AvatarWrap>
-                  <Avatar
-                    source={{
-                      uri: "https://i.pravatar.cc/300?img=32",
-                    }}
-                  />
+                  <Avatar source={{ uri: "https://i.pravatar.cc/300?img=32" }} />
                   <MiniIconButton onPress={() => {}}>
                     <MiniIconText>🎨</MiniIconText>
                   </MiniIconButton>
                 </AvatarWrap>
-  
+
                 <FormCol>
                   <Field>
                     <Label>Name</Label>
                     <Input value={name} onChangeText={setName} placeholder="Your name" />
                   </Field>
-  
+
                   <Field>
                     <Label>Email</Label>
                     <Input
@@ -96,9 +122,10 @@ export default function SettingsScreen() {
                       placeholder="you@email.com"
                       autoCapitalize="none"
                       keyboardType="email-address"
+                      editable={false}
                     />
                   </Field>
-  
+
                   <Field>
                     <Label>Bio</Label>
                     <BioInput
@@ -111,27 +138,26 @@ export default function SettingsScreen() {
                   </Field>
                 </FormCol>
               </ProfileRow>
-  
+
               <RightRow>
-                <Button onPress={() => {}}>
+                <Button onPress={() => Alert.alert("Profile", "Saving profile comes next.")}>
                   <ButtonText>Save Changes</ButtonText>
                 </Button>
               </RightRow>
             </CardBody>
           </Card>
-  
-          {/* Appearance */}
+
           <Card style={[{ marginTop: 16 }, softShadow]}>
             <CardBody>
               <H2>Appearance</H2>
               <Small style={{ marginTop: 6 }}>
                 Choose a theme that matches your reading mood
               </Small>
-  
+
               <ThemeGrid>
                 {themeOptions.map((opt) => {
                   const active = opt.key === themeKey;
-  
+
                   return (
                     <ThemeTile
                       key={opt.key}
@@ -139,18 +165,18 @@ export default function SettingsScreen() {
                       onPress={() => setThemeKey(opt.key)}
                     >
                       {active && <CheckPill>✓</CheckPill>}
-  
+
                       <PreviewBox
                         style={{
                           backgroundColor: opt.previewBg,
                           borderColor: opt.previewBorder,
                         }}
                       />
-  
+
                       <TileTitleRow>
                         <TileTitle numberOfLines={1}>{opt.name}</TileTitle>
                       </TileTitleRow>
-  
+
                       <TileDesc numberOfLines={2}>{opt.description}</TileDesc>
                     </ThemeTile>
                   );
@@ -158,7 +184,20 @@ export default function SettingsScreen() {
               </ThemeGrid>
             </CardBody>
           </Card>
-  
+
+          <Card style={[{ marginTop: 16 }, softShadow]}>
+            <CardBody>
+              <H2>Account</H2>
+              <Small style={{ marginTop: 6 }}>
+                Manage your session and account settings
+              </Small>
+
+              <LogoutButton onPress={onLogout}>
+                <LogoutButtonText>Log out</LogoutButtonText>
+              </LogoutButton>
+            </CardBody>
+          </Card>
+
           <FooterSpace />
         </Page>
       </ScrollView>
@@ -334,6 +373,23 @@ const TileDesc = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.medium};
   font-size: 13px;
   line-height: 18px;
+`;
+
+const LogoutButton = styled.Pressable`
+  margin-top: 18px;
+  height: 46px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const LogoutButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
 const FooterSpace = styled.View`
