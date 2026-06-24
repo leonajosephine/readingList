@@ -1,45 +1,46 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Alert, ScrollView, useWindowDimensions } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Modal, ScrollView, useWindowDimensions } from "react-native";
 import styled from "styled-components/native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import { AppHeader } from "../../src/components/AppHeader";
-import { StatCard } from "../../src/components/StatCard";
 import { BookCard, BookCardBook } from "../../src/components/BookCard";
 import { SegmentedControl } from "../../src/components/SegmentedControl";
 import { BookActionsSheet } from "../../src/components/BookActionsSheet";
 import { BookListPickerModal } from "../../src/components/BookListPickerModal";
 import { useLibrary } from "../../src/store/LibraryContext";
-import { supabase } from "../../src/lib/supabase";
 
-
-const testConnection = async () => {
-  const { data, error } = await supabase.from("books").select("*").limit(1);
-  console.log("books:", data);
-  console.log("error:", error);
+type Rank = {
+  title: string;
+  icon: string;
+  minBooks: number;
 };
 
+const RANKS: Rank[] = [
+  { title: "Novize", icon: "🌱", minBooks: 0 },
+  { title: "Zauberlehrling", icon: "🪄", minBooks: 10 },
+  { title: "Meisterin der Zitadelle", icon: "🏰", minBooks: 25 },
+  { title: "Princess of Knowledge", icon: "👑", minBooks: 50 },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { books, updateBookStatus } = useLibrary();
+  const { books, lists, updateBookStatus } = useLibrary();
 
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
   const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [listPickerOpen, setListPickerOpen] = useState(false);
-
-  useEffect(() => {
-    testConnection();
-  }, []);
+  const [activeReadingIndex, setActiveReadingIndex] = useState(0);
+  const [rankOpen, setRankOpen] = useState(false);
 
   const { width } = useWindowDimensions();
 
   const contentMaxWidth = 1000;
   const contentWidth = Math.min(width, contentMaxWidth);
-
   const horizontalPadding = 18 * 2;
-  const cardsGap = 14;
+  const libraryGap = 12;
 
   const isTablet = width >= 768;
   const isDesktop = width >= 1100;
@@ -65,16 +66,53 @@ export default function HomeScreen() {
     return books;
   }, [books, doneBooks, filter, toReadBooks]);
 
-  const readingColumns = isDesktop ? 4 : isTablet ? 3 : 2;
-  const readingCardWidth =
-    (contentWidth - horizontalPadding - cardsGap * (readingColumns - 1)) /
-    readingColumns;
+  const rankInfo = useMemo(() => {
+    const done = doneBooks.length;
+
+    const current =
+      [...RANKS].reverse().find((rank) => done >= rank.minBooks) ?? RANKS[0];
+
+    const currentIndex = RANKS.findIndex((rank) => rank.title === current.title);
+    const next = RANKS[currentIndex + 1];
+
+    const booksUntilNext = next ? Math.max(next.minBooks - done, 0) : 0;
+
+    return {
+      current,
+      next,
+      booksUntilNext,
+    };
+  }, [doneBooks.length]);
+
+  const enrichedLists = useMemo(() => {
+    return lists.slice(0, 2).map((list) => {
+      const listBooks = list.bookIds
+        .map((bookId) => books.find((book) => book.id === bookId))
+        .filter(Boolean);
+
+      return {
+        ...list,
+        subtitle: `${list.bookIds.length} book${list.bookIds.length === 1 ? "" : "s"}`,
+        covers: listBooks.slice(0, 4).map((book) => book!.coverUrl),
+      };
+    });
+  }, [lists, books]);
 
   const libraryColumns = isDesktop ? 4 : isTablet ? 3 : 2;
-  const libraryGap = 12;
   const libraryCardWidth =
     (contentWidth - horizontalPadding - libraryGap * (libraryColumns - 1)) /
     libraryColumns;
+
+  const carouselCardWidth = contentWidth - horizontalPadding;
+
+  const mapBook = (book: (typeof books)[number]): BookCardBook => ({
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    rating: book.rating ?? "0.0",
+    coverUrl: book.coverUrl,
+    status: book.status,
+  });
 
   const openBookActions = (book: BookCardBook) => {
     setSelectedBook(book);
@@ -95,47 +133,187 @@ export default function HomeScreen() {
     <Screen>
       <AppHeader />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <Content>
-          <H1>Hi Leona</H1>
-          <Sub>Track, organize, and discover your next favorite book</Sub>
+          <HeroBlock>
+            <WelcomeWrap>
+              <WelcomeKicker>Welcome back,</WelcomeKicker>
+              <WelcomeText>Hi Leona ✨</WelcomeText>
+            </WelcomeWrap>
 
-          <StatsRow>
-            <StatCard label="Reading" value={String(currentlyReading.length)} />
-            <StatCard label="To Read" value={String(toReadBooks.length)} />
-            <StatCard label="Done" value={String(doneBooks.length)} />
-          </StatsRow>
+            <RankCardButton onPress={() => setRankOpen(true)}>
+              <RankIcon>{rankInfo.current.icon}</RankIcon>
+              <RankCopy>
+                <RankTitle numberOfLines={1}>{rankInfo.current.title}</RankTitle>
+                <RankSub numberOfLines={1}>
+                  {rankInfo.next
+                    ? `${rankInfo.booksUntilNext} books to ${rankInfo.next.title}`
+                    : "Highest rank reached"}
+                </RankSub>
+              </RankCopy>
+            </RankCardButton>
+          </HeroBlock>
 
-          <SectionTitle>Currently Reading</SectionTitle>
-          <CardsRow>
-            {currentlyReading.map((book) => (
-              <BookCard
-                key={book.id}
-                style={{ width: readingCardWidth }}
-                onPress={() => router.push(`/book/${book.id}`)}
-                onLongPress={() =>
-                  openBookActions({
-                    id: book.id,
-                    title: book.title,
-                    author: book.author,
-                    rating: book.rating ?? "0.0",
-                    coverUrl: book.coverUrl,
-                    status: book.status,
-                  })
-                }
-                book={{
-                  id: book.id,
-                  title: book.title,
-                  author: book.author,
-                  rating: book.rating ?? "0.0",
-                  coverUrl: book.coverUrl,
-                  status: book.status,
+          <StatsPanel>
+            <StatBox>
+              <StatNumber>{doneBooks.length}</StatNumber>
+              <StatLabel>Books Read</StatLabel>
+            </StatBox>
+
+            <StatDivider />
+
+            <StatBox>
+              <StatNumber>{toReadBooks.length}</StatNumber>
+              <StatLabel>To Read</StatLabel>
+            </StatBox>
+
+            <StatDivider />
+
+            <StatBox>
+              <StatNumber>{currentlyReading.length}</StatNumber>
+              <StatLabel>Reading</StatLabel>
+            </StatBox>
+          </StatsPanel>
+
+          <SectionHeader>
+            <SectionTitle>Currently Reading</SectionTitle>
+          </SectionHeader>
+
+          {currentlyReading.length > 0 ? (
+            <>
+              <Carousel
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                decelerationRate="fast"
+                snapToInterval={carouselCardWidth + 12}
+                contentContainerStyle={{ paddingHorizontal: 18, gap: 12 }}
+                onMomentumScrollEnd={(event) => {
+                  const index = Math.round(
+                    event.nativeEvent.contentOffset.x / (carouselCardWidth + 12)
+                  );
+                  setActiveReadingIndex(index);
                 }}
-              />
-            ))}
-          </CardsRow>
+              >
+                {currentlyReading.map((book) => {
+                  const total = book.totalPages ?? 0;
+                  const current = Math.min(book.currentPage ?? 0, total);
+                  const percent =
+                    total > 0 ? Math.round((current / total) * 100) : 0;
+                  const mappedBook = mapBook(book);
 
-          <SectionTitle>Your Library</SectionTitle>
+                  return (
+                    <ReadingCard
+                      key={book.id}
+                      style={{ width: carouselCardWidth }}
+                      onPress={() => router.push(`/book/${book.id}`)}
+                      onLongPress={() => openBookActions(mappedBook)}
+                    >
+                      <ReadingTopRow>
+                        <ReadingBadge>Currently Reading</ReadingBadge>
+
+                        <BookDonutWrap>
+                          <DonutBase>
+                            <DonutArc
+                              style={{
+                                transform: [{ rotate: `${percent * 3.6}deg` }],
+                              }}
+                            />
+                            <DonutInner>
+                              <DonutText>{percent}%</DonutText>
+                            </DonutInner>
+                          </DonutBase>
+                        </BookDonutWrap>
+                      </ReadingTopRow>
+
+                      <ReadingMainRow>
+                        <ReadingLeft>
+                          <ReadingTitle numberOfLines={2}>
+                            {book.title}
+                          </ReadingTitle>
+                          <ReadingAuthor numberOfLines={1}>
+                            {book.author}
+                          </ReadingAuthor>
+
+                          <ReadingMeta>
+                            Page {current || 0} of {total || "—"}
+                          </ReadingMeta>
+                        </ReadingLeft>
+
+                        <ReadingCover source={{ uri: book.coverUrl }} />
+                      </ReadingMainRow>
+
+                      <ProgressTrack>
+                        <ProgressFill style={{ width: `${percent}%` }} />
+                      </ProgressTrack>
+                    </ReadingCard>
+                  );
+                })}
+              </Carousel>
+
+              {currentlyReading.length > 1 ? (
+                <DotsRow>
+                  {currentlyReading.map((book, index) => (
+                    <Dot key={book.id} active={index === activeReadingIndex} />
+                  ))}
+                </DotsRow>
+              ) : null}
+            </>
+          ) : (
+            <EmptyCard>
+              <EmptyTitle>No books in progress</EmptyTitle>
+              <EmptyText>Start reading a book to see it here.</EmptyText>
+            </EmptyCard>
+          )}
+
+          <SectionHeaderWithAction>
+            <SectionTitle>My Reading Lists</SectionTitle>
+            <ViewAllButton onPress={() => router.push("/lists")}>
+              <ViewAllText>View all</ViewAllText>
+            </ViewAllButton>
+          </SectionHeaderWithAction>
+
+          {enrichedLists.length > 0 ? (
+            <ListPreviewWrap>
+              {enrichedLists.map((list) => (
+                <ListPreviewCard
+                  key={list.id}
+                  onPress={() => router.push(`/list/${list.id}`)}
+                >
+                  <ListPreviewText>
+                    <ListPreviewTitle numberOfLines={1}>{list.title}</ListPreviewTitle>
+                    <ListPreviewMeta>{list.subtitle}</ListPreviewMeta>
+                  </ListPreviewText>
+
+                  <ListPreviewCovers>
+                    {list.covers.length > 0 ? (
+                      list.covers.map((cover, index) => (
+                        <TinyCover
+                          key={`${list.id}-${index}`}
+                          source={{ uri: cover }}
+                        />
+                      ))
+                    ) : (
+                      <TinyEmpty>
+                        <Ionicons name="book-outline" size={18} color="#6b7280" />
+                      </TinyEmpty>
+                    )}
+                  </ListPreviewCovers>
+
+                  <Ionicons name="chevron-forward" size={18} color="#6b7280" />
+                </ListPreviewCard>
+              ))}
+            </ListPreviewWrap>
+          ) : (
+            <EmptyCard>
+              <EmptyTitle>No lists yet</EmptyTitle>
+              <EmptyText>Create your first reading list to see it here.</EmptyText>
+            </EmptyCard>
+          )}
+
+          <SectionHeader>
+            <SectionTitle>Your Library</SectionTitle>
+          </SectionHeader>
 
           <SegmentWrap>
             <SegmentedControl
@@ -150,31 +328,19 @@ export default function HomeScreen() {
           </SegmentWrap>
 
           <LibraryGrid>
-            {libraryBooks.map((book) => (
-              <BookCard
-                key={book.id}
-                style={{ width: libraryCardWidth }}
-                onPress={() => router.push(`/book/${book.id}`)}
-                onLongPress={() =>
-                  openBookActions({
-                    id: book.id,
-                    title: book.title,
-                    author: book.author,
-                    rating: book.rating ?? "0.0",
-                    coverUrl: book.coverUrl,
-                    status: book.status,
-                  })
-                }
-                book={{
-                  id: book.id,
-                  title: book.title,
-                  author: book.author,
-                  rating: book.rating ?? "0.0",
-                  coverUrl: book.coverUrl,
-                  status: book.status,
-                }}
-              />
-            ))}
+            {libraryBooks.map((book) => {
+              const mappedBook = mapBook(book);
+
+              return (
+                <BookCard
+                  key={book.id}
+                  style={{ width: libraryCardWidth }}
+                  onPress={() => router.push(`/book/${book.id}`)}
+                  onLongPress={() => openBookActions(mappedBook)}
+                  book={mappedBook}
+                />
+              );
+            })}
           </LibraryGrid>
 
           <BookActionsSheet
@@ -214,9 +380,47 @@ export default function HomeScreen() {
           />
         </Content>
       </ScrollView>
+
+      <Modal visible={rankOpen} transparent animationType="fade">
+        <ModalOverlay>
+          <RankModalCard>
+            <ModalHeader>
+              <ModalTitle>Reading Ranks</ModalTitle>
+              <CloseButton onPress={() => setRankOpen(false)}>
+                <Ionicons name="close" size={18} color="#6b7280" />
+              </CloseButton>
+            </ModalHeader>
+
+            <ModalSub>
+              Finish books to unlock new reader ranks.
+            </ModalSub>
+
+            <RankList>
+              {RANKS.map((rank) => {
+                const unlocked = doneBooks.length >= rank.minBooks;
+
+                return (
+                  <RankRow key={rank.title} unlocked={unlocked}>
+                    <RankRowIcon>{rank.icon}</RankRowIcon>
+                    <RankRowText>
+                      <RankRowTitle>{rank.title}</RankRowTitle>
+                      <RankRowMeta>{rank.minBooks}+ books read</RankRowMeta>
+                    </RankRowText>
+                    {unlocked ? (
+                      <Ionicons name="checkmark-circle" size={20} color="#6b7280" />
+                    ) : null}
+                  </RankRow>
+                );
+              })}
+            </RankList>
+          </RankModalCard>
+        </ModalOverlay>
+      </Modal>
     </Screen>
   );
 }
+
+/* styles */
 
 const Screen = styled.View`
   flex: 1;
@@ -229,43 +433,338 @@ const Content = styled.View`
   align-self: center;
 `;
 
-const H1 = styled.Text`
-  font-size: 32px;
+const HeroBlock = styled.View`
+  padding: 14px 18px 10px 18px;
+  gap: 12px;
+`;
+
+const WelcomeWrap = styled.View`
+  gap: 2px;
+`;
+
+const WelcomeKicker = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const WelcomeText = styled.Text`
+  font-size: 34px;
   font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
-  padding: 0 18px;
-  margin-top: 10px;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.7px;
 `;
 
-const Sub = styled.Text`
-  font-size: 16px;
-  color: ${({ theme }) => theme.colors.mutedForeground};
-  padding: 8px 18px 0 18px;
-  line-height: 24px;
-  font-weight: ${({ theme }) => theme.font.family.medium};
-  max-width: 340px;
-`;
-
-const StatsRow = styled.View`
+const RankCardButton = styled.Pressable`
+  min-height: 58px;
+  padding: 10px 12px;
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
   flex-direction: row;
-  gap: 11px;
-  padding: 18px;
+  align-items: center;
+  gap: 10px;
+`;
+
+const RankIcon = styled.Text`
+  font-size: 26px;
+`;
+
+const RankCopy = styled.View`
+  flex: 1;
+`;
+
+const RankTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const RankSub = styled.Text`
+  margin-top: 2px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const StatsPanel = styled.View`
+  margin: 4px 18px 10px 18px;
+  padding: 14px;
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  flex-direction: row;
+  align-items: center;
+`;
+
+const StatBox = styled.View`
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+`;
+
+const StatNumber = styled.Text`
+  font-size: 24px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+  color: ${({ theme }) => theme.colors.foreground};
+`;
+
+const StatLabel = styled.Text`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-weight: ${({ theme }) => theme.font.family.medium};
+  text-align: center;
+`;
+
+const StatDivider = styled.View`
+  width: 1px;
+  height: 34px;
+  background: ${({ theme }) => theme.colors.border};
+`;
+
+const SectionHeader = styled.View`
+  padding: 18px 18px 12px 18px;
+`;
+
+const SectionHeaderWithAction = styled.View`
+  padding: 22px 18px 12px 18px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const SectionTitle = styled.Text`
   font-size: 24px;
   font-weight: ${({ theme }) => theme.font.family.bold};
   color: ${({ theme }) => theme.colors.foreground};
-  padding: 14px 18px 14px 18px;
   letter-spacing: -0.3px;
 `;
 
-const CardsRow = styled.View`
+const ViewAllButton = styled.Pressable`
+  padding: 8px 0 8px 12px;
+`;
+
+const ViewAllText = styled.Text`
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const Carousel = styled.ScrollView``;
+
+const ReadingCard = styled.Pressable`
+  min-height: 220px;
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  overflow: hidden;
+  padding: 18px;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const ReadingTopRow = styled.View`
   flex-direction: row;
-  flex-wrap: wrap;
-  gap: 14px;
-  padding: 0 18px 18px 18px;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const ReadingBadge = styled.Text`
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const ReadingMainRow = styled.View`
+  margin-top: 14px;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 16px;
+`;
+
+const ReadingLeft = styled.View`
+  flex: 1;
+`;
+
+const ReadingTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-size: 24px;
+  line-height: 29px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const ReadingAuthor = styled.Text`
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const ReadingMeta = styled.Text`
+  margin-top: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const ReadingCover = styled.Image`
+  width: 92px;
+  height: 138px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+`;
+
+const BookDonutWrap = styled.View`
+  width: 62px;
+  height: 62px;
+  align-items: center;
+  justify-content: center;
+`;
+
+const DonutBase = styled.View`
+  width: 58px;
+  height: 58px;
+  border-radius: 29px;
+  border-width: 5px;
+  border-color: rgba(255, 255, 255, 0.28);
+  align-items: center;
+  justify-content: center;
+  position: relative;
+`;
+
+const DonutArc = styled.View`
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  border-radius: 29px;
+  border-width: 5px;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  border-right-color: rgba(255, 255, 255, 0.95);
+`;
+
+const DonutInner = styled.View`
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.12);
+  align-items: center;
+  justify-content: center;
+`;
+
+const DonutText = styled.Text`
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const ProgressTrack = styled.View`
+  margin-top: 16px;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+`;
+
+const ProgressFill = styled.View`
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+`;
+
+const DotsRow = styled.View`
+  flex-direction: row;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 12px;
+`;
+
+const Dot = styled.View<{ active: boolean }>`
+  width: ${({ active }) => (active ? 18 : 6)}px;
+  height: 6px;
+  border-radius: 999px;
+  background: ${({ active, theme }) =>
+    active ? theme.colors.primary : theme.colors.border};
+`;
+
+const ListPreviewWrap = styled.View`
+  padding: 0 18px;
+  gap: 10px;
+`;
+
+const ListPreviewCard = styled.Pressable`
+  min-height: 74px;
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 12px 14px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+`;
+
+const ListPreviewText = styled.View`
+  flex: 1;
+`;
+
+const ListPreviewTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const ListPreviewMeta = styled.Text`
+  margin-top: 4px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const ListPreviewCovers = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const TinyCover = styled.Image`
+  width: 34px;
+  height: 50px;
+  border-radius: 6px;
+  margin-left: -8px;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const TinyEmpty = styled.View`
+  width: 42px;
+  height: 50px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const EmptyCard = styled.View`
+  margin: 0 18px;
+  padding: 18px;
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const EmptyTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 17px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const EmptyText = styled.Text`
+  margin-top: 5px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const SegmentWrap = styled.View`
@@ -279,4 +778,87 @@ const LibraryGrid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
   gap: 12px;
+`;
+
+const ModalOverlay = styled.View`
+  flex: 1;
+  background: rgba(0, 0, 0, 0.35);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+`;
+
+const RankModalCard = styled.View`
+  width: 100%;
+  max-width: 420px;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
+`;
+
+const ModalHeader = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const ModalTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 22px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const CloseButton = styled.Pressable`
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const ModalSub = styled.Text`
+  margin-top: 6px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
+`;
+
+const RankList = styled.View`
+  margin-top: 16px;
+  gap: 10px;
+`;
+
+const RankRow = styled.View<{ unlocked: boolean }>`
+  padding: 12px;
+  border-radius: ${({ theme }) => theme.radius.lg}px;
+  background: ${({ theme }) => theme.colors.muted};
+  opacity: ${({ unlocked }) => (unlocked ? 1 : 0.55)};
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+`;
+
+const RankRowIcon = styled.Text`
+  font-size: 24px;
+`;
+
+const RankRowText = styled.View`
+  flex: 1;
+`;
+
+const RankRowTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 15px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const RankRowMeta = styled.Text`
+  margin-top: 2px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
