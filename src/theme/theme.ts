@@ -11,6 +11,9 @@ export const makeTheme = (t: Tokens) => ({
     primary: t.primary,
     primaryForeground: t.primaryForeground,
 
+    readingCard: t.readingCard,
+    readingCardForeground: t.readingCardForeground,
+
     secondary: t.secondary,
     secondaryForeground: t.secondaryForeground,
 

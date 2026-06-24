@@ -18,6 +18,9 @@ export type Tokens = {
   primary: string;
   primaryForeground: string;
 
+  readingCard: string;
+  readingCardForeground: string;
+
   secondary: string;
   secondaryForeground: string;
 
@@ -46,6 +49,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     primary: "#030213",
     primaryForeground: "#ffffff",
+
+    readingCard: "#1F1B2E",
+    readingCardForeground: "#FFFFFF",
 
     secondary: "#F1F1F4",
     secondaryForeground: "#030213",
@@ -76,6 +82,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     primary: "#F3F3F3",
     primaryForeground: "#1a1a1a",
 
+    readingCard: "#0E0C1D",
+    readingCardForeground: "#FFFFFF",
+
     secondary: "#2b2b2b",
     secondaryForeground: "#F3F3F3",
 
@@ -104,6 +113,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     primary: "#6b4423",
     primaryForeground: "#faf8f5",
+
+    readingCard: "#3B2A56",
+    readingCardForeground: "#FFFFFF",
 
     secondary: "#e8dcc8",
     secondaryForeground: "#2d1810",
@@ -134,6 +146,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     primary: "#d946a6",
     primaryForeground: "#ffffff",
 
+    readingCard: "#6E4B73",
+    readingCardForeground: "#FFFFFF",
+
     secondary: "#fce7f3",
     secondaryForeground: "#4a1942",
 
@@ -162,6 +177,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     primary: "#7c3aed",
     primaryForeground: "#ffffff",
+
+    readingCard: "#161429",
+    readingCardForeground: "#FFFFFF",
 
     secondary: "#2d2d44",
     secondaryForeground: "#e8e8f0",
@@ -192,6 +210,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     primary: "#06b6d4",
     primaryForeground: "#0a0e1a",
 
+    readingCard: "#102338",
+    readingCardForeground: "#E0F2FE",
+
     secondary: "#1e293b",
     secondaryForeground: "#e0f2fe",
 
@@ -221,6 +242,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     primary: "#7c8cff",
     primaryForeground: "#ffffff",
 
+    readingCard: "#E8EEFF",
+    readingCardForeground: "#1F2937",
+
     secondary: "#e9eef8",
     secondaryForeground: "#1f2937",
 
@@ -249,6 +273,9 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     primary: "#3f6b4b",
     primaryForeground: "#ffffff",
+
+    readingCard: "#4A6654",
+    readingCardForeground: "#FFFFFF",
 
     secondary: "#dde8dd",
     secondaryForeground: "#203126",

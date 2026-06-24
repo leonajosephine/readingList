@@ -68,20 +68,14 @@ export default function HomeScreen() {
 
   const rankInfo = useMemo(() => {
     const done = doneBooks.length;
-
     const current =
       [...RANKS].reverse().find((rank) => done >= rank.minBooks) ?? RANKS[0];
 
     const currentIndex = RANKS.findIndex((rank) => rank.title === current.title);
     const next = RANKS[currentIndex + 1];
-
     const booksUntilNext = next ? Math.max(next.minBooks - done, 0) : 0;
 
-    return {
-      current,
-      next,
-      booksUntilNext,
-    };
+    return { current, next, booksUntilNext };
   }, [doneBooks.length]);
 
   const enrichedLists = useMemo(() => {
@@ -119,9 +113,7 @@ export default function HomeScreen() {
     setActionsOpen(true);
   };
 
-  const closeBookActions = () => {
-    setActionsOpen(false);
-  };
+  const closeBookActions = () => setActionsOpen(false);
 
   const closeAllBookMenus = () => {
     setActionsOpen(false);
@@ -142,7 +134,10 @@ export default function HomeScreen() {
             </WelcomeWrap>
 
             <RankCardButton onPress={() => setRankOpen(true)}>
-              <RankIcon>{rankInfo.current.icon}</RankIcon>
+              <RankIconBubble>
+                <RankIcon>{rankInfo.current.icon}</RankIcon>
+              </RankIconBubble>
+
               <RankCopy>
                 <RankTitle numberOfLines={1}>{rankInfo.current.title}</RankTitle>
                 <RankSub numberOfLines={1}>
@@ -151,11 +146,16 @@ export default function HomeScreen() {
                     : "Highest rank reached"}
                 </RankSub>
               </RankCopy>
+
+              <Ionicons name="chevron-forward" size={18} color="#6b7280" />
             </RankCardButton>
           </HeroBlock>
 
           <StatsPanel>
             <StatBox>
+              <StatIconBubble>
+                <Ionicons name="book-outline" size={18} color="#6b7280" />
+              </StatIconBubble>
               <StatNumber>{doneBooks.length}</StatNumber>
               <StatLabel>Books Read</StatLabel>
             </StatBox>
@@ -163,6 +163,9 @@ export default function HomeScreen() {
             <StatDivider />
 
             <StatBox>
+              <StatIconBubble>
+                <Ionicons name="bookmark-outline" size={18} color="#6b7280" />
+              </StatIconBubble>
               <StatNumber>{toReadBooks.length}</StatNumber>
               <StatLabel>To Read</StatLabel>
             </StatBox>
@@ -170,6 +173,9 @@ export default function HomeScreen() {
             <StatDivider />
 
             <StatBox>
+              <StatIconBubble>
+                <Ionicons name="reader-outline" size={18} color="#6b7280" />
+              </StatIconBubble>
               <StatNumber>{currentlyReading.length}</StatNumber>
               <StatLabel>Reading</StatLabel>
             </StatBox>
@@ -209,8 +215,19 @@ export default function HomeScreen() {
                       onPress={() => router.push(`/book/${book.id}`)}
                       onLongPress={() => openBookActions(mappedBook)}
                     >
-                      <ReadingTopRow>
-                        <ReadingBadge>Currently Reading</ReadingBadge>
+                      <ReadingMainRow>
+                        <ReadingCover source={{ uri: book.coverUrl }} />
+
+                        <ReadingInfo>
+                          <ReadingTextGroup>
+                            <ReadingTitle numberOfLines={2}>{book.title}</ReadingTitle>
+                            <ReadingAuthor numberOfLines={1}>{book.author}</ReadingAuthor>
+                          </ReadingTextGroup>
+
+                          <ReadingMeta>
+                            Page {current || 0} of {total || "—"}
+                          </ReadingMeta>
+                        </ReadingInfo>
 
                         <BookDonutWrap>
                           <DonutBase>
@@ -224,23 +241,6 @@ export default function HomeScreen() {
                             </DonutInner>
                           </DonutBase>
                         </BookDonutWrap>
-                      </ReadingTopRow>
-
-                      <ReadingMainRow>
-                        <ReadingLeft>
-                          <ReadingTitle numberOfLines={2}>
-                            {book.title}
-                          </ReadingTitle>
-                          <ReadingAuthor numberOfLines={1}>
-                            {book.author}
-                          </ReadingAuthor>
-
-                          <ReadingMeta>
-                            Page {current || 0} of {total || "—"}
-                          </ReadingMeta>
-                        </ReadingLeft>
-
-                        <ReadingCover source={{ uri: book.coverUrl }} />
                       </ReadingMainRow>
 
                       <ProgressTrack>
@@ -281,7 +281,9 @@ export default function HomeScreen() {
                   onPress={() => router.push(`/list/${list.id}`)}
                 >
                   <ListPreviewText>
-                    <ListPreviewTitle numberOfLines={1}>{list.title}</ListPreviewTitle>
+                    <ListPreviewTitle numberOfLines={1}>
+                      {list.title}
+                    </ListPreviewTitle>
                     <ListPreviewMeta>{list.subtitle}</ListPreviewMeta>
                   </ListPreviewText>
 
@@ -352,9 +354,7 @@ export default function HomeScreen() {
             onClose={closeAllBookMenus}
             onAddToList={() => {
               closeBookActions();
-              setTimeout(() => {
-                setListPickerOpen(true);
-              }, 180);
+              setTimeout(() => setListPickerOpen(true), 180);
             }}
             onMarkReading={() => {
               if (!selectedBook) return;
@@ -391,28 +391,34 @@ export default function HomeScreen() {
               </CloseButton>
             </ModalHeader>
 
-            <ModalSub>
-              Finish books to unlock new reader ranks.
-            </ModalSub>
+            <ModalSub>Finish books to unlock new reader ranks.</ModalSub>
 
-            <RankList>
-              {RANKS.map((rank) => {
+            <RankTimeline>
+              {RANKS.map((rank, index) => {
                 const unlocked = doneBooks.length >= rank.minBooks;
+                const isLast = index === RANKS.length - 1;
+                const nextUnlocked = !isLast
+                  ? doneBooks.length >= RANKS[index + 1].minBooks
+                  : false;
 
                 return (
-                  <RankRow key={rank.title} unlocked={unlocked}>
-                    <RankRowIcon>{rank.icon}</RankRowIcon>
-                    <RankRowText>
-                      <RankRowTitle>{rank.title}</RankRowTitle>
-                      <RankRowMeta>{rank.minBooks}+ books read</RankRowMeta>
-                    </RankRowText>
-                    {unlocked ? (
-                      <Ionicons name="checkmark-circle" size={20} color="#6b7280" />
-                    ) : null}
-                  </RankRow>
+                  <TimelineItem key={rank.title} unlocked={unlocked}>
+                    <TimelineTrack>
+                      <TimelineDot unlocked={unlocked}>
+                        <TimelineIcon>{rank.icon}</TimelineIcon>
+                      </TimelineDot>
+
+                      {!isLast ? <TimelineLine unlocked={nextUnlocked} /> : null}
+                    </TimelineTrack>
+
+                    <TimelineContent>
+                      <TimelineTitle>{rank.title}</TimelineTitle>
+                      <TimelineMeta>{rank.minBooks}+ books read</TimelineMeta>
+                    </TimelineContent>
+                  </TimelineItem>
                 );
               })}
-            </RankList>
+            </RankTimeline>
           </RankModalCard>
         </ModalOverlay>
       </Modal>
@@ -467,8 +473,17 @@ const RankCardButton = styled.Pressable`
   gap: 10px;
 `;
 
+const RankIconBubble = styled.View`
+  width: 42px;
+  height: 42px;
+  border-radius: 21px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
 const RankIcon = styled.Text`
-  font-size: 26px;
+  font-size: 24px;
 `;
 
 const RankCopy = styled.View`
@@ -505,6 +520,16 @@ const StatBox = styled.View`
   gap: 4px;
 `;
 
+const StatIconBubble = styled.View`
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.muted};
+  margin-bottom: 2px;
+`;
+
 const StatNumber = styled.Text`
   font-size: 24px;
   font-weight: ${({ theme }) => theme.font.family.bold};
@@ -520,7 +545,7 @@ const StatLabel = styled.Text`
 
 const StatDivider = styled.View`
   width: 1px;
-  height: 34px;
+  height: 50px;
   background: ${({ theme }) => theme.colors.border};
 `;
 
@@ -558,66 +583,61 @@ const ReadingCard = styled.Pressable`
   min-height: 220px;
   border-radius: ${({ theme }) => theme.radius.xl}px;
   overflow: hidden;
-  padding: 18px;
-  background: ${({ theme }) => theme.colors.primary};
-`;
-
-const ReadingTopRow = styled.View`
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const ReadingBadge = styled.Text`
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 13px;
-  font-weight: ${({ theme }) => theme.font.family.medium};
+  padding: 18px 18px 28px 18px;
+  background: ${({ theme }) => theme.colors.readingCard};
+  justify-content: center;
 `;
 
 const ReadingMainRow = styled.View`
-  margin-top: 14px;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 16px;
 `;
 
-const ReadingLeft = styled.View`
+const ReadingCover = styled.Image`
+  width: 108px;
+  height: 168px; 
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+`;
+
+const ReadingInfo = styled.View`
   flex: 1;
+  justify-content: space-between;
+  padding: 16px 0 10px 0;
+`;
+
+const ReadingTextGroup = styled.View`
+  gap: 2px;
 `;
 
 const ReadingTitle = styled.Text`
-  color: ${({ theme }) => theme.colors.primaryForeground};
-  font-size: 24px;
-  line-height: 29px;
+  color: ${({ theme }) => theme.colors.readingCardForeground};
+  font-size: 18px;
+  line-height: 23px;
   font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
 const ReadingAuthor = styled.Text`
   margin-top: 4px;
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
   font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const ReadingMeta = styled.Text`
-  margin-top: 18px;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
-const ReadingCover = styled.Image`
-  width: 92px;
-  height: 138px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.25);
-`;
-
 const BookDonutWrap = styled.View`
-  width: 62px;
-  height: 62px;
+  width: 64px;
+  height: 64px;
   align-items: center;
   justify-content: center;
+  align-self: flex-end;
+  margin-bottom: 18px;
 `;
 
 const DonutBase = styled.View`
@@ -647,7 +667,7 @@ const DonutInner = styled.View`
   width: 40px;
   height: 40px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.16);
   align-items: center;
   justify-content: center;
 `;
@@ -659,8 +679,10 @@ const DonutText = styled.Text`
 `;
 
 const ProgressTrack = styled.View`
-  margin-top: 16px;
-  width: 100%;
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 14px;
   height: 7px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.28);
@@ -827,37 +849,57 @@ const ModalSub = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
-const RankList = styled.View`
-  margin-top: 16px;
-  gap: 10px;
+const RankTimeline = styled.View`
+  margin-top: 18px;
 `;
 
-const RankRow = styled.View<{ unlocked: boolean }>`
-  padding: 12px;
-  border-radius: ${({ theme }) => theme.radius.lg}px;
-  background: ${({ theme }) => theme.colors.muted};
-  opacity: ${({ unlocked }) => (unlocked ? 1 : 0.55)};
+const TimelineItem = styled.View<{ unlocked: boolean }>`
+  min-height: 72px;
   flex-direction: row;
+  opacity: ${({ unlocked }) => (unlocked ? 1 : 0.45)};
+`;
+
+const TimelineTrack = styled.View`
+  width: 42px;
   align-items: center;
-  gap: 10px;
 `;
 
-const RankRowIcon = styled.Text`
-  font-size: 24px;
+const TimelineDot = styled.View<{ unlocked: boolean }>`
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme, unlocked }) =>
+    unlocked ? theme.colors.readingCard : theme.colors.muted};
 `;
 
-const RankRowText = styled.View`
+const TimelineIcon = styled.Text`
+  font-size: 17px;
+`;
+
+const TimelineLine = styled.View<{ unlocked: boolean }>`
   flex: 1;
+  width: 2px;
+  margin-top: 6px;
+  background: ${({ theme, unlocked }) =>
+    unlocked ? theme.colors.readingCard : theme.colors.border};
 `;
 
-const RankRowTitle = styled.Text`
+const TimelineContent = styled.View`
+  flex: 1;
+  padding-left: 10px;
+  padding-bottom: 18px;
+`;
+
+const TimelineTitle = styled.Text`
   color: ${({ theme }) => theme.colors.foreground};
   font-size: 15px;
   font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
-const RankRowMeta = styled.Text`
-  margin-top: 2px;
+const TimelineMeta = styled.Text`
+  margin-top: 3px;
   color: ${({ theme }) => theme.colors.mutedForeground};
   font-size: 12px;
   font-weight: ${({ theme }) => theme.font.family.medium};
