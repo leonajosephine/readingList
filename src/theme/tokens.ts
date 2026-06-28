@@ -20,6 +20,7 @@ export type Tokens = {
 
   readingCard: string;
   readingCardForeground: string;
+  readingCardMutedForeground: string;
 
   secondary: string;
   secondaryForeground: string;
@@ -52,6 +53,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#1F1B2E",
     readingCardForeground: "#FFFFFF",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#F1F1F4",
     secondaryForeground: "#030213",
@@ -84,6 +86,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#0E0C1D",
     readingCardForeground: "#FFFFFF",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#2b2b2b",
     secondaryForeground: "#F3F3F3",
@@ -116,6 +119,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#3B2A56",
     readingCardForeground: "#FFFFFF",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#e8dcc8",
     secondaryForeground: "#2d1810",
@@ -148,6 +152,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#6E4B73",
     readingCardForeground: "#FFFFFF",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#fce7f3",
     secondaryForeground: "#4a1942",
@@ -180,6 +185,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#161429",
     readingCardForeground: "#FFFFFF",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#2d2d44",
     secondaryForeground: "#e8e8f0",
@@ -212,6 +218,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#102338",
     readingCardForeground: "#E0F2FE",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#1e293b",
     secondaryForeground: "#e0f2fe",
@@ -244,6 +251,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#E8EEFF",
     readingCardForeground: "#1F2937",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#e9eef8",
     secondaryForeground: "#1f2937",
@@ -276,6 +284,7 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     readingCard: "#4A6654",
     readingCardForeground: "#FFFFFF",
+    readingCardMutedForeground: "#B5B5B5",
 
     secondary: "#dde8dd",
     secondaryForeground: "#203126",

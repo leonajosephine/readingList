@@ -13,6 +13,7 @@ export const makeTheme = (t: Tokens) => ({
 
     readingCard: t.readingCard,
     readingCardForeground: t.readingCardForeground,
+    readingCardMutedForeground: t.readingCardMutedForeground,
 
     secondary: t.secondary,
     secondaryForeground: t.secondaryForeground,

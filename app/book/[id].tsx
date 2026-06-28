@@ -27,7 +27,7 @@ const RATING_CONFIG: {
   { key: "overall", label: "Overall", activeIcon: "⭐️", inactiveIcon: "☆" },
   { key: "spice", label: "Spice", activeIcon: "🔥", inactiveIcon: "○" },
   { key: "tension", label: "Tension", activeIcon: "⚡", inactiveIcon: "○" },
-  { key: "humor", label: "Humor", activeIcon: "😊", inactiveIcon: "○" },
+  { key: "humor", label: "Humor", activeIcon: "😂", inactiveIcon: "○" },
   { key: "romance", label: "Romance", activeIcon: "❤️", inactiveIcon: "○" },
   { key: "tears", label: "Tears", activeIcon: "💧", inactiveIcon: "○" },
 ];
@@ -439,9 +439,7 @@ export default function BookDetailScreen() {
           <Section>
             <SectionTitle>About this book</SectionTitle>
             <BodyText>
-              A full description will be added later. For now, this is the
-              perfect place for a short summary, themes, mood, and why the book
-              is worth reading.
+              {book.description || "No description available yet."}
             </BodyText>
           </Section>
 

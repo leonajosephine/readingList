@@ -65,6 +65,7 @@ import React, {
     author: string;
     rating?: string;
     coverUrl: string;
+    description?: string;
     genre?: string;
     status?: BookStatus;
     userRatings?: BookRatings;
@@ -290,6 +291,7 @@ import React, {
           author: book.author,
           rating: undefined,
           coverUrl: book.cover_url ?? "",
+          description: book.description ?? undefined,
           genre: book.genre ?? undefined,
           status: userBook?.status,
           currentPage: userBook?.current_page ?? 0,

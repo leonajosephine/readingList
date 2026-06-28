@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
-import { Modal, ScrollView, useWindowDimensions } from "react-native";
-import styled from "styled-components/native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Modal, ScrollView, useWindowDimensions } from "react-native";
+import styled, { useTheme } from "styled-components/native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -10,6 +10,7 @@ import { SegmentedControl } from "../../src/components/SegmentedControl";
 import { BookActionsSheet } from "../../src/components/BookActionsSheet";
 import { BookListPickerModal } from "../../src/components/BookListPickerModal";
 import { useLibrary } from "../../src/store/LibraryContext";
+import { supabase } from "../../src/lib/supabase";
 
 type Rank = {
   title: string;
@@ -18,16 +19,20 @@ type Rank = {
 };
 
 const RANKS: Rank[] = [
-  { title: "Novize", icon: "🌱", minBooks: 0 },
-  { title: "Zauberlehrling", icon: "🪄", minBooks: 10 },
-  { title: "Meisterin der Zitadelle", icon: "🏰", minBooks: 25 },
-  { title: "Princess of Knowledge", icon: "👑", minBooks: 50 },
+  { title: "Novice: Which end of the wand glows again?", icon: "🌱", minBooks: 0 }, // Egg: Still figuring things out
+  { title: "Sorcerer's apprentice: Needs a nap", icon: "🪄", minBooks: 10 }, // Scaly Hatchling: Danger noodle
+  { title: "Mistress of the Citadel", icon: "🏰", minBooks: 25 }, // Teenage Dragon: 
+  { title: "High Mage: Almost the big boss", icon: "🧙‍♂️", minBooks: 40 }, //Elder Dragon: Knows everything, complains about everything
+  { title: "High Fae & Princess of Knowledge", icon: "👑", minBooks: 50 }, //
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { books, lists, updateBookStatus } = useLibrary();
+  const theme = useTheme();
 
+  const { books, lists, updateBookStatus, loading } = useLibrary();
+
+  const [displayName, setDisplayName] = useState("Reader");
   const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
   const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -36,6 +41,23 @@ export default function HomeScreen() {
   const [rankOpen, setRankOpen] = useState(false);
 
   const { width } = useWindowDimensions();
+
+  useEffect(() => {
+    const loadUserName = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const nameFromMetadata =
+        user?.user_metadata?.name ||
+        user?.user_metadata?.full_name ||
+        user?.email?.split("@")[0];
+
+      setDisplayName(nameFromMetadata || "Reader");
+    };
+
+    loadUserName();
+  }, []);
 
   const contentMaxWidth = 1000;
   const contentWidth = Math.min(width, contentMaxWidth);
@@ -121,6 +143,18 @@ export default function HomeScreen() {
     setSelectedBook(null);
   };
 
+  if (loading) {
+    return (
+      <Screen>
+        <AppHeader />
+        <LoadingWrap>
+          <ActivityIndicator />
+          <LoadingText>Loading your library...</LoadingText>
+        </LoadingWrap>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <AppHeader />
@@ -130,7 +164,7 @@ export default function HomeScreen() {
           <HeroBlock>
             <WelcomeWrap>
               <WelcomeKicker>Welcome back,</WelcomeKicker>
-              <WelcomeText>Hi Leona ✨</WelcomeText>
+              <WelcomeText>Hi {displayName} ✨</WelcomeText>
             </WelcomeWrap>
 
             <RankCardButton onPress={() => setRankOpen(true)}>
@@ -147,14 +181,22 @@ export default function HomeScreen() {
                 </RankSub>
               </RankCopy>
 
-              <Ionicons name="chevron-forward" size={18} color="#6b7280" />
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={theme.colors.mutedForeground}
+              />
             </RankCardButton>
           </HeroBlock>
 
           <StatsPanel>
             <StatBox>
               <StatIconBubble>
-                <Ionicons name="book-outline" size={18} color="#6b7280" />
+                <Ionicons
+                  name="book-outline"
+                  size={18}
+                  color={theme.colors.mutedForeground}
+                />
               </StatIconBubble>
               <StatNumber>{doneBooks.length}</StatNumber>
               <StatLabel>Books Read</StatLabel>
@@ -164,7 +206,11 @@ export default function HomeScreen() {
 
             <StatBox>
               <StatIconBubble>
-                <Ionicons name="bookmark-outline" size={18} color="#6b7280" />
+                <Ionicons
+                  name="bookmark-outline"
+                  size={18}
+                  color={theme.colors.mutedForeground}
+                />
               </StatIconBubble>
               <StatNumber>{toReadBooks.length}</StatNumber>
               <StatLabel>To Read</StatLabel>
@@ -174,7 +220,11 @@ export default function HomeScreen() {
 
             <StatBox>
               <StatIconBubble>
-                <Ionicons name="reader-outline" size={18} color="#6b7280" />
+                <Ionicons
+                  name="reader-outline"
+                  size={18}
+                  color={theme.colors.mutedForeground}
+                />
               </StatIconBubble>
               <StatNumber>{currentlyReading.length}</StatNumber>
               <StatLabel>Reading</StatLabel>
@@ -221,7 +271,9 @@ export default function HomeScreen() {
                         <ReadingInfo>
                           <ReadingTextGroup>
                             <ReadingTitle numberOfLines={2}>{book.title}</ReadingTitle>
-                            <ReadingAuthor numberOfLines={1}>{book.author}</ReadingAuthor>
+                            <ReadingAuthor numberOfLines={1}>
+                              {book.author}
+                            </ReadingAuthor>
                           </ReadingTextGroup>
 
                           <ReadingMeta>
@@ -297,12 +349,20 @@ export default function HomeScreen() {
                       ))
                     ) : (
                       <TinyEmpty>
-                        <Ionicons name="book-outline" size={18} color="#6b7280" />
+                        <Ionicons
+                          name="book-outline"
+                          size={18}
+                          color={theme.colors.mutedForeground}
+                        />
                       </TinyEmpty>
                     )}
                   </ListPreviewCovers>
 
-                  <Ionicons name="chevron-forward" size={18} color="#6b7280" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={theme.colors.mutedForeground}
+                  />
                 </ListPreviewCard>
               ))}
             </ListPreviewWrap>
@@ -387,7 +447,11 @@ export default function HomeScreen() {
             <ModalHeader>
               <ModalTitle>Reading Ranks</ModalTitle>
               <CloseButton onPress={() => setRankOpen(false)}>
-                <Ionicons name="close" size={18} color="#6b7280" />
+                <Ionicons
+                  name="close"
+                  size={18}
+                  color={theme.colors.mutedForeground}
+                />
               </CloseButton>
             </ModalHeader>
 
@@ -431,6 +495,19 @@ export default function HomeScreen() {
 const Screen = styled.View`
   flex: 1;
   background: ${({ theme }) => theme.colors.background};
+`;
+
+const LoadingWrap = styled.View`
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+`;
+
+const LoadingText = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const Content = styled.View`
@@ -596,9 +673,9 @@ const ReadingMainRow = styled.View`
 
 const ReadingCover = styled.Image`
   width: 108px;
-  height: 168px; 
+  height: 168px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.2);
+  background: ${({ theme }) => theme.colors.readingCardMutedForeground};
 `;
 
 const ReadingInfo = styled.View`
@@ -620,13 +697,13 @@ const ReadingTitle = styled.Text`
 
 const ReadingAuthor = styled.Text`
   margin-top: 4px;
-  color: rgba(255, 255, 255, 0.82);
+  color: ${({ theme }) => theme.colors.readingCardMutedForeground};
   font-size: 13px;
   font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const ReadingMeta = styled.Text`
-  color: rgba(255, 255, 255, 0.9);
+  color: ${({ theme }) => theme.colors.readingCardMutedForeground};
   font-size: 12px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
@@ -645,7 +722,7 @@ const DonutBase = styled.View`
   height: 58px;
   border-radius: 29px;
   border-width: 5px;
-  border-color: rgba(255, 255, 255, 0.28);
+  border-color: ${({ theme }) => theme.colors.readingCardMutedForeground};
   align-items: center;
   justify-content: center;
   position: relative;
@@ -659,21 +736,21 @@ const DonutArc = styled.View`
   border-width: 5px;
   border-left-color: transparent;
   border-bottom-color: transparent;
-  border-top-color: rgba(255, 255, 255, 0.95);
-  border-right-color: rgba(255, 255, 255, 0.95);
+  border-top-color: ${({ theme }) => theme.colors.readingCardForeground};
+  border-right-color: ${({ theme }) => theme.colors.readingCardForeground};
 `;
 
 const DonutInner = styled.View`
   width: 40px;
   height: 40px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.16);
+  background: ${({ theme }) => theme.colors.readingCard};
   align-items: center;
   justify-content: center;
 `;
 
 const DonutText = styled.Text`
-  color: #ffffff;
+  color: ${({ theme }) => theme.colors.readingCardForeground};
   font-size: 12px;
   font-weight: ${({ theme }) => theme.font.family.bold};
 `;
@@ -685,14 +762,15 @@ const ProgressTrack = styled.View`
   bottom: 14px;
   height: 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
+  background: ${({ theme }) => theme.colors.readingCardMutedForeground};
   overflow: hidden;
+  opacity: 0.5;
 `;
 
 const ProgressFill = styled.View`
   height: 100%;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.95);
+  background: ${({ theme }) => theme.colors.readingCardForeground};
 `;
 
 const DotsRow = styled.View`
