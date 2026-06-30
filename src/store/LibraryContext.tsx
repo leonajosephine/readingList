@@ -6,7 +6,8 @@ import React, {
     useState,
   } from "react";
   import { supabase } from "../lib/supabase";
-  import { ExternalBook } from "../services/bookApi";
+  import { ExternalBook, getBookDetails } from "../services/bookApi";
+
   
   export type BookStatus = "reading" | "to-read" | "done";
   
@@ -329,12 +330,14 @@ import React, {
     ): Promise<string | null> => {
       const user = await requireUser();
       if (!user) return null;
+
+      const detailedBook = await getBookDetails(externalBook);
   
       const { data: existingBooks, error: existingError } = await supabase
         .from("books")
-        .select("id")
-        .eq("title", externalBook.title)
-        .eq("author", externalBook.author)
+        .select("id, description")
+        .eq("title", detailedBook.title)
+        .eq("author", detailedBook.author)
         .limit(1);
   
       if (existingError) {
@@ -343,19 +346,30 @@ import React, {
       }
   
       let bookId = existingBooks?.[0]?.id;
+
+      const existingDescription = existingBooks?.[0]?.description;
+
+      if (bookId && !existingDescription && detailedBook.description) {
+        await supabase
+          .from("books")
+          .update({
+            description: detailedBook.description,
+          })
+          .eq("id", bookId);
+        }
   
       if (!bookId) {
         const { data, error } = await supabase
           .from("books")
           .insert({
-            title: externalBook.title,
-            author: externalBook.author,
-            cover_url: externalBook.coverUrl,
-            description: externalBook.description ?? null,
-            genre: externalBook.genre ?? null,
-            total_pages: externalBook.totalPages ?? null,
-            published_year: externalBook.publishedYear ?? null,
-            isbn: externalBook.isbn ?? null,
+            title: detailedBook.title,
+            author: detailedBook.author,
+            cover_url: detailedBook.coverUrl,
+            description: detailedBook.description ?? null,
+            genre: detailedBook.genre ?? null,
+            total_pages: detailedBook.totalPages ?? null,
+            published_year: detailedBook.publishedYear ?? null,
+            isbn: detailedBook.isbn ?? null,
           })
           .select("id")
           .single();
@@ -374,7 +388,7 @@ import React, {
           book_id: bookId,
           status: "to-read",
           current_page: 0,
-          total_pages_override: externalBook.totalPages ?? null,
+          total_pages_override: detailedBook.totalPages ?? null,
         },
         { onConflict: "user_id,book_id" }
       );
