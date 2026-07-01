@@ -38,272 +38,277 @@ export type Tokens = {
   destructive: string;
   destructiveForeground: string;
 
-  radius: number; // base radius (px)
+  radius: number;
 };
 
 export const TOKENS: Record<ThemeKey, Tokens> = {
   light: {
-    background: "#ffffff",
-    foreground: "#1a1a1a", //#171717" #222129"
-    card: "#ffffff",
-    cardForeground: "#1a1a1a",
+    background: "#FFFFFF",
+    foreground: "#1C1B20",
 
-    primary: "#030213",
-    primaryForeground: "#ffffff",
+    card: "#FFFFFF",
+    cardForeground: "#1C1B20",
 
-    readingCard: "#1F1B2E",
+    primary: "#2E2945",
+    primaryForeground: "#FFFFFF",
+
+    readingCard: "#2E2945",
     readingCardForeground: "#FFFFFF",
-    readingCardMutedForeground: "#B5B5B5",
+    readingCardMutedForeground: "#C9C4D5",
 
-    secondary: "#F1F1F4",
-    secondaryForeground: "#030213",
+    secondary: "#F3F2F6",
+    secondaryForeground: "#1C1B20",
 
-    muted: "#ECECF0",
-    mutedForeground: "#717182",
+    muted: "#EEEFF3",
+    mutedForeground: "#70707D",
 
-    accent: "#E9EBEF",
-    accentForeground: "#030213",
+    accent: "#ECEAF3",
+    accentForeground: "#1C1B20",
 
-    border: "rgba(0,0,0,0.10)",
+    border: "rgba(28,27,32,0.09)",
 
-    inputBackground: "#F3F3F5",
+    inputBackground: "#F6F6F8",
 
     destructive: "#D4183D",
-    destructiveForeground: "#ffffff",
+    destructiveForeground: "#FFFFFF",
 
-    radius: 10, // ~0.625rem
+    radius: 10,
   },
 
   dark: {
-    background: "#151515",
-    foreground: "#F3F3F3",
+    background: "#111113",
+    foreground: "#F4F4F5",
 
-    card: "#151515",
-    cardForeground: "#F3F3F3",
+    card: "#1A1A1D",
+    cardForeground: "#F4F4F5",
 
-    primary: "#F3F3F3",
-    primaryForeground: "#1a1a1a",
+    primary: "#F4F4F5",
+    primaryForeground: "#111113",
 
-    readingCard: "#0E0C1D",
+    readingCard: "#171525",
     readingCardForeground: "#FFFFFF",
-    readingCardMutedForeground: "#B5B5B5",
+    readingCardMutedForeground: "#A7A7B5",
 
-    secondary: "#2b2b2b",
-    secondaryForeground: "#F3F3F3",
+    secondary: "#242428",
+    secondaryForeground: "#F4F4F5",
 
-    muted: "#2b2b2b",
-    mutedForeground: "#b5b5b5",
+    muted: "#26262B",
+    mutedForeground: "#A5A5AE",
 
-    accent: "#2b2b2b",
-    accentForeground: "#F3F3F3",
+    accent: "#303038",
+    accentForeground: "#F4F4F5",
 
-    border: "rgba(255,255,255,0.14)",
+    border: "rgba(255,255,255,0.11)",
 
-    inputBackground: "#232323",
+    inputBackground: "#202024",
 
-    destructive: "#ef4444",
-    destructiveForeground: "#ffffff",
+    destructive: "#EF4444",
+    destructiveForeground: "#FFFFFF",
 
     radius: 10,
   },
 
   fantasy: {
-    background: "#faf8f5",
-    foreground: "#2d1810",
+    background: "#FBF8F2",
+    foreground: "#2D2118",
 
-    card: "#ffffff",
-    cardForeground: "#2d1810",
+    card: "#FFFFFF",
+    cardForeground: "#2D2118",
 
-    primary: "#6b4423",
-    primaryForeground: "#faf8f5",
+    primary: "#79552E",
+    primaryForeground: "#FFF8EC",
 
-    readingCard: "#3B2A56",
+    readingCard: "#413058",
     readingCardForeground: "#FFFFFF",
-    readingCardMutedForeground: "#B5B5B5",
+    readingCardMutedForeground: "#D6C6E8",
 
-    secondary: "#e8dcc8",
-    secondaryForeground: "#2d1810",
+    secondary: "#EFE3D0",
+    secondaryForeground: "#2D2118",
 
-    muted: "#f0e8d8",
-    mutedForeground: "#8b7355",
+    muted: "#F2EADB",
+    mutedForeground: "#7F674D",
 
-    accent: "#d4af37",
-    accentForeground: "#2d1810",
+    accent: "#D8B25C",
+    accentForeground: "#2D2118",
 
-    border: "rgba(107,68,35,0.20)",
+    border: "rgba(45,33,24,0.09)",
 
-    inputBackground: "#f5ede0",
+    inputBackground: "#F6EEE1",
 
-    destructive: "#8b2f2f",
-    destructiveForeground: "#ffffff",
+    destructive: "#9B2F2F",
+    destructiveForeground: "#FFFFFF",
 
-    radius: 10,
+    radius: 11,
   },
 
   romance: {
-    background: "#fff5f8",
-    foreground: "#4a1942",
+    background: "#FFF8FA",
+    foreground: "#49233F",
 
-    card: "#ffffff",
-    cardForeground: "#4a1942",
+    card: "#FFFFFF",
+    cardForeground: "#49233F",
 
-    primary: "#d946a6",
-    primaryForeground: "#ffffff",
+    primary: "#C85A9B",
+    primaryForeground: "#FFFFFF",
 
-    readingCard: "#6E4B73",
+    readingCard: "#766082",
     readingCardForeground: "#FFFFFF",
-    readingCardMutedForeground: "#B5B5B5",
+    readingCardMutedForeground: "#E3D2E5",
 
-    secondary: "#fce7f3",
-    secondaryForeground: "#4a1942",
+    secondary: "#FDEEF5",
+    secondaryForeground: "#49233F",
 
-    muted: "#fce7f3",
-    mutedForeground: "#9d4b8d",
+    muted: "#FAE8F1",
+    mutedForeground: "#93547F",
 
-    accent: "#ec4899",
-    accentForeground: "#ffffff",
+    accent: "#EFA2C4",
+    accentForeground: "#49233F",
 
-    border: "rgba(217,70,166,0.20)",
+    border: "rgba(73,35,63,0.09)",
 
-    inputBackground: "#fdf2f8",
+    inputBackground: "#FFF1F7",
 
-    destructive: "#be185d",
-    destructiveForeground: "#ffffff",
+    destructive: "#BE185D",
+    destructiveForeground: "#FFFFFF",
 
-    radius: 10,
+    radius: 14,
   },
 
   mystery: {
-    background: "#0f0f1e",
-    foreground: "#e8e8f0",
+    background: "#11111D",
+    foreground: "#ECEAF6",
 
-    card: "#1a1a2e",
-    cardForeground: "#e8e8f0",
+    card: "#19192A",
+    cardForeground: "#ECEAF6",
 
-    primary: "#7c3aed",
-    primaryForeground: "#ffffff",
+    primary: "#8B5CF6",
+    primaryForeground: "#FFFFFF",
 
-    readingCard: "#161429",
+    readingCard: "#221F38",
     readingCardForeground: "#FFFFFF",
-    readingCardMutedForeground: "#B5B5B5",
+    readingCardMutedForeground: "#A9A5C2",
 
-    secondary: "#2d2d44",
-    secondaryForeground: "#e8e8f0",
+    secondary: "#282842",
+    secondaryForeground: "#ECEAF6",
 
-    muted: "#2d2d44",
-    mutedForeground: "#9999b3",
+    muted: "#24243A",
+    mutedForeground: "#A09CB8",
 
-    accent: "#8b5cf6",
-    accentForeground: "#ffffff",
+    accent: "#A78BFA",
+    accentForeground: "#11111D",
 
-    border: "rgba(124,58,237,0.30)",
+    border: "rgba(236,234,246,0.11)",
 
-    inputBackground: "#16162a",
+    inputBackground: "#161627",
 
-    destructive: "#dc2626",
-    destructiveForeground: "#ffffff",
+    destructive: "#DC2626",
+    destructiveForeground: "#FFFFFF",
 
     radius: 10,
   },
 
   scifi: {
-    background: "#0a0e1a",
-    foreground: "#e0f2fe",
+    background: "#09111F",
+    foreground: "#E0F2FE",
 
-    card: "#0f1729",
-    cardForeground: "#e0f2fe",
+    card: "#101B2D",
+    cardForeground: "#E0F2FE",
 
-    primary: "#06b6d4",
-    primaryForeground: "#0a0e1a",
+    primary: "#2AB7D7",
+    primaryForeground: "#06101C",
 
-    readingCard: "#102338",
+    readingCard: "#162B44",
     readingCardForeground: "#E0F2FE",
-    readingCardMutedForeground: "#B5B5B5",
+    readingCardMutedForeground: "#A7C7D6",
 
-    secondary: "#1e293b",
-    secondaryForeground: "#e0f2fe",
+    secondary: "#1A2A3E",
+    secondaryForeground: "#E0F2FE",
 
-    muted: "#1e293b",
-    mutedForeground: "#94a3b8",
+    muted: "#172235",
+    mutedForeground: "#91AFC1",
 
-    accent: "#22d3ee",
-    accentForeground: "#0a0e1a",
+    accent: "#5EE3FF",
+    accentForeground: "#06101C",
 
-    border: "rgba(6,182,212,0.30)",
+    border: "rgba(94,227,255,0.16)",
 
-    inputBackground: "#0c1220",
+    inputBackground: "#0D1728",
 
-    destructive: "#ef4444",
-    destructiveForeground: "#ffffff",
+    destructive: "#EF4444",
+    destructiveForeground: "#FFFFFF",
 
-    radius: 10,
+    radius: 9,
   },
 
   glass: {
-    background: "#f4f7fb",
-    foreground: "#1f2937",
+    background: "#F5F8FD",
+    foreground: "#24324A",
 
-    card: "#ffffff",
-    cardForeground: "#1f2937",
+    card: "#FFFFFF",
+    cardForeground: "#24324A",
 
-    primary: "#7c8cff",
-    primaryForeground: "#ffffff",
+    primary: "#7C8CFF",
+    primaryForeground: "#FFFFFF",
 
-    readingCard: "#E8EEFF",
-    readingCardForeground: "#1F2937",
-    readingCardMutedForeground: "#B5B5B5",
+    readingCard: "#EAF2FF",
+    readingCardForeground: "#24324A",
+    readingCardMutedForeground: "#71839C",
 
-    secondary: "#e9eef8",
-    secondaryForeground: "#1f2937",
+    secondary: "#EFF4FB",
+    secondaryForeground: "#24324A",
 
-    muted: "#eef3fb",
-    mutedForeground: "#6b7280",
+    muted: "#EDF3FA",
+    mutedForeground: "#6C7A90",
 
-    accent: "#dbeafe",
-    accentForeground: "#1f2937",
+    accent: "#DCEAFF",
+    accentForeground: "#24324A",
 
-    border: "rgba(255,255,255,0.65)",
+    border: "rgba(36,50,74,0.08)",
 
-    inputBackground: "#f8fbff",
+    inputBackground: "#FAFCFF",
 
-    destructive: "#ef4444",
-    destructiveForeground: "#ffffff",
+    destructive: "#EF4444",
+    destructiveForeground: "#FFFFFF",
 
-    radius: 14,
+    radius: 16,
   },
 
   matcha: {
-    background: "#f6f7f2",
+    background: "#FEFFFD", // noch etwas heller
+  
     foreground: "#203126",
-
-    card: "#ffffff",
+  
+    card: "#F7FBF5", // ganz sanftes Matcha
     cardForeground: "#203126",
-
-    primary: "#3f6b4b",
-    primaryForeground: "#ffffff",
-
-    readingCard: "#4A6654",
-    readingCardForeground: "#FFFFFF",
-    readingCardMutedForeground: "#B5B5B5",
-
-    secondary: "#dde8dd",
+  
+    primary: "#4B6E53",
+    primaryForeground: "#FFFFFF",
+  
+    // ← kräftigeres Matcha
+    readingCard: "#AFC9B3",
+  
+    // dadurch wird die Karte jetzt hell statt dunkel
+    readingCardForeground: "#183123",
+  
+    // Untertitel/Page etwas heller
+    readingCardMutedForeground: "#4F6A59",
+  
+    secondary: "#EEF6EB",
     secondaryForeground: "#203126",
-
-    muted: "#e8efe6",
-    mutedForeground: "#6b7b6d",
-
-    accent: "#b8d5b0",
+  
+    muted: "#E8F1E5",
+    mutedForeground: "#6A7C6D",
+  
+    accent: "#CFE4C8",
     accentForeground: "#203126",
-
-    border: "rgba(63,107,75,0.18)",
-
-    inputBackground: "#f3f7f1",
-
-    destructive: "#b42318",
-    destructiveForeground: "#ffffff",
-
-    radius: 12,
+  
+    border: "rgba(32,49,38,0.08)",
+  
+    inputBackground: "#FAFCF8",
+  
+    destructive: "#B42318",
+    destructiveForeground: "#FFFFFF",
+  
+    radius: 13,
   },
-
 };
-
