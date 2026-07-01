@@ -35,6 +35,9 @@ const RATING_CONFIG: {
 export default function BookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const theme = useTheme();
+  const { width } = useWindowDimensions();
+
   const {
     books,
     updateBookRatings,
@@ -42,10 +45,8 @@ export default function BookDetailScreen() {
     deleteBookNote,
     addBookNote,
     updateBookProgress,
+    updateBookStatus,
   } = useLibrary();
-
-  const theme = useTheme();
-  const { width } = useWindowDimensions();
 
   const book = books.find((item) => item.id === id);
 
@@ -63,9 +64,10 @@ export default function BookDetailScreen() {
   const [progressModalOpen, setProgressModalOpen] = useState(false);
   const [draftCurrentPage, setDraftCurrentPage] = useState("");
   const [draftTotalPages, setDraftTotalPages] = useState("");
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   const isTablet = width >= 768;
-  const coverWidth = isTablet ? 280 : Math.min(width * 0.52, 220);
+  const coverWidth = isTablet ? 240 : Math.min(width * 0.48, 190);
 
   useEffect(() => {
     if (!book) return;
@@ -74,6 +76,7 @@ export default function BookDetailScreen() {
 
   useEffect(() => {
     if (!book) return;
+
     setDraftCurrentPage(
       book.currentPage !== undefined ? String(book.currentPage) : ""
     );
@@ -118,12 +121,15 @@ export default function BookDetailScreen() {
 
   const statusLabel =
     book.status === "reading"
-      ? "Currently Reading"
+      ? "Reading"
       : book.status === "done"
-        ? "Completed"
+        ? "Finished"
         : "To Read";
 
-  const totalPages = book.totalPages ?? 384;
+  const statusIcon =
+    book.status === "reading" ? "📖" : book.status === "done" ? "✓" : "📚";
+
+  const totalPages = book.totalPages ?? 0;
   const currentPage =
     book.status === "done"
       ? totalPages
@@ -131,6 +137,10 @@ export default function BookDetailScreen() {
 
   const progressPercentage =
     totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
+
+  const topRating = book.userRatings?.overall
+    ? `${book.userRatings.overall}/5`
+    : book.rating ?? "—";
 
   const openRatingModal = () => {
     setDraftRatings(book.userRatings ?? {});
@@ -157,7 +167,7 @@ export default function BookDetailScreen() {
     setDraftTotalPages("");
   };
 
-  const onSaveProgress = () => {
+  const onSaveProgress = async () => {
     const parsedTotal = Number(draftTotalPages);
     const parsedCurrent = Number(draftCurrentPage);
 
@@ -179,10 +189,14 @@ export default function BookDetailScreen() {
 
     const safeCurrent = Math.min(parsedCurrent, parsedTotal);
 
-    updateBookProgress(book.id, {
+    await updateBookProgress(book.id, {
       currentPage: safeCurrent,
       totalPages: parsedTotal,
     });
+
+    if (safeCurrent >= parsedTotal) {
+      await updateBookStatus(book.id, "done");
+    }
 
     closeProgressModal();
   };
@@ -240,20 +254,18 @@ export default function BookDetailScreen() {
           content: trimmedContent,
         });
       }
+    } else if (noteType === "note") {
+      addBookNote(book.id, {
+        type: "note",
+        content: trimmedContent,
+      });
     } else {
-      if (noteType === "note") {
-        addBookNote(book.id, {
-          type: "note",
-          content: trimmedContent,
-        });
-      } else {
-        addBookNote(book.id, {
-          type: "quote",
-          content: trimmedContent,
-          page: quotePage.trim() || undefined,
-          chapter: quoteChapter.trim() || undefined,
-        });
-      }
+      addBookNote(book.id, {
+        type: "quote",
+        content: trimmedContent,
+        page: quotePage.trim() || undefined,
+        chapter: quoteChapter.trim() || undefined,
+      });
     }
 
     closeNoteModal();
@@ -292,6 +304,7 @@ export default function BookDetailScreen() {
       const icons = Array.from({ length: value })
         .map(() => item.activeIcon)
         .join("");
+
       return `${item.label}: ${icons || "—"}`;
     });
 
@@ -304,8 +317,7 @@ export default function BookDetailScreen() {
       `${book.title} — ${book.author}`,
       "",
       `Genre: ${book.genre ?? "—"}`,
-      `Community Rating: ${book.rating ?? "—"}`,
-      `Progress: ${currentPage}/${totalPages}`,
+      `Progress: ${currentPage}/${totalPages || "—"}`,
       "",
       "My Rating:",
       ...(ratingLines.length > 0 ? ratingLines : ["No personal ratings yet"]),
@@ -324,7 +336,7 @@ export default function BookDetailScreen() {
         title: book.title,
         message: shareLines.join("\n"),
       });
-    } catch (error) {
+    } catch {
       Alert.alert(
         "Share failed",
         "Something went wrong while trying to share this book."
@@ -395,100 +407,96 @@ export default function BookDetailScreen() {
 
       <ScrollView contentContainerStyle={{ paddingTop: 82, paddingBottom: 118 }}>
         <Content>
-          <Hero>
-            <Cover
-              source={{ uri: book.coverUrl }}
-              resizeMode="cover"
-              style={{ width: coverWidth }}
-            />
+          <HeroCard>
+            <CoverWrap>
+              <Cover
+                source={{ uri: book.coverUrl }}
+                resizeMode="cover"
+                style={{ width: coverWidth }}
+              />
+            </CoverWrap>
 
-            <Info>
-              <Title>{book.title}</Title>
-              <Author>{book.author}</Author>
+            <HeroTitleRow>
+              <HeroTextGroup>
+                <Title numberOfLines={3}>{book.title}</Title>
+                <Author numberOfLines={1}>{book.author}</Author>
+              </HeroTextGroup>
 
-              <MetaRow>
-                <MetaBadge>
-                  <MetaBadgeText>{statusLabel}</MetaBadgeText>
-                </MetaBadge>
+              <ShareButton onPress={onShareBook}>
+                <Ionicons
+                  name="share-outline"
+                  size={18}
+                  color={theme.colors.foreground}
+                />
+              </ShareButton>
+            </HeroTitleRow>
 
-                {!!book.genre && (
-                  <MetaBadge secondary>
-                    <MetaBadgeText secondary>{book.genre}</MetaBadgeText>
-                  </MetaBadge>
-                )}
-              </MetaRow>
+            <HeroMetaRow>
+              <SmallBadge>
+                <SmallBadgeText>
+                  {statusIcon} {statusLabel}
+                </SmallBadgeText>
+              </SmallBadge>
 
-              <RatingRow>
+              {!!book.genre && (
+                <SmallBadge muted>
+                  <SmallBadgeText muted>{book.genre}</SmallBadgeText>
+                </SmallBadge>
+              )}
+
+              <InlineRatingButton onPress={openRatingModal}>
                 <Star>★</Star>
-                <Rating>{book.rating ?? "0.0"}</Rating>
-              </RatingRow>
-
-              <HeroActionsRow>
-                <HeroGhostButton onPress={onShareBook}>
-                  <Ionicons
-                    name="share-outline"
-                    size={16}
-                    color={theme.colors.foreground}
-                  />
-                  <HeroGhostButtonText>Share</HeroGhostButtonText>
-                </HeroGhostButton>
-              </HeroActionsRow>
-            </Info>
-          </Hero>
+                <Rating>{topRating}</Rating>
+              </InlineRatingButton>
+            </HeroMetaRow>
+          </HeroCard>
 
           <Section>
             <SectionTitle>About this book</SectionTitle>
-            <BodyText>
+
+            <BodyText numberOfLines={descriptionExpanded ? undefined : 3}>
               {book.description || "No description available yet."}
             </BodyText>
+
+            {!!book.description && book.description.length > 170 ? (
+              <ReadMoreButton
+                onPress={() => setDescriptionExpanded((prev) => !prev)}
+              >
+                <ReadMoreText>
+                  {descriptionExpanded ? "Show less" : "Read more"}
+                </ReadMoreText>
+              </ReadMoreButton>
+            ) : null}
           </Section>
-
-          <StatsCard>
-            <MiniStatButton onPress={openProgressModal}>
-              <MiniStatLabel>Your Progress</MiniStatLabel>
-              <MiniStatValue>
-                {currentPage}/{totalPages}
-              </MiniStatValue>
-              <MiniStatHelper>{progressPercentage}%</MiniStatHelper>
-            </MiniStatButton>
-
-            <MiniDivider />
-
-            <MiniStat>
-              <MiniStatLabel>Your Rating</MiniStatLabel>
-              <MiniStatValue>
-                {book.userRatings?.overall ? `${book.userRatings.overall}/5` : "—"}
-              </MiniStatValue>
-            </MiniStat>
-
-            <MiniDivider />
-
-            <MiniStat>
-              <MiniStatLabel>Notes</MiniStatLabel>
-              <MiniStatValue>{notesCount}</MiniStatValue>
-            </MiniStat>
-          </StatsCard>
 
           <ProgressCard>
             <ProgressHeaderRow>
               <ProgressTitle>Reading Progress</ProgressTitle>
+
               <ProgressEditButton onPress={openProgressModal}>
                 <ProgressEditButtonText>Edit</ProgressEditButtonText>
               </ProgressEditButton>
             </ProgressHeaderRow>
+
+            <ProgressTopLine>
+              <ProgressMainText>
+                {currentPage}/{totalPages || "—"}
+              </ProgressMainText>
+              <ProgressPercent>{progressPercentage}%</ProgressPercent>
+            </ProgressTopLine>
 
             <ProgressBarTrack>
               <ProgressBarFill style={{ width: `${progressPercentage}%` }} />
             </ProgressBarTrack>
 
             <ProgressMeta>
-              {currentPage} of {totalPages} pages
+              {currentPage} of {totalPages || "—"} pages
             </ProgressMeta>
           </ProgressCard>
 
           <Section>
             <SectionHeaderRow>
-              <SectionTitle>My Rating</SectionTitle>
+              <SectionTitle>Your Rating</SectionTitle>
 
               <SectionActionButton onPress={openRatingModal}>
                 <SectionActionButtonText>
@@ -504,7 +512,9 @@ export default function BookDetailScreen() {
 
                   return (
                     <RatingItem key={item.key}>
-                      <RatingItemLabel>{item.label}</RatingItemLabel>
+                      <RatingItemLabel>
+                        {item.activeIcon} {item.label}
+                      </RatingItemLabel>
 
                       <RatingIconsRow>
                         {renderStaticRatingIcons(
@@ -530,7 +540,7 @@ export default function BookDetailScreen() {
 
           <Section>
             <SectionHeaderRow>
-              <SectionTitle>Notes</SectionTitle>
+              <SectionTitle>Notes & Quotes</SectionTitle>
 
               <HeaderActionsRow>
                 <SmallGhostButton onPress={() => openNoteModal("note")}>
@@ -634,13 +644,23 @@ export default function BookDetailScreen() {
 
       <StickyBottomBar>
         <BottomActions>
-          <PrimaryButton onPress={() => setListModalOpen(true)}>
-            <PrimaryButtonText>Add to List</PrimaryButtonText>
-          </PrimaryButton>
+          <FooterPillButton onPress={() => setListModalOpen(true)}>
+            <Ionicons
+              name="heart-outline"
+              size={17}
+              color={theme.colors.foreground}
+            />
+            <FooterPillText>Add to List</FooterPillText>
+          </FooterPillButton>
 
-          <SecondaryButton onPress={() => openNoteModal("note")}>
-            <SecondaryButtonText>Add Note</SecondaryButtonText>
-          </SecondaryButton>
+          <FooterPrimaryButton onPress={() => openNoteModal("note")}>
+            <Ionicons
+              name="create-outline"
+              size={17}
+              color={theme.colors.primaryForeground}
+            />
+            <FooterPrimaryText>Add Note</FooterPrimaryText>
+          </FooterPrimaryButton>
         </BottomActions>
       </StickyBottomBar>
 
@@ -666,9 +686,7 @@ export default function BookDetailScreen() {
               </CloseButton>
             </ModalHeaderRow>
 
-            <ModalSubtitle>
-              Set how far you are in this book.
-            </ModalSubtitle>
+            <ModalSubtitle>Set how far you are in this book.</ModalSubtitle>
 
             <ProgressFieldsRow>
               <SmallInputWrap>
@@ -677,7 +695,7 @@ export default function BookDetailScreen() {
                   value={draftCurrentPage}
                   onChangeText={setDraftCurrentPage}
                   placeholder="e.g. 120"
-                  placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                  placeholderTextColor={theme.colors.mutedForeground}
                   keyboardType="number-pad"
                 />
               </SmallInputWrap>
@@ -688,7 +706,7 @@ export default function BookDetailScreen() {
                   value={draftTotalPages}
                   onChangeText={setDraftTotalPages}
                   placeholder="e.g. 384"
-                  placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                  placeholderTextColor={theme.colors.mutedForeground}
                   keyboardType="number-pad"
                 />
               </SmallInputWrap>
@@ -805,7 +823,7 @@ export default function BookDetailScreen() {
                   ? "Enter your quote..."
                   : "Write your note here..."
               }
-              placeholderTextColor="rgba(113, 113, 130, 0.9)"
+              placeholderTextColor={theme.colors.mutedForeground}
               multiline
               textAlignVertical="top"
             />
@@ -818,7 +836,7 @@ export default function BookDetailScreen() {
                     value={quotePage}
                     onChangeText={setQuotePage}
                     placeholder="e.g. 184"
-                    placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                    placeholderTextColor={theme.colors.mutedForeground}
                   />
                 </SmallInputWrap>
 
@@ -828,7 +846,7 @@ export default function BookDetailScreen() {
                     value={quoteChapter}
                     onChangeText={setQuoteChapter}
                     placeholder="e.g. 12"
-                    placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                    placeholderTextColor={theme.colors.mutedForeground}
                   />
                 </SmallInputWrap>
               </QuoteFieldsRow>
@@ -894,102 +912,101 @@ const BackButton = styled.Pressable`
   border-color: ${({ theme }) => theme.colors.border};
 `;
 
-const Hero = styled.View`
-  gap: 20px;
-  margin-top: 12px;
+const HeroCard = styled.View`
+  margin-top: 10px;
+  gap: 18px;
+`;
+
+const CoverWrap = styled.View`
+  align-items: center;
 `;
 
 const Cover = styled.Image`
   aspect-ratio: 2 / 3;
   border-radius: ${({ theme }) => theme.radius.xl}px;
   background: ${({ theme }) => theme.colors.muted};
-  align-self: center;
 `;
 
-const Info = styled.View`
-  gap: 10px;
+const HeroTitleRow = styled.View`
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+`;
+
+const HeroTextGroup = styled.View`
+  flex: 1;
+  gap: 6px;
 `;
 
 const Title = styled.Text`
-  font-size: 30px;
+  font-size: 31px;
   line-height: 36px;
   color: ${({ theme }) => theme.colors.foreground};
   font-weight: ${({ theme }) => theme.font.family.bold};
-  letter-spacing: -0.4px;
+  letter-spacing: -0.6px;
 `;
 
 const Author = styled.Text`
-  font-size: 17px;
+  font-size: 16px;
   color: ${({ theme }) => theme.colors.mutedForeground};
   font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
-const MetaRow = styled.View`
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 4px;
-`;
-
-const MetaBadge = styled.View<{ secondary?: boolean }>`
-  padding: 8px 12px;
+const ShareButton = styled.Pressable`
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
-  background: ${({ theme, secondary }) =>
-    secondary ? theme.colors.muted : theme.colors.secondary};
-`;
-
-const MetaBadgeText = styled.Text<{ secondary?: boolean }>`
-  color: ${({ theme, secondary }) =>
-    secondary ? theme.colors.foreground : theme.colors.secondaryForeground};
-  font-size: 13px;
-  font-weight: ${({ theme }) => theme.font.family.semibold};
-`;
-
-const RatingRow = styled.View`
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-`;
-
-const Star = styled.Text`
-  color: #f4b400;
-  font-size: 20px;
-`;
-
-const Rating = styled.Text`
-  font-size: 16px;
-  color: ${({ theme }) => theme.colors.foreground};
-  font-weight: ${({ theme }) => theme.font.family.semibold};
-`;
-
-const HeroActionsRow = styled.View`
-  margin-top: 8px;
-  flex-direction: row;
-  gap: 10px;
-`;
-
-const HeroGhostButton = styled.Pressable`
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 999px;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   background: ${({ theme }) => theme.colors.card};
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
 `;
 
-const HeroGhostButtonText = styled.Text`
+const HeroMetaRow = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+`;
+
+const SmallBadge = styled.View<{ muted?: boolean }>`
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: ${({ theme, muted }) =>
+    muted ? theme.colors.muted : theme.colors.secondary};
+`;
+
+const SmallBadgeText = styled.Text<{ muted?: boolean }>`
+  color: ${({ theme, muted }) =>
+    muted ? theme.colors.foreground : theme.colors.secondaryForeground};
+  font-size: 12px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const InlineRatingButton = styled.Pressable`
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const Star = styled.Text`
+  color: #f4b400;
+  font-size: 17px;
+`;
+
+const Rating = styled.Text`
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.foreground};
-  font-size: 14px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
 const Section = styled.View`
-  margin-top: 28px;
+  margin-top: 30px;
   gap: 10px;
 `;
 
@@ -1006,23 +1023,6 @@ const SectionTitle = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.bold};
 `;
 
-const SectionActionButton = styled.Pressable`
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 999px;
-  align-items: center;
-  justify-content: center;
-  background: ${({ theme }) => theme.colors.card};
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-`;
-
-const SectionActionButtonText = styled.Text`
-  color: ${({ theme }) => theme.colors.foreground};
-  font-size: 14px;
-  font-weight: ${({ theme }) => theme.font.family.semibold};
-`;
-
 const BodyText = styled.Text`
   font-size: 15px;
   line-height: 24px;
@@ -1030,60 +1030,18 @@ const BodyText = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
-const StatsCard = styled.View`
-  margin-top: 24px;
-  background: ${({ theme }) => theme.colors.card};
-  border-radius: ${({ theme }) => theme.radius.xl}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-  padding: 18px;
-  flex-direction: row;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 12px;
+const ReadMoreButton = styled.Pressable`
+  align-self: flex-start;
 `;
 
-const MiniStat = styled.View`
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-`;
-
-const MiniStatButton = styled.Pressable`
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-`;
-
-const MiniStatLabel = styled.Text`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.family.medium};
-`;
-
-const MiniStatValue = styled.Text`
-  font-size: 20px;
-  color: ${({ theme }) => theme.colors.foreground};
-  font-weight: ${({ theme }) => theme.font.family.bold};
-`;
-
-const MiniStatHelper = styled.Text`
-  font-size: 12px;
-  color: ${({ theme }) => theme.colors.mutedForeground};
-  font-weight: ${({ theme }) => theme.font.family.medium};
-`;
-
-const MiniDivider = styled.View`
-  width: 1px;
-  height: 40px;
-  background: ${({ theme }) => theme.colors.border};
-  align-self: center;
+const ReadMoreText = styled.Text`
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
 const ProgressCard = styled.View`
-  margin-top: 16px;
+  margin-top: 26px;
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.xl}px;
   border-width: 1px;
@@ -1120,6 +1078,25 @@ const ProgressEditButtonText = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
+const ProgressTopLine = styled.View`
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+`;
+
+const ProgressMainText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 26px;
+  font-weight: ${({ theme }) => theme.font.family.bold};
+  letter-spacing: -0.4px;
+`;
+
+const ProgressPercent = styled.Text`
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
 const ProgressBarTrack = styled.View`
   width: 100%;
   height: 10px;
@@ -1140,12 +1117,29 @@ const ProgressMeta = styled.Text`
   font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
+const SectionActionButton = styled.Pressable`
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.card};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+const SectionActionButtonText = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
 const RatingCard = styled.View`
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.xl}px;
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
-  padding: 18px;
+  padding: 16px;
   gap: 14px;
 `;
 
@@ -1167,7 +1161,7 @@ const RatingIconsRow = styled.View`
 `;
 
 const RatingEmoji = styled.Text<{ inactive?: boolean }>`
-  font-size: 22px;
+  font-size: 21px;
   opacity: ${({ inactive }) => (inactive ? 0.35 : 1)};
 `;
 
@@ -1195,7 +1189,7 @@ const StickyBottomBar = styled.View`
   bottom: 0;
   z-index: 20;
   background: ${({ theme }) => theme.colors.background};
-  padding: 12px 18px 20px 18px;
+  padding: 10px 18px 18px 18px;
 `;
 
 const BottomActions = styled.View`
@@ -1203,38 +1197,42 @@ const BottomActions = styled.View`
   max-width: 920px;
   align-self: center;
   flex-direction: row;
-  gap: 12px;
+  gap: 10px;
 `;
 
-const PrimaryButton = styled.Pressable`
+const FooterPillButton = styled.Pressable`
   flex: 1;
-  height: 48px;
-  border-radius: 14px;
+  height: 46px;
+  border-radius: 999px;
   align-items: center;
   justify-content: center;
-  background: ${({ theme }) => theme.colors.primary};
-`;
-
-const PrimaryButtonText = styled.Text`
-  color: ${({ theme }) => theme.colors.primaryForeground};
-  font-size: 16px;
-  font-weight: ${({ theme }) => theme.font.family.semibold};
-`;
-
-const SecondaryButton = styled.Pressable`
-  flex: 1;
-  height: 48px;
-  border-radius: 14px;
-  align-items: center;
-  justify-content: center;
+  flex-direction: row;
+  gap: 8px;
   background: ${({ theme }) => theme.colors.card};
   border-width: 1px;
   border-color: ${({ theme }) => theme.colors.border};
 `;
 
-const SecondaryButtonText = styled.Text`
+const FooterPillText = styled.Text`
   color: ${({ theme }) => theme.colors.foreground};
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
+`;
+
+const FooterPrimaryButton = styled.Pressable`
+  flex: 1;
+  height: 46px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: 8px;
+  background: ${({ theme }) => theme.colors.primary};
+`;
+
+const FooterPrimaryText = styled.Text`
+  color: ${({ theme }) => theme.colors.primaryForeground};
+  font-size: 14px;
   font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
@@ -1279,6 +1277,16 @@ const RatingModalCard = styled.View`
   width: 100%;
   max-width: 520px;
   max-height: 84%;
+  background: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.radius.xl}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: 20px;
+`;
+
+const NoteModalCard = styled.View`
+  width: 100%;
+  max-width: 520px;
   background: ${({ theme }) => theme.colors.card};
   border-radius: ${({ theme }) => theme.radius.xl}px;
   border-width: 1px;
@@ -1454,7 +1462,7 @@ const QuoteBadge = styled.View`
   align-self: flex-start;
   padding: 6px 10px;
   border-radius: 999px;
-  background: ${({ theme }) => theme.colors.muted};
+  background: ${({ theme }) => theme.colors.card};
 `;
 
 const NoteBadgeText = styled.Text`
@@ -1514,16 +1522,6 @@ const QuoteMetaText = styled.Text`
 const QuoteMetaDot = styled.Text`
   color: ${({ theme }) => theme.colors.mutedForeground};
   font-size: 13px;
-`;
-
-const NoteModalCard = styled.View`
-  width: 100%;
-  max-width: 520px;
-  background: ${({ theme }) => theme.colors.card};
-  border-radius: ${({ theme }) => theme.radius.xl}px;
-  border-width: 1px;
-  border-color: ${({ theme }) => theme.colors.border};
-  padding: 20px;
 `;
 
 const NoteTextArea = styled.TextInput`

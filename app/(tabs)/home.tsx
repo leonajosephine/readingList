@@ -16,14 +16,15 @@ type Rank = {
   title: string;
   icon: string;
   minBooks: number;
+  desc?: string;
 };
 
 const RANKS: Rank[] = [
-  { title: "Novice: Which end of the wand glows again?", icon: "🌱", minBooks: 0 }, // Egg: Still figuring things out
-  { title: "Sorcerer's apprentice: Needs a nap", icon: "🪄", minBooks: 10 }, // Scaly Hatchling: Danger noodle
-  { title: "Mistress of the Citadel", icon: "🏰", minBooks: 25 }, // Teenage Dragon: 
-  { title: "High Mage: Almost the big boss", icon: "🧙‍♂️", minBooks: 40 }, //Elder Dragon: Knows everything, complains about everything
-  { title: "High Fae & Princess of Knowledge", icon: "👑", minBooks: 50 }, //
+  { title: "Novice", desc:"Which end of the wand glows again?", icon: "🌱", minBooks: 0 }, // Egg: Still figuring things out
+  { title: "Sorcerer's apprentice", desc: "Needs a nap", icon: "🪄", minBooks: 10 }, // Scaly Hatchling: Danger noodle
+  { title: "Mistress of the Citadel", desc: "Probably lost in the archives", icon: "🏰", minBooks: 25 }, // Teenage Dragon: 
+  { title: "High Mage: Almost the big boss", desc: "Almost the big boss", icon: "🧙‍♂️", minBooks: 40 }, // Elder Dragon: Knows everything, complains about everything
+  { title: "High Fae & Princess of Knowledge", desc: "Ruler of realms, still forgets why they entered a room", icon: "👑", minBooks: 50 }, //
 ];
 
 export default function HomeScreen() {
@@ -295,9 +296,7 @@ export default function HomeScreen() {
                         </BookDonutWrap>
                       </ReadingMainRow>
 
-                      <ProgressTrack>
-                        <ProgressFill style={{ width: `${percent}%` }} />
-                      </ProgressTrack>
+                      
                     </ReadingCard>
                   );
                 })}
@@ -477,6 +476,7 @@ export default function HomeScreen() {
 
                     <TimelineContent>
                       <TimelineTitle>{rank.title}</TimelineTitle>
+                      <TimelineDesc>{rank.desc}</TimelineDesc>
                       <TimelineMeta>{rank.minBooks}+ books read</TimelineMeta>
                     </TimelineContent>
                   </TimelineItem>
@@ -974,6 +974,13 @@ const TimelineTitle = styled.Text`
   color: ${({ theme }) => theme.colors.foreground};
   font-size: 15px;
   font-weight: ${({ theme }) => theme.font.family.bold};
+`;
+
+const TimelineDesc = styled.Text`
+  margin-top: 2px;
+  color: ${({ theme }) => theme.colors.mutedForeground};
+  font-size: 13px;
+  font-weight: ${({ theme }) => theme.font.family.medium};
 `;
 
 const TimelineMeta = styled.Text`
