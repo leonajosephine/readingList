@@ -330,34 +330,48 @@ import React, {
     ): Promise<string | null> => {
       const user = await requireUser();
       if (!user) return null;
-
+    
       const detailedBook = await getBookDetails(externalBook);
-  
+    
       const { data: existingBooks, error: existingError } = await supabase
         .from("books")
-        .select("id, description")
-        .eq("title", detailedBook.title)
-        .eq("author", detailedBook.author)
+        .select("id, description, cover_url, genre, total_pages, isbn")
+        .or(
+          detailedBook.isbn
+            ? `isbn.eq.${detailedBook.isbn},and(title.eq.${detailedBook.title},author.eq.${detailedBook.author})`
+            : `and(title.eq.${detailedBook.title},author.eq.${detailedBook.author})`
+        )
         .limit(1);
-  
+    
       if (existingError) {
         console.log("Find existing book error:", existingError);
         return null;
       }
-  
+    
       let bookId = existingBooks?.[0]?.id;
-
-      const existingDescription = existingBooks?.[0]?.description;
-
-      if (bookId && !existingDescription && detailedBook.description) {
-        await supabase
+      const existingBook = existingBooks?.[0];
+    
+      if (bookId && existingBook) {
+        const { error: updateError } = await supabase
           .from("books")
           .update({
-            description: detailedBook.description,
+            description: existingBook.description ?? detailedBook.description ?? null,
+            cover_url:
+              existingBook.cover_url || detailedBook.coverUrl
+                ? detailedBook.coverUrl
+                : existingBook.cover_url,
+            genre: existingBook.genre ?? detailedBook.genre ?? null,
+            total_pages: existingBook.total_pages ?? detailedBook.totalPages ?? null,
+            isbn: existingBook.isbn ?? detailedBook.isbn ?? null,
+            published_year: detailedBook.publishedYear ?? null,
           })
           .eq("id", bookId);
+    
+        if (updateError) {
+          console.log("Update existing book error:", updateError);
         }
-  
+      }
+    
       if (!bookId) {
         const { data, error } = await supabase
           .from("books")
@@ -373,15 +387,15 @@ import React, {
           })
           .select("id")
           .single();
-  
+    
         if (error || !data) {
           console.log("Add external book error:", error);
           return null;
         }
-  
+    
         bookId = data.id;
       }
-  
+    
       const { error: userBookError } = await supabase.from("user_books").upsert(
         {
           user_id: user.id,
@@ -392,12 +406,12 @@ import React, {
         },
         { onConflict: "user_id,book_id" }
       );
-  
+    
       if (userBookError) {
         console.log("Add user book error:", userBookError);
         return null;
       }
-  
+    
       await refreshLibrary();
       return bookId;
     };

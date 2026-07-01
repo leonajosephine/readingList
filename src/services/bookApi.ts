@@ -10,97 +10,207 @@ export type ExternalBook = {
   isbn?: string;
 };
 
-type OpenLibraryDoc = {
-  key?: string;
+type GoogleIdentifier = {
+  type?: string;
+  identifier?: string;
+};
+
+type GoogleImageLinks = {
+  smallThumbnail?: string;
+  thumbnail?: string;
+};
+
+type GoogleVolumeInfo = {
   title?: string;
-  author_name?: string[];
-  cover_i?: number;
-  first_publish_year?: number;
-  isbn?: string[];
-  number_of_pages_median?: number;
-  subject?: string[];
+  subtitle?: string;
+  authors?: string[];
+  description?: string;
+  categories?: string[];
+  pageCount?: number;
+  publishedDate?: string;
+  industryIdentifiers?: GoogleIdentifier[];
+  imageLinks?: GoogleImageLinks;
 };
 
-type OpenLibrarySearchResponse = {
-  docs?: OpenLibraryDoc[];
+type GoogleBookItem = {
+  id?: string;
+  volumeInfo?: GoogleVolumeInfo;
 };
 
-type OpenLibraryWorkResponse = {
-  description?: string | { value?: string };
-  subjects?: string[];
+type GoogleBooksResponse = {
+  items?: GoogleBookItem[];
 };
 
-const FALLBACK_COVER = "https://picsum.photos/400/600?random=999";
+const API_BASE = "https://www.googleapis.com/books/v1/volumes";
+const GOOGLE_BOOKS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_BOOKS_API_KEY;
 
-function getDescriptionFromWork(work: OpenLibraryWorkResponse): string | undefined {
-  if (!work.description) return undefined;
+const FALLBACK_COVER =
+  "https://dummyimage.com/400x600/e9ebef/717182.png&text=No+Cover";
 
-  if (typeof work.description === "string") {
-    return work.description;
+const searchCache = new Map<string, ExternalBook[]>();
+const detailsCache = new Map<string, ExternalBook>();
+
+const normalizeText = (value?: string) => value?.trim() || undefined;
+
+const toHttps = (url?: string) => {
+  if (!url) return undefined;
+  return url.replace(/^http:\/\//, "https://");
+};
+
+const getCoverUrl = (links?: GoogleImageLinks) => {
+  return toHttps(links?.thumbnail ?? links?.smallThumbnail) ?? FALLBACK_COVER;
+};
+
+const getPublishedYear = (publishedDate?: string) => {
+  if (!publishedDate) return undefined;
+
+  const year = Number(publishedDate.slice(0, 4));
+  return Number.isNaN(year) ? undefined : year;
+};
+
+const getIsbn = (identifiers?: GoogleIdentifier[]) => {
+  return (
+    identifiers?.find((item) => item.type === "ISBN_13")?.identifier ??
+    identifiers?.find((item) => item.type === "ISBN_10")?.identifier
+  );
+};
+
+const cleanDescription = (description?: string) => {
+  if (!description) return undefined;
+
+  return description
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const mapGoogleBook = (item: GoogleBookItem): ExternalBook | null => {
+  const info = item.volumeInfo;
+  const title = normalizeText(info?.title);
+
+  if (!item.id || !title) return null;
+
+  return {
+    externalId: item.id,
+    title,
+    author: info?.authors?.[0] ?? "Unknown Author",
+    coverUrl: getCoverUrl(info?.imageLinks),
+    description: cleanDescription(info?.description),
+    genre: info?.categories?.[0],
+    totalPages: info?.pageCount,
+    publishedYear: getPublishedYear(info?.publishedDate),
+    isbn: getIsbn(info?.industryIdentifiers),
+  };
+};
+
+const dedupeBooks = (books: ExternalBook[]) => {
+  const seen = new Set<string>();
+
+  return books.filter((book) => {
+    const key = book.isbn
+      ? `isbn:${book.isbn}`
+      : `${book.title.toLowerCase()}-${book.author.toLowerCase()}`;
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
+
+const buildParams = (params: Record<string, string>) => {
+  const searchParams = new URLSearchParams(params);
+
+  if (GOOGLE_BOOKS_API_KEY) {
+    searchParams.append("key", GOOGLE_BOOKS_API_KEY);
   }
 
-  return work.description.value;
-}
-
-export async function getBookDetails(book: ExternalBook): Promise<ExternalBook> {
-  if (!book.externalId.startsWith("/works/")) {
-    return book;
-  }
-
-  try {
-    const response = await fetch(`https://openlibrary.org${book.externalId}.json`);
-
-    if (!response.ok) {
-      return book;
-    }
-
-    const data = (await response.json()) as OpenLibraryWorkResponse;
-    const description = getDescriptionFromWork(data);
-
-    return {
-      ...book,
-      description: description ?? book.description,
-      genre: book.genre ?? data.subjects?.[0],
-    };
-  } catch (error) {
-    console.log("OpenLibrary details error:", error);
-    return book;
-  }
-}
+  return searchParams.toString();
+};
 
 export async function searchBooks(query: string): Promise<ExternalBook[]> {
   const trimmed = query.trim();
 
   if (!trimmed) return [];
 
-  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(
-    trimmed
-  )}&limit=20`;
+  const cacheKey = trimmed.toLowerCase();
 
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error("Could not fetch books.");
+  if (searchCache.has(cacheKey)) {
+    return searchCache.get(cacheKey)!;
   }
 
-  const data = (await response.json()) as OpenLibrarySearchResponse;
+  const url = `${API_BASE}?${buildParams({
+    q: trimmed,
+    maxResults: "20",
+    printType: "books",
+    orderBy: "relevance",
+  })}`;
 
-  return (data.docs ?? [])
-    .filter((book) => !!book.title)
-    .map((book) => {
-      const coverUrl = book.cover_i
-        ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
-        : FALLBACK_COVER;
+  try {
+    const response = await fetch(url);
 
-      return {
-        externalId: book.key ?? book.title ?? String(Date.now()),
-        title: book.title ?? "Untitled",
-        author: book.author_name?.[0] ?? "Unknown Author",
-        coverUrl,
-        publishedYear: book.first_publish_year,
-        isbn: book.isbn?.[0],
-        totalPages: book.number_of_pages_median,
-        genre: book.subject?.[0],
-      };
-    });
+    if (!response.ok) {
+      console.log("Google Books search failed:", response.status);
+      return [];
+    }
+
+    const data = (await response.json()) as GoogleBooksResponse;
+
+    const results = dedupeBooks(
+      (data.items ?? [])
+        .map(mapGoogleBook)
+        .filter((book): book is ExternalBook => book !== null)
+    );
+
+    searchCache.set(cacheKey, results);
+
+    return results;
+  } catch (error) {
+    console.log("Google Books search error:", error);
+    return [];
+  }
+}
+
+export async function getBookDetails(book: ExternalBook): Promise<ExternalBook> {
+  if (!book.externalId) return book;
+
+  if (detailsCache.has(book.externalId)) {
+    return {
+      ...book,
+      ...detailsCache.get(book.externalId)!,
+    };
+  }
+
+  const url = `${API_BASE}/${book.externalId}?${buildParams({})}`;
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.log("Google Books details failed:", response.status);
+      return book;
+    }
+
+    const data = (await response.json()) as GoogleBookItem;
+    const detailedBook = mapGoogleBook(data);
+
+    if (!detailedBook) return book;
+
+    const mergedBook: ExternalBook = {
+      ...book,
+      ...detailedBook,
+      description: detailedBook.description ?? book.description,
+      coverUrl:
+        detailedBook.coverUrl !== FALLBACK_COVER
+          ? detailedBook.coverUrl
+          : book.coverUrl,
+    };
+
+    detailsCache.set(book.externalId, mergedBook);
+
+    return mergedBook;
+  } catch (error) {
+    console.log("Google Books details error:", error);
+    return book;
+  }
 }

@@ -35,6 +35,7 @@ export default function SearchScreen() {
 
   const [apiResults, setApiResults] = useState<ExternalBook[]>([]);
   const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [addingBookId, setAddingBookId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -86,18 +87,27 @@ export default function SearchScreen() {
   const onSearchApi = async () => {
     const trimmed = query.trim();
 
+    if (apiLoading) return;
+
     if (trimmed.length < 3) {
       setApiResults([]);
+      setApiError(null);
       return;
     }
 
     try {
       setApiLoading(true);
+      setApiError(null);
+
       const results = await searchBooks(trimmed);
       setApiResults(results);
+
+      if (results.length === 0) {
+        setApiError("No online results found.");
+      }
     } catch (error) {
       console.log("API search error:", error);
-      Alert.alert("Search failed", "Could not search books online.");
+      setApiError("Could not search books online.");
     } finally {
       setApiLoading(false);
     }
@@ -108,12 +118,13 @@ export default function SearchScreen() {
 
     if (trimmed.length < 3) {
       setApiResults([]);
+      setApiError(null);
       return;
     }
 
     const timeout = setTimeout(() => {
       onSearchApi();
-    }, 500);
+    }, 1000);
 
     return () => clearTimeout(timeout);
   }, [query]);
@@ -136,11 +147,14 @@ export default function SearchScreen() {
   };
 
   const isAlreadyInLibrary = (externalBook: ExternalBook) => {
-    return books.some(
-      (book) =>
-        book.title.toLowerCase() === externalBook.title.toLowerCase() &&
-        book.author.toLowerCase() === externalBook.author.toLowerCase()
-    );
+    return books.some((book) => {
+      const sameTitle =
+        book.title.toLowerCase() === externalBook.title.toLowerCase();
+      const sameAuthor =
+        book.author.toLowerCase() === externalBook.author.toLowerCase();
+
+      return sameTitle && sameAuthor;
+    });
   };
 
   return (
@@ -157,7 +171,7 @@ export default function SearchScreen() {
                 <Ionicons
                   name="search-outline"
                   size={20}
-                  color="rgba(113, 113, 130, 0.9)"
+                  color={theme.colors.mutedForeground}
                 />
               </SearchIconWrap>
 
@@ -165,7 +179,7 @@ export default function SearchScreen() {
                 value={query}
                 onChangeText={setQuery}
                 placeholder="Search by title, author..."
-                placeholderTextColor="rgba(113, 113, 130, 0.9)"
+                placeholderTextColor={theme.colors.mutedForeground}
                 autoCorrect={false}
                 autoCapitalize="none"
                 returnKeyType="search"
@@ -186,6 +200,8 @@ export default function SearchScreen() {
             <SearchHint>Searching online...</SearchHint>
           ) : query.trim().length > 0 && query.trim().length < 3 ? (
             <SearchHint>Type at least 3 characters to search online</SearchHint>
+          ) : apiError ? (
+            <SearchHint>{apiError}</SearchHint>
           ) : null}
 
           <ChipsScroll
@@ -236,7 +252,7 @@ export default function SearchScreen() {
               <OnlineSectionHeader>
                 <OnlineSectionTitle>Online Results</OnlineSectionTitle>
                 <OnlineSectionSub>
-                  Add books from Open Library to your personal library
+                  Add books from Google Books to your personal library
                 </OnlineSectionSub>
               </OnlineSectionHeader>
 
@@ -268,6 +284,12 @@ export default function SearchScreen() {
                           {book.totalPages ? (
                             <ApiMetaPill>
                               <ApiMetaText>{book.totalPages} pages</ApiMetaText>
+                            </ApiMetaPill>
+                          ) : null}
+
+                          {book.genre ? (
+                            <ApiMetaPill>
+                              <ApiMetaText numberOfLines={1}>{book.genre}</ApiMetaText>
                             </ApiMetaPill>
                           ) : null}
                         </ApiMetaRow>
