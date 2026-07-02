@@ -31,12 +31,24 @@ export const makeTheme = (t: Tokens) => ({
     destructive: t.destructive,
     destructiveForeground: t.destructiveForeground,
   },
+
+  meta: {
+    name: t.name,
+    displayName: t.displayName,
+    assets: t.assets,
+    navigationIcons: t.navigationIcons,
+    capabilities: t.capabilities,
+    shadowOpacity: t.shadowOpacity,
+    shadowRadius: t.shadowRadius,
+  },
+
   radius: {
     sm: Math.max(4, t.radius - 4),
     md: Math.max(6, t.radius - 2),
     lg: t.radius,
     xl: t.radius + 6,
   },
+
   space: {
     xs: 8,
     sm: 12,
@@ -44,6 +56,7 @@ export const makeTheme = (t: Tokens) => ({
     lg: 24,
     xl: 32,
   },
+
   font: {
     family: {
       regular: "Inter_400Regular",

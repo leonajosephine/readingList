@@ -42,7 +42,7 @@ export default function TabsLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name={theme.meta.navigationIcons.home} size={size} color={color} />
           ),
         }}
       />
@@ -52,7 +52,7 @@ export default function TabsLayout() {
         options={{
           title: "Lists",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list-outline" size={size} color={color} />
+            <Ionicons name={theme.meta.navigationIcons.lists} size={size} color={color} />
           ),
         }}
       />
@@ -62,7 +62,7 @@ export default function TabsLayout() {
         options={{
           title: "Search",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search-outline" size={size} color={color} />
+            <Ionicons name={theme.meta.navigationIcons.search} size={size} color={color} />
           ),
         }}
       />
@@ -72,7 +72,7 @@ export default function TabsLayout() {
         options={{
           title: "Friends",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <Ionicons name={theme.meta.navigationIcons.friends} size={size} color={color} />
           ),
         }}
       />

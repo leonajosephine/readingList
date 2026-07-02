@@ -1,3 +1,24 @@
+import type { ImageSourcePropType } from "react-native";
+
+import { Ionicons } from "@expo/vector-icons";
+
+export type ThemeNavigationIcons = {
+  home: keyof typeof Ionicons.glyphMap;
+  lists: keyof typeof Ionicons.glyphMap;
+  search: keyof typeof Ionicons.glyphMap;
+  friends: keyof typeof Ionicons.glyphMap;
+};
+export type ThemeAssets = {
+  backgroundImage?: ImageSourcePropType;
+  heroDecoration?: ImageSourcePropType;
+  cardDecoration?: ImageSourcePropType;
+};
+
+export type ThemeCapabilities = {
+  hasBackgroundImage: boolean;
+  hasDecoration: boolean;
+};
+
 export type ThemeKey =
   | "light"
   | "dark"
@@ -9,6 +30,9 @@ export type ThemeKey =
   | "matcha";
 
 export type Tokens = {
+  name: string;
+  displayName: string;
+
   background: string;
   foreground: string;
 
@@ -39,10 +63,20 @@ export type Tokens = {
   destructiveForeground: string;
 
   radius: number;
+
+  assets: ThemeAssets;
+  navigationIcons: ThemeNavigationIcons;
+  capabilities: ThemeCapabilities;
+
+  shadowOpacity: number;
+  shadowRadius: number;
 };
 
 export const TOKENS: Record<ThemeKey, Tokens> = {
   light: {
+    name: "light",
+    displayName: "Light",
+
     background: "#FFFFFF",
     foreground: "#1C1B20",
 
@@ -73,9 +107,26 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
 
     radius: 10,
+
+    assets: {},
+    navigationIcons: {
+      home: "home-outline",
+      lists: "albums-outline",
+      search: "search-outline",
+      friends: "person-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: false,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 
   dark: {
+    name: "dark",
+    displayName: "Dark",
+
     background: "#111113",
     foreground: "#F4F4F5",
 
@@ -106,9 +157,26 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
 
     radius: 10,
+
+    assets: {},
+    navigationIcons: {
+      home: "home-outline",
+      lists: "albums-outline",
+      search: "search-outline",
+      friends: "settings-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: false,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 
   fantasy: {
+    name: "fantasy",
+    displayName: "Fantasy",
+
     background: "#FBF8F2",
     foreground: "#2D2118",
 
@@ -139,9 +207,29 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
 
     radius: 11,
+
+    assets: {
+      heroDecoration: require("../../assets/themes/fantasy/dragon.png"),
+      cardDecoration: require("../../assets/themes/fantasy/dragons.png"),
+    },
+    navigationIcons: {
+      home: "sparkles-outline",
+      lists: "map-outline",
+      search: "compass-outline",
+      friends: "person-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: true,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 
   romance: {
+    name: "romance",
+    displayName: "Romance",
+
     background: "#FFF8FA",
     foreground: "#49233F",
 
@@ -172,9 +260,26 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
 
     radius: 14,
+
+    assets: {},
+    navigationIcons: {
+      home: "flower-outline",
+      lists: "albums-outline",
+      search: "heart-outline",
+      friends: "settings-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: false,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 
   mystery: {
+    name: "mystery",
+    displayName: "Mystery",
+
     background: "#11111D",
     foreground: "#ECEAF6",
 
@@ -205,9 +310,26 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
 
     radius: 10,
+
+    assets: {},
+    navigationIcons: {
+      home: "home-outline",
+      lists: "albums-outline",
+      search: "search-outline",
+      friends: "settings-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: false,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 
   scifi: {
+    name: "scifi",
+    displayName: "Sci-Fi",
+
     background: "#09111F",
     foreground: "#E0F2FE",
 
@@ -238,9 +360,26 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
 
     radius: 9,
+
+    assets: {},
+    navigationIcons: {
+      home: "planet-outline",
+      lists: "albums-outline",
+      search: "telescope-outline",
+      friends: "person-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: false,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 
   glass: {
+    name: "glass",
+    displayName: "Glass",
+
     background: "#F5F8FD",
     foreground: "#24324A",
 
@@ -271,9 +410,26 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
 
     radius: 16,
+    
+    assets: {},
+    navigationIcons: {
+      home: "home-outline",
+      lists: "albums-outline",
+      search: "search-outline",
+      friends: "person-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: false,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 
   matcha: {
+    name: "matcha",
+    displayName: "Matcha",
+
     background: "#FEFFFD", // noch etwas heller
   
     foreground: "#203126",
@@ -310,5 +466,19 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
     destructiveForeground: "#FFFFFF",
   
     radius: 13,
+
+    assets: {},
+    navigationIcons: {
+      home: "leaf-outline",
+      lists: "albums-outline",
+      search: "search-outline",
+      friends: "person-outline",
+    },
+    capabilities: {
+      hasBackgroundImage: false,
+      hasDecoration: false,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
 };
