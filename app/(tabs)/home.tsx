@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Modal, ScrollView, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Image, ImageBackground, Modal, ScrollView, useWindowDimensions } from "react-native";
 import styled, { useTheme } from "styled-components/native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,7 +23,7 @@ const RANKS: Rank[] = [
   { title: "Novice", desc:"Which end of the wand glows again?", icon: "🌱", minBooks: 0 }, // Egg: Still figuring things out
   { title: "Sorcerer's apprentice", desc: "Needs a nap", icon: "🪄", minBooks: 10 }, // Scaly Hatchling: Danger noodle
   { title: "Mistress of the Citadel", desc: "Probably lost in the archives", icon: "🏰", minBooks: 25 }, // Teenage Dragon: 
-  { title: "High Mage: Almost the big boss", desc: "Almost the big boss", icon: "🧙‍♂️", minBooks: 40 }, // Elder Dragon: Knows everything, complains about everything
+  { title: "High Mage", desc: "Almost the big boss", icon: "🧙‍♂️", minBooks: 40 }, // Elder Dragon: Knows everything, complains about everything
   { title: "High Fae & Princess of Knowledge", desc: "Ruler of realms, still forgets why they entered a room", icon: "👑", minBooks: 50 }, //
 ];
 
@@ -156,16 +156,31 @@ export default function HomeScreen() {
     );
   }
 
+  const hasBackgroundImage = theme.meta.capabilities.hasBackgroundImage && theme.meta.assets.backgroundImage;
+
   return (
     <Screen>
+      {hasBackgroundImage ? (
+        <FullPageBackground
+          source={theme.meta.assets.backgroundImage}
+          resizeMode="cover"
+        />
+      ) : null}
+
       <AppHeader />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <Content>
           <HeroBlock>
+          {theme.meta.assets.heroDecoration ? (
+            <HeroDecoration
+              source={theme.meta.assets.heroDecoration}
+              resizeMode="contain"
+            />
+          ) : null}
             <WelcomeWrap>
               <WelcomeKicker>Welcome back,</WelcomeKicker>
-              <WelcomeText>Hi {displayName} ✨</WelcomeText>
+              <WelcomeText>Hi {displayName}</WelcomeText>
             </WelcomeWrap>
 
             <RankCardButton onPress={() => setRankOpen(true)}>
@@ -266,6 +281,12 @@ export default function HomeScreen() {
                       onPress={() => router.push(`/book/${book.id}`)}
                       onLongPress={() => openBookActions(mappedBook)}
                     >
+                      {theme.meta.assets.cardDecoration ? (
+                        <CardDecoration
+                          source={theme.meta.assets.cardDecoration}
+                          resizeMode="contain"
+                        />
+                      ) : null}
                       <ReadingMainRow>
                         <ReadingCover source={{ uri: book.coverUrl }} />
 
@@ -497,6 +518,24 @@ const Screen = styled.View`
   background: ${({ theme }) => theme.colors.background};
 `;
 
+const FullPageBackground = styled(ImageBackground)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+`;
+
+const PageOverlay = styled.View`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: ${({ theme }) => theme.colors.background};
+  opacity: 0.72;
+`;
+
 const LoadingWrap = styled.View`
   flex: 1;
   align-items: center;
@@ -519,6 +558,17 @@ const Content = styled.View`
 const HeroBlock = styled.View`
   padding: 14px 18px 10px 18px;
   gap: 12px;
+  position: relative;
+  overflow: hidden;
+`;
+
+const HeroDecoration = styled(Image)`
+  position: absolute;
+  right: -8px;
+  top: -12px;
+  width: 140px;
+  height: 140px;
+  opacity: 0.8;
 `;
 
 const WelcomeWrap = styled.View`
@@ -663,6 +713,16 @@ const ReadingCard = styled.Pressable`
   padding: 18px 18px 28px 18px;
   background: ${({ theme }) => theme.colors.readingCard};
   justify-content: center;
+  position: relative;
+`;
+
+const CardDecoration = styled(Image)`
+  position: absolute;
+  right: -18px;
+  top: -14px;
+  width: 150px;
+  height: 150px;
+  opacity: 0.80;
 `;
 
 const ReadingMainRow = styled.View`
