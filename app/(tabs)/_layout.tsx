@@ -1,9 +1,37 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "styled-components/native";
+import { Image } from "react-native";
 
 export default function TabsLayout() {
   const theme = useTheme();
+
+  const renderIcon = (
+    icon: typeof theme.meta.navigationIcons.home,
+    color: string,
+    size: number
+  ) => {
+    if (icon.type === "ionicon") {
+      return (
+        <Ionicons
+          name={icon.name}
+          size={size}
+          color={color}
+        />
+      );
+    }
+  
+    return (
+      <Image
+        source={icon.source}
+        resizeMode="contain"
+        style={{
+          width: size,
+          height: size,
+        }}
+      />
+    );
+  };
 
   return (
     <Tabs
@@ -41,9 +69,8 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={theme.meta.navigationIcons.home} size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) =>
+            renderIcon(theme.meta.navigationIcons.home, color, size)
         }}
       />
 
@@ -51,9 +78,8 @@ export default function TabsLayout() {
         name="lists"
         options={{
           title: "Lists",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={theme.meta.navigationIcons.lists} size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) =>
+            renderIcon(theme.meta.navigationIcons.lists, color, size)
         }}
       />
 
@@ -61,9 +87,8 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: "Search",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={theme.meta.navigationIcons.search} size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) =>
+            renderIcon(theme.meta.navigationIcons.search, color, size)
         }}
       />
 
@@ -71,9 +96,8 @@ export default function TabsLayout() {
         name="friends"
         options={{
           title: "Friends",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name={theme.meta.navigationIcons.friends} size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) =>
+            renderIcon(theme.meta.navigationIcons.friends, color, size)
         }}
       />
     </Tabs>
