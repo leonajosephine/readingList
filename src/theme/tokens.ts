@@ -2,11 +2,21 @@ import type { ImageSourcePropType } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
+export type ThemeNavigationIcon =
+  | {
+      type: "ionicon";
+      name: keyof typeof Ionicons.glyphMap;
+    }
+  | {
+      type: "asset";
+      source: ImageSourcePropType;
+    };
+
 export type ThemeNavigationIcons = {
-  home: keyof typeof Ionicons.glyphMap;
-  lists: keyof typeof Ionicons.glyphMap;
-  search: keyof typeof Ionicons.glyphMap;
-  friends: keyof typeof Ionicons.glyphMap;
+  home: ThemeNavigationIcon;
+  search: ThemeNavigationIcon;
+  lists: ThemeNavigationIcon;
+  friends: ThemeNavigationIcon;
 };
 export type ThemeAssets = {
   backgroundImage?: ImageSourcePropType;
@@ -110,10 +120,10 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     assets: {},
     navigationIcons: {
-      home: "home-outline",
-      lists: "albums-outline",
-      search: "search-outline",
-      friends: "person-outline",
+      home: { type: "ionicon", name: "home-outline" },
+      lists: { type: "ionicon", name: "albums-outline" },
+      search: { type: "ionicon", name: "search-outline" },
+      friends: { type: "ionicon", name: "person-outline" },
     },
     capabilities: {
       hasBackgroundImage: false,
@@ -158,15 +168,17 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     radius: 10,
 
-    assets: {},
+    assets: {
+      backgroundImage: require("../../assets/themes/fantasy/bg.jpg"),
+    },
     navigationIcons: {
-      home: "home-outline",
-      lists: "albums-outline",
-      search: "search-outline",
-      friends: "settings-outline",
+      home: { type: "ionicon", name: "home-outline" },
+      lists: { type: "ionicon", name: "albums-outline" },
+      search: { type: "ionicon", name: "search-outline" },
+      friends: { type: "ionicon", name: "settings-outline" },
     },
     capabilities: {
-      hasBackgroundImage: false,
+      hasBackgroundImage: true,
       hasDecoration: false,
     },
     shadowOpacity: 0.08,
@@ -213,10 +225,10 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
       cardDecoration: require("../../assets/themes/fantasy/dragons.png"),
     },
     navigationIcons: {
-      home: "sparkles-outline",
-      lists: "map-outline",
-      search: "compass-outline",
-      friends: "person-outline",
+      home: { type: "asset", source: require("../../assets/themes/fantasy/dragon.png") },
+      lists: { type: "asset", source: require("../../assets/themes/fantasy/1.png") },
+      search: { type: "asset", source: require("../../assets/themes/fantasy/search.png") },
+      friends: { type: "asset", source: require("../../assets/themes/fantasy/3.png") },
     },
     capabilities: {
       hasBackgroundImage: false,
@@ -263,10 +275,10 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     assets: {},
     navigationIcons: {
-      home: "flower-outline",
-      lists: "albums-outline",
-      search: "heart-outline",
-      friends: "settings-outline",
+      home: { type: "ionicon", name: "flower-outline" },
+      lists: { type: "ionicon", name: "albums-outline" },
+      search: { type: "ionicon", name: "heart-outline" },
+      friends: { type: "ionicon", name: "settings-outline" },
     },
     capabilities: {
       hasBackgroundImage: false,
@@ -313,10 +325,10 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     assets: {},
     navigationIcons: {
-      home: "home-outline",
-      lists: "albums-outline",
-      search: "search-outline",
-      friends: "settings-outline",
+      home: { type: "ionicon", name: "home-outline" },
+      lists: { type: "ionicon", name: "albums-outline" },
+      search: { type: "ionicon", name: "search-outline" },
+      friends: { type: "ionicon", name: "settings-outline" },
     },
     capabilities: {
       hasBackgroundImage: false,
@@ -363,10 +375,10 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     assets: {},
     navigationIcons: {
-      home: "planet-outline",
-      lists: "albums-outline",
-      search: "telescope-outline",
-      friends: "person-outline",
+      home: { type: "ionicon", name: "planet-outline" },
+      lists: { type: "ionicon", name: "albums-outline" },
+      search: { type: "ionicon", name: "telescope-outline" },
+      friends: { type: "ionicon", name: "person-outline" },
     },
     capabilities: {
       hasBackgroundImage: false,
@@ -411,15 +423,17 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     radius: 16,
     
-    assets: {},
+    assets: {
+      backgroundImage: require("../../assets/themes/fantasy/velaris.jpg"),
+    },
     navigationIcons: {
-      home: "home-outline",
-      lists: "albums-outline",
-      search: "search-outline",
-      friends: "person-outline",
+      home: { type: "ionicon", name: "home-outline" },
+      lists: { type: "ionicon", name: "albums-outline" },
+      search: { type: "ionicon", name: "search-outline" },
+      friends: { type: "ionicon", name: "person-outline" },
     },
     capabilities: {
-      hasBackgroundImage: false,
+      hasBackgroundImage: true,
       hasDecoration: false,
     },
     shadowOpacity: 0.08,
@@ -469,10 +483,10 @@ export const TOKENS: Record<ThemeKey, Tokens> = {
 
     assets: {},
     navigationIcons: {
-      home: "leaf-outline",
-      lists: "albums-outline",
-      search: "search-outline",
-      friends: "person-outline",
+      home: { type: "ionicon", name: "leaf-outline" },
+      lists: { type: "ionicon", name: "albums-outline" },
+      search: { type: "ionicon", name: "search-outline" },
+      friends: { type: "ionicon", name: "person-outline" },
     },
     capabilities: {
       hasBackgroundImage: false,
