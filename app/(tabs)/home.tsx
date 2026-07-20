@@ -34,7 +34,7 @@ export default function HomeScreen() {
   const { books, lists, updateBookStatus, loading } = useLibrary();
 
   const [displayName, setDisplayName] = useState("Reader");
-  const [filter, setFilter] = useState<"all" | "toRead" | "done">("all");
+  const [filter, setFilter] = useState<"all" | "toRead" | "reading" | "done">("all");
   const [selectedBook, setSelectedBook] = useState<BookCardBook | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [listPickerOpen, setListPickerOpen] = useState(false);
@@ -78,6 +78,11 @@ export default function HomeScreen() {
     [books]
   );
 
+  const currentlyReadingBook = useMemo(
+    () => books.find((book) => book.status === "reading"),
+    [books]
+  )
+
   const doneBooks = useMemo(
     () => books.filter((book) => book.status === "done"),
     [books]
@@ -85,6 +90,7 @@ export default function HomeScreen() {
 
   const libraryBooks = useMemo(() => {
     if (filter === "toRead") return toReadBooks;
+    if (filter === "reading") return currentlyReading;
     if (filter === "done") return doneBooks;
     return books;
   }, [books, doneBooks, filter, toReadBooks]);
@@ -115,10 +121,11 @@ export default function HomeScreen() {
     });
   }, [lists, books]);
 
-  const libraryColumns = isDesktop ? 4 : isTablet ? 3 : 2;
-  const libraryCardWidth =
-    (contentWidth - horizontalPadding - libraryGap * (libraryColumns - 1)) /
-    libraryColumns;
+  const libraryCardWidth = isDesktop
+  ? 180
+  : isTablet
+    ? 160
+    : 145;
 
   const carouselCardWidth = contentWidth - horizontalPadding;
 
@@ -400,16 +407,24 @@ export default function HomeScreen() {
           <SegmentWrap>
             <SegmentedControl
               value={filter}
-              onChange={(k) => setFilter(k as "all" | "toRead" | "done")}
+              onChange={(k) => setFilter(k as "all" | "toRead" | "reading" | "done")}
               options={[
                 { key: "all", label: "All" },
                 { key: "toRead", label: "To Read" },
+                { key: "reading", label: "Reading" },
                 { key: "done", label: "Done" },
               ]}
             />
           </SegmentWrap>
 
-          <LibraryGrid>
+          <LibraryCarousel
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 18,
+              gap: 12,
+            }}
+          >
             {libraryBooks.map((book) => {
               const mappedBook = mapBook(book);
 
@@ -423,7 +438,7 @@ export default function HomeScreen() {
                 />
               );
             })}
-          </LibraryGrid>
+          </LibraryCarousel>
 
           <BookActionsSheet
             visible={actionsOpen}
@@ -524,6 +539,7 @@ const FullPageBackground = styled(ImageBackground)`
   left: 0;
   right: 0;
   bottom: 0;
+  opacity: 0.6;
 `;
 
 const PageOverlay = styled.View`
@@ -931,13 +947,11 @@ const SegmentWrap = styled.View`
   padding: 0 18px;
   width: 100%;
   max-width: 420px;
+  font-size: 9px;
 `;
 
-const LibraryGrid = styled.View`
-  padding: 16px 18px;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 12px;
+const LibraryCarousel = styled.ScrollView`
+  margin-top: 16px;
 `;
 
 const ModalOverlay = styled.View`

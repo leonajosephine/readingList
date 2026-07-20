@@ -73,7 +73,7 @@ export default function ListDetailScreen() {
   const isTablet = width >= 768;
   const isDesktop = width >= 1100;
 
-  const columns = isDesktop ? 4 : isTablet ? 3 : 2;
+  const columns = isDesktop ? 6 : isTablet ? 5 : 3;
 
   const cardWidth =
     (contentWidth - horizontalPadding - gap * (columns - 1)) / columns;
@@ -246,14 +246,15 @@ export default function ListDetailScreen() {
                 };
 
                 return (
-                  <BookCardWrap key={book.id}>
-                    <BookCard
-                      style={{ width: cardWidth }}
-                      onPress={() => router.push(`/book/${book.id}`)}
-                      onLongPress={() => openBookActions(mappedBook)}
-                      book={mappedBook}
-                    />
-                  </BookCardWrap>
+                  <SmallBookTile
+                    key={book.id}
+                    style={{ width: cardWidth }}
+                    onPress={() => router.push(`/book/${book.id}`)}
+                    onLongPress={() => openBookActions(mappedBook)}
+                  >
+                    <SmallBookCover source={{ uri: book.coverUrl }} resizeMode="cover" />
+                    <SmallBookTitle numberOfLines={2}>{book.title}</SmallBookTitle>
+                  </SmallBookTile>
                 );
               })}
             </Grid>
@@ -612,8 +613,22 @@ const Grid = styled.View`
   gap: 12px;
 `;
 
-const BookCardWrap = styled.View`
-  position: relative;
+const SmallBookTile = styled.Pressable`
+  gap: 8px;
+`;
+
+const SmallBookCover = styled.Image`
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: ${({ theme }) => theme.radius.md}px;
+  background: ${({ theme }) => theme.colors.muted};
+`;
+
+const SmallBookTitle = styled.Text`
+  color: ${({ theme }) => theme.colors.foreground};
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: ${({ theme }) => theme.font.family.semibold};
 `;
 
 const EmptyStateCard = styled.View`
