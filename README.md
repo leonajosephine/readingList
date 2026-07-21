@@ -48,6 +48,36 @@ expo start
 Use the Expo Go app to scan the QR code.
 Or run it on an emulator/simulator.
 
+### Running on iOS Simulator (Expo)
+
+If you usually start Expo manually and then open the iOS simulator, use this workflow:
+
+1. Start Expo:
+
+   ```bash
+   npx expo start
+   ```
+
+2. In another terminal (optional), open the iOS Simulator app:
+
+   ```bash
+   open -a Simulator
+   ```
+
+3. Go back to the Expo terminal and press:
+
+   ```text
+   i
+   ```
+
+This will launch the app in the iOS Simulator.
+
+> Tip: You can also run everything in one step with:
+>
+> ```bash
+> npx expo start --ios
+> ```
+
 ## Project Structure
 src/components: Reusable UI components like AppHeader, BookCard, etc.
 src/screens: Screens for different app views (e.g., HomeScreen, SettingsScreen).
